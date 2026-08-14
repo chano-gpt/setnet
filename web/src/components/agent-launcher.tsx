@@ -2,46 +2,45 @@ import { useState } from "react";
 import { Loader2, ShieldCheck } from "lucide-react";
 
 import { AgentIcon } from "@/components/agent-icon";
-import { sendReply } from "@/lib/api";
+import { startAgent } from "@/lib/api";
 import { setStatus } from "@/lib/status";
 
 interface LaunchAgent {
   id: string;
   name: string;
   description: string;
-  command: string;
 }
 
 const AGENTS: readonly LaunchAgent[] = [
   {
-    id: "antigravity",
+    id: "agy",
     name: "Antigravity",
     description: "Google coding agent",
-    command: "agy --dangerously-skip-permissions",
   },
   {
     id: "omo",
     name: "Omo",
     description: "Omo coding agent",
-    command: "omo --approve --permission-preset full-access",
   },
   {
     id: "claude",
     name: "Claude Code",
     description: "Anthropic coding agent",
-    command: "claude --dangerously-skip-permissions",
   },
   {
     id: "codex",
     name: "Codex",
     description: "OpenAI coding agent",
-    command: "codex --dangerously-bypass-approvals-and-sandbox",
   },
   {
     id: "pi",
     name: "Pi",
     description: "Minimal coding agent",
-    command: "pi --approve",
+  },
+  {
+    id: "opencode",
+    name: "OpenCode",
+    description: "Open-source coding agent",
   },
 ];
 
@@ -53,7 +52,7 @@ export function AgentLauncher({ paneId, session }: { paneId: string; session?: s
     if (launching !== null) return;
     setLaunching(agent.id);
     try {
-      const response = await sendReply(paneId, agent.command, true, session);
+      const response = await startAgent(paneId, agent.id, session);
       if (!response.ok) {
         setStatus(response.error, "error");
         setLaunching(null);
@@ -82,7 +81,7 @@ export function AgentLauncher({ paneId, session }: { paneId: string; session?: s
         <div className="mb-5">
           <h2 className="text-xl font-semibold">Choose an agent</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Starts in this tab with approval prompts disabled.
+            Starts through Herdr when ready; approval prompts stay enabled.
           </p>
         </div>
         <div className="grid gap-2">

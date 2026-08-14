@@ -105,6 +105,14 @@ function makeEngine() {
 }
 
 describe("StateEngine — transition detection", () => {
+  test("exposes the connected Herdr version and protocol from session.snapshot", async () => {
+    const { engine, poll } = makeEngine();
+
+    await poll();
+
+    expect(engine.current().herdr).toEqual({ version: "0.7.2", protocol: 16 });
+  });
+
   test("does not fire a transition on the first sighting of a pane", async () => {
     const { herdr, transitions, poll } = makeEngine();
     herdr.panes = [pane("w1:p1", "w1", "blocked", "claude")];

@@ -97,7 +97,7 @@ function renderComposerWithStatus(overrides: Partial<ComponentProps<typeof Compo
 }
 
 describe("Composer — inline slash commands", () => {
-  it("shows the complete Omo command catalog for a bare slash", async () => {
+  it("shows the bundled Omo command fallback for a bare slash", async () => {
     const user = userEvent.setup();
     renderComposer({ agent: "omo" });
     const box = screen.getByPlaceholderText(/type a reply/i);
@@ -106,7 +106,7 @@ describe("Composer — inline slash commands", () => {
 
     expect(screen.getAllByRole("option")).toHaveLength(commandsFor("omo").length);
     expect(screen.getByRole("option", { name: "/favorite-models" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "/plan-review" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "/tasks" })).toBeInTheDocument();
   });
 
   it("opens suggestions while typing and previews the matching command", async () => {
@@ -135,7 +135,7 @@ describe("Composer — inline slash commands", () => {
     expect(screen.queryByRole("listbox", { name: /agent command suggestions/i })).not.toBeInTheDocument();
   });
 
-  it("runs a safe no-argument command with the keyboard", async () => {
+  it("inserts a bundled no-argument command for review with the keyboard", async () => {
     const user = userEvent.setup();
     const sent: string[] = [];
     server.use(replyHandler((text) => sent.push(text)));
@@ -145,10 +145,9 @@ describe("Composer — inline slash commands", () => {
     await user.type(box, "/status");
     await user.keyboard("{Enter}");
 
-    await waitFor(() => {
-      expect(sent).toEqual(["/status"]);
-      expect(box).toHaveValue("");
-    });
+    expect(sent).toEqual([]);
+    expect(box).toHaveValue("/status");
+    expect(box).toHaveFocus();
   });
 
   it("inserts a dangerous command for review instead of running it", async () => {

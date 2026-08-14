@@ -41,13 +41,13 @@ describe("CommandPalette", () => {
     expect(screen.getByText(/No commands match/)).toBeInTheDocument();
   });
 
-  it("submits a no-arg command immediately and closes", async () => {
+  it("inserts a bundled no-arg command for review instead of submitting it", async () => {
     const user = userEvent.setup();
     const props = setup();
     await user.click(screen.getByText("/status"));
-    expect(props.onSubmit).toHaveBeenCalledExactlyOnceWith("/status");
+    expect(props.onInsert).toHaveBeenCalledExactlyOnceWith("/status");
     expect(props.onClose).toHaveBeenCalledOnce();
-    expect(props.onInsert).not.toHaveBeenCalled();
+    expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
   it("inserts an arg-taking command into the composer (with trailing space) and closes", async () => {
@@ -59,18 +59,13 @@ describe("CommandPalette", () => {
     expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("requires a two-tap confirm for a dangerous no-arg command", async () => {
+  it("inserts a dangerous bundled command without executing it", async () => {
     const user = userEvent.setup();
     const props = setup();
 
-    // /clear is dangerous + no-arg. First tap arms confirm, does not submit.
     await user.click(screen.getByText("/clear"));
+    expect(props.onInsert).toHaveBeenCalledExactlyOnceWith("/clear");
     expect(props.onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByText("Confirm?")).toBeInTheDocument();
-
-    // Second tap submits and closes.
-    await user.click(screen.getByText("/clear"));
-    expect(props.onSubmit).toHaveBeenCalledExactlyOnceWith("/clear");
     expect(props.onClose).toHaveBeenCalledOnce();
   });
 
@@ -82,6 +77,11 @@ describe("CommandPalette", () => {
 
   it("uses the omp catalog for the current omo harness name", () => {
     setup({ agent: "omo" });
-    expect(screen.getByText("/shake")).toBeInTheDocument();
+    expect(screen.getByText("/tasks")).toBeInTheDocument();
+  });
+
+  it("shows AGY's conservative bundled fallback", () => {
+    setup({ agent: "agy" });
+    expect(screen.getByText("/help")).toBeInTheDocument();
   });
 });

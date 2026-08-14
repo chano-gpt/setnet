@@ -163,6 +163,7 @@ export interface DeviceAuth {
 /** GET /api/snapshot — the current herd view. */
 export interface SnapshotResponse {
   bridge: BridgeStatus;
+  herdr: { version: string; protocol: number } | null;
   /** Per-device authorisation for the requesting client; absent when the feature is off. */
   device?: DeviceAuth;
   /** Agent-bearing panes, triage-sorted (the home list). */

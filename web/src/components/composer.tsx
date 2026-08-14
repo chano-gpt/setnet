@@ -17,7 +17,7 @@ import { QuickActionsContent } from "@/components/quick-actions";
 import { DisplayPrefsContent } from "@/components/display-prefs";
 import { SectionLabel } from "@/components/ui/section-label";
 import * as api from "@/lib/api";
-import { commandsFor, type AgentCommand } from "@/lib/agent-commands";
+import { commandCatalogFor, type AgentCommand } from "@/lib/agent-commands";
 import { isDestructiveInput } from "@/lib/destructive";
 import { loadDraft, saveDraft } from "@/lib/drafts";
 import { useHoldReload } from "@/lib/reload-guard";
@@ -383,7 +383,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     focusInputEnd();
   }
 
-  const commands = commandsFor(agent);
+  const commandCatalog = commandCatalogFor(agent);
+  const commands = commandCatalog.commands;
   const commandQuery = !direct.active && /^\/[^\s]*$/.test(input) ? input.toLowerCase() : null;
   const commandMatches =
     commandQuery === null
@@ -401,8 +402,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   function chooseInlineCommand(command: AgentCommand) {
     setCommandMenuDismissed(true);
     setSelectedCommandIndex(0);
-    if (command.takesArg || command.dangerous) {
-      updateInput(`${command.command} `);
+    if (commandCatalog.execution === "insert-only" || command.takesArg || command.dangerous) {
+      updateInput(`${command.command}${command.takesArg || command.dangerous ? " " : ""}`);
       requestAnimationFrame(() => inputRef.current?.focus());
       return;
     }

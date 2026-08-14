@@ -86,6 +86,7 @@ export const fixtureSessions: SessionSummary[] = [
 
 export const fixtureSnapshot: SnapshotResponse = {
   bridge: "connected",
+  herdr: null,
   agents: fixtureAgents,
   shellPanes: fixtureShellPanes,
   workspaces: fixtureWorkspaces,

@@ -159,6 +159,7 @@ export interface UpdateInfo {
 
 export interface SnapshotResponse {
   bridge: BridgeStatus;
+  herdr: { version: string; protocol: number } | null;
   /** Per-device authorisation for the requesting client; absent when the feature is off. */
   device?: DeviceAuth;
   agents: AgentView[];

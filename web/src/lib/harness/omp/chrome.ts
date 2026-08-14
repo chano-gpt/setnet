@@ -50,7 +50,12 @@ function locateRulePrompt(lines: StyledLine[]): { row: number; draft: string } |
       bottom++;
     }
     if (!RULE_ROW.test(texts[bottom]!)) continue;
-    if (!texts.slice(bottom + 1, bottom + 7).some((text) => OMO_NATIVE_STATUS.test(text))) continue;
+    const statusOffset = texts
+      .slice(bottom + 1, bottom + 7)
+      .findIndex((text) => OMO_NATIVE_STATUS.test(text));
+    if (statusOffset < 0) continue;
+    const statusRow = bottom + 1 + statusOffset;
+    if (texts.slice(statusRow + 1).some((text) => text.trim() !== "")) continue;
     return { row, draft: parts.filter(Boolean).join(" ") };
   }
   return null;

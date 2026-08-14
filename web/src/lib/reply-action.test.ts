@@ -301,19 +301,30 @@ describe("sendGuardedReply", () => {
     expect(calls.some((c) => c.submit)).toBe(false);
   });
 
-  it("keeps the legacy one-shot send for a harness with no adapter", async () => {
-    // No grammar → the input box is unreadable, so there is nothing to verify against. Guessing
-    // would strand a no-echo input (a shell's sudo prompt) with the submit key withheld forever.
+  it("requires an explicit force confirmation before a harness with no adapter can send", async () => {
     const calls = harness(() => paneWithDialog);
 
-    const out = await sendGuardedReply({
+    const first = await sendGuardedReply({
       paneId: "w1:p1",
       text: "ls -la",
-      agent: "shell",
+      agent: "codex",
       ...instant,
     });
+    expect(first).toEqual({
+      status: "blocked",
+      error:
+        "Collie has no verified composer grammar for this agent. Open the terminal to inspect it, or confirm Type anyway.",
+    });
+    expect(calls).toEqual([]);
 
-    expect(out).toEqual({ status: "sent" });
+    const forced = await sendGuardedReply({
+      paneId: "w1:p1",
+      text: "ls -la",
+      agent: "codex",
+      force: true,
+      ...instant,
+    });
+    expect(forced).toEqual({ status: "sent" });
     expect(calls).toEqual([{ text: "ls -la", submit: true }]);
   });
 

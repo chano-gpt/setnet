@@ -319,6 +319,20 @@ export function sendReply(
   );
 }
 
+export function startAgent(
+  paneId: string,
+  kind: string,
+  session?: string,
+): Promise<ActionResponse> {
+  return req<ActionResponse>(
+    withSession(`/api/pane/${encodeURIComponent(paneId)}/start`, session),
+    {
+      method: "POST",
+      body: JSON.stringify({ kind }),
+    },
+  );
+}
+
 export function sendKeys(
   paneId: string,
   keys: string[],

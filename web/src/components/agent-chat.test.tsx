@@ -99,13 +99,13 @@ describe("AgentChat — pane surface", () => {
 });
 
 describe("AgentChat — fresh tab agent picker", () => {
-  it("launches Omo with full-access defaults before showing the shell", async () => {
+  it("launches Omo through Herdr managed start before showing the shell", async () => {
     const user = userEvent.setup();
     const shell = { ...fixtureAgents[0]!, kind: "shell" as const, agent: "shell" };
-    let reply: { text?: string; submit?: boolean } | null = null;
+    let launch: { kind?: string } | null = null;
     server.use(
-      http.post(/\/api\/pane\/[^/]+\/reply$/, async ({ request }) => {
-        reply = (await request.json()) as { text?: string; submit?: boolean };
+      http.post(/\/api\/pane\/[^/]+\/start$/, async ({ request }) => {
+        launch = (await request.json()) as { kind?: string };
         return HttpResponse.json({ ok: true });
       }),
     );
@@ -120,22 +120,17 @@ describe("AgentChat — fresh tab agent picker", () => {
     expect(screen.getByRole("heading", { name: "Choose an agent" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Omo/ }));
 
-    await waitFor(() =>
-      expect(reply).toEqual({
-        text: "omo --approve --permission-preset full-access",
-        submit: true,
-      }),
-    );
+    await waitFor(() => expect(launch).toEqual({ kind: "omo" }));
     expect(screen.queryByRole("heading", { name: "Choose an agent" })).not.toBeInTheDocument();
   });
 
-  it("launches Antigravity with permission prompts disabled", async () => {
+  it("launches Antigravity through Herdr managed start", async () => {
     const user = userEvent.setup();
     const shell = { ...fixtureAgents[0]!, kind: "shell" as const, agent: "shell" };
-    let reply: { text?: string; submit?: boolean } | null = null;
+    let launch: { kind?: string } | null = null;
     server.use(
-      http.post(/\/api\/pane\/[^/]+\/reply$/, async ({ request }) => {
-        reply = (await request.json()) as { text?: string; submit?: boolean };
+      http.post(/\/api\/pane\/[^/]+\/start$/, async ({ request }) => {
+        launch = (await request.json()) as { kind?: string };
         return HttpResponse.json({ ok: true });
       }),
     );
@@ -149,12 +144,7 @@ describe("AgentChat — fresh tab agent picker", () => {
 
     await user.click(screen.getByRole("button", { name: /Launch Antigravity/ }));
 
-    await waitFor(() =>
-      expect(reply).toEqual({
-        text: "agy --dangerously-skip-permissions",
-        submit: true,
-      }),
-    );
+    await waitFor(() => expect(launch).toEqual({ kind: "agy" }));
   });
 });
 

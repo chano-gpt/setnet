@@ -245,12 +245,19 @@ export type ComposerPrepResult =
 
 export async function sendGuardedReply(args: GuardedReplyArgs): Promise<ReplyOutcome> {
   const adapter = adapterFor(args.agent ?? undefined);
-  // No grammar for this harness → the input box is unreadable, so there is nothing to verify
-  // against and the guard cannot run. Keep the legacy one-shot send rather than guess: a heuristic
-  // over the raw mirror has a false-negative that is worse than the bug — a no-echo input (a shell's
-  // sudo prompt) would never show the text, so the submit key would be withheld forever. Non-Claude
-  // harnesses gain this safety exactly when they gain an adapter.
-  if (!adapter) return oneShot(args);
+  // Identity, history, and managed readiness do not prove that Collie can distinguish this agent's
+  // composer from its modals. Require the same explicit two-step override used for a refused live
+  // composer before falling back to terminal-compatible one-shot input.
+  if (!adapter) {
+    if (!args.force) {
+      return {
+        status: "blocked",
+        error:
+          "Collie has no verified composer grammar for this agent. Open the terminal to inspect it, or confirm Type anyway.",
+      };
+    }
+    return oneShot(args);
+  }
 
   // PRE-FLIGHT. The verify-after guard below is enough to keep Enter from answering a dialog, but it
   // is not enough to keep the MESSAGE out of one: it types first and checks second, so a modal that
@@ -408,7 +415,7 @@ async function preflight(adapter: HarnessAdapter, args: GuardedReplyArgs): Promi
   };
 }
 
-/** The pre-#34 behaviour: one call that types AND submits. Only for harnesses with no adapter. */
+/** Explicitly confirmed fallback: one call that types AND submits for a harness with no adapter. */
 async function oneShot(args: GuardedReplyArgs): Promise<ReplyOutcome> {
   // No `onComposerSeen` here, and none is possible: with no adapter nothing can read the input box,
   // so no live read can ever confirm a composer, and the invariant says the destructive sweep stays

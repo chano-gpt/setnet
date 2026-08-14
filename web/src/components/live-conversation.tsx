@@ -13,6 +13,9 @@ interface LiveConversationProps {
   onTerminal: () => void;
 }
 
+const HISTORY_FETCH_LIMIT = 200;
+const VISIBLE_ENTRY_LIMIT = 60;
+
 export function LiveConversation({
   paneId,
   session,
@@ -25,19 +28,24 @@ export function LiveConversation({
   useEffect(() => {
     let controller: AbortController | null = null;
     let stopped = false;
+    let inFlight = false;
+    let unavailable = false;
 
     const refresh = async () => {
-      controller?.abort();
-      controller = new AbortController();
+      if (stopped || inFlight || unavailable || document.visibilityState === "hidden") return;
+      inFlight = true;
+      const activeController = new AbortController();
+      controller = activeController;
       try {
         const response = await fetchHistory(
           paneId,
-          { limit: 5000 },
+          { limit: HISTORY_FETCH_LIMIT },
           session,
-          controller.signal,
+          activeController.signal,
         );
         if (stopped) return;
         if (!response.available) {
+          unavailable = true;
           setState("unavailable");
           return;
         }
@@ -45,14 +53,23 @@ export function LiveConversation({
         setState("ready");
       } catch (error: unknown) {
         if (!stopped && (error as Error).name !== "AbortError") setState("error");
+      } finally {
+        if (controller === activeController) controller = null;
+        inFlight = false;
       }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refresh();
     };
 
     void refresh();
     const timer = window.setInterval(() => void refresh(), 1_500);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       stopped = true;
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       controller?.abort();
     };
   }, [paneId, session]);
@@ -91,7 +108,7 @@ export function LiveConversation({
   return (
     <ChatMessageList className="min-h-0 flex-1 px-3 py-4">
       {entries.length > 0 ? (
-        <TranscriptView entries={entries} agent={agent} />
+        <TranscriptView entries={entries.slice(-VISIBLE_ENTRY_LIMIT)} agent={agent} />
       ) : (
         <div className="py-16 text-center text-sm text-muted-foreground">
           Start the conversation below.

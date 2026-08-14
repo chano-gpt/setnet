@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { BottomSheet } from "@/components/ui/sheet";
 import { AgentIcon } from "@/components/agent-icon";
 import { usePendingConfirm } from "@/hooks/use-pending-confirm";
-import { commandsFor, type AgentCommand } from "@/lib/agent-commands";
+import { commandCatalogFor, type AgentCommand } from "@/lib/agent-commands";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -18,7 +18,8 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ open, onClose, agent, onInsert, onSubmit }: CommandPaletteProps) {
-  const all = commandsFor(agent);
+  const catalog = commandCatalogFor(agent);
+  const all = catalog.commands;
   const [query, setQuery] = useState("");
   const { pending, confirm, reset } = usePendingConfirm();
 
@@ -39,6 +40,11 @@ export function CommandPalette({ open, onClose, agent, onInsert, onSubmit }: Com
     : all.filter((c) => c.common);
 
   function pick(c: AgentCommand) {
+    if (catalog.execution === "insert-only") {
+      onInsert(`${c.command}${c.takesArg ? " " : ""}`);
+      onClose();
+      return;
+    }
     if (c.takesArg) {
       onInsert(`${c.command} `);
       onClose();
@@ -76,7 +82,7 @@ export function CommandPalette({ open, onClose, agent, onInsert, onSubmit }: Com
 
       {!q && (
         <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-          Common · type to search all {all.length}
+            Bundled reference · partial · type to search all {all.length}
         </p>
       )}
 

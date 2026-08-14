@@ -112,7 +112,7 @@ class FakeSession {
   readonly disposed = { engine: 0, poker: 0, notifications: 0 };
   snap: EngineSnapshot;
   constructor(bridge: "connected" | "disconnected", agents: AgentView[]) {
-    this.snap = { agents, shellPanes: [], workspaces: [], tabs: [], bridge };
+    this.snap = { agents, shellPanes: [], workspaces: [], tabs: [], bridge, herdr: null };
   }
   parts(): SessionParts {
     const engine = { current: () => this.snap, stop: () => void this.disposed.engine++ };

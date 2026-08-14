@@ -14,10 +14,12 @@ import {
   keysPane,
   normalizeTabLabel,
   paneReadResponse,
+  parseReplyBody,
   replyPane,
   resolvePaneSession,
   resolveStaticPath,
   sendReplySteps,
+  startAgentPane,
   startupWarnings,
   withBuildHeader,
   type ReplySender,
@@ -319,6 +321,89 @@ describe("sendReplySteps — two-step send & partial-failure clarity", () => {
     const out = await sendReplySteps(client, "p1", "hello", false, ["Enter"], noSleep);
     expect(out).toEqual({ ok: true, textDelivered: true });
     expect(client.calls).toEqual(["text"]);
+  });
+});
+
+describe("parseReplyBody — terminal write boundary", () => {
+  test("rejects an object that omits text instead of turning it into Enter", () => {
+    expect(parseReplyBody({})).toEqual({ ok: false, error: "bad text" });
+  });
+
+  test("rejects malformed field types and unknown fields", () => {
+    expect(parseReplyBody({ text: 42 })).toEqual({ ok: false, error: "bad text" });
+    expect(parseReplyBody({ text: "hello", submit: "yes" })).toEqual({
+      ok: false,
+      error: "bad submit",
+    });
+    expect(parseReplyBody({ text: "hello", force: true })).toEqual({
+      ok: false,
+      error: "bad field",
+    });
+  });
+
+  test("keeps an explicit empty-text submit for the guarded confirmation flow", () => {
+    expect(parseReplyBody({ text: "", submit: true })).toEqual({
+      ok: true,
+      value: { text: "", submit: true },
+    });
+  });
+});
+
+describe("startAgentPane — managed launch boundary", () => {
+  test("passes only the server-owned safe profile to Herdr", async () => {
+    const calls: unknown[][] = [];
+    const herdr = {
+      startAgent: (...args: unknown[]) => {
+        calls.push(args);
+        return Promise.resolve({ agent: {}, argv: ["codex"] });
+      },
+    } as unknown as HerdrClient;
+    const audit = { record: () => undefined } as unknown as AuditLog;
+    const response = await startAgentPane(
+      herdr,
+      "wD:pG",
+      new Request("http://localhost/api/pane/wD%3ApG/start", {
+        method: "POST",
+        body: JSON.stringify({ kind: "codex" }),
+      }),
+      audit,
+      "device",
+      "default",
+    );
+
+    expect(response.status).toBe(200);
+    expect(calls).toEqual([
+      [
+        "collie-codex-wd-pg",
+        "codex",
+        "wD:pG",
+        ["--ask-for-approval", "on-request", "--sandbox", "workspace-write"],
+      ],
+    ]);
+  });
+
+  test("rejects unknown kinds before calling Herdr", async () => {
+    let called = false;
+    const herdr = {
+      startAgent: () => {
+        called = true;
+        return Promise.resolve({ agent: {}, argv: [] });
+      },
+    } as unknown as HerdrClient;
+    const response = await startAgentPane(
+      herdr,
+      "w1:p1",
+      new Request("http://localhost/api/pane/w1%3Ap1/start", {
+        method: "POST",
+        body: JSON.stringify({ kind: "shell-command" }),
+      }),
+      { record: () => undefined } as unknown as AuditLog,
+      null,
+      "default",
+    );
+
+    expect(response.status).toBe(400);
+    expect(called).toBe(false);
   });
 });
 

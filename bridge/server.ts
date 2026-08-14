@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { extname, join, normalize, sep } from "node:path";
 import type { ActivityLedger } from "./activity.ts";
 import type { AuditLog } from "./audit.ts";
+import { managedAgentName, managedLaunchFor } from "./agent-launch.ts";
 import type { Config } from "./config.ts";
 import type { HerdrClient, PaneRead } from "./herdr-client.ts";
 import { computeEtag, gzipJsonResponse, notModified } from "./http-cache.ts";
@@ -90,7 +91,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 // (or a co-located proxy) can reach the bridge's port, so a loopback caller is the on-host operator.
 const LOOPBACK_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 
-const PANE_ROUTE = /^\/api\/pane\/([^/]+)(?:\/(reply|keys|upload|close|rename|history))?$/;
+const PANE_ROUTE = /^\/api\/pane\/([^/]+)(?:\/(reply|keys|upload|close|rename|history|start))?$/;
 // Turns per history page. "Show entire history" means the WHOLE conversation, so the client asks for
 // everything and this ceiling is a safety net against a pathological log, not the normal path — a
 // 1400-turn session is ~1.4 MB raw / ~400 KB gzipped, which a tailnet link serves fine. The default
@@ -179,7 +180,8 @@ export function startServer(opts: {
         if (!gate.ok) return text(gate.reason, 403);
         const rt = registry.get(sessionName);
         if (!rt) return unknownSession();
-        const { agents, shellPanes, workspaces, tabs, bridge } = rt.engine.current();
+        const { agents, shellPanes, workspaces, tabs, bridge, herdr: herdrRuntime } =
+          rt.engine.current();
         const device = deviceAuth(req, cfg);
         // Attach each pane's activity timestamps. Done here rather than in the state engine so the
         // engine stays a pure Herdr-poller with no knowledge of the ledger — and so the two numbers
@@ -193,6 +195,7 @@ export function startServer(opts: {
         return withBuildHeader(
           json({
             bridge,
+            herdr: herdrRuntime,
             // Only report device state when the feature is on, so an off deployment sends nothing new.
             ...(device.enforced ? { device } : {}),
             // The one place a pane leaves the bridge: the session ref is stripped to a presence flag
@@ -278,6 +281,7 @@ export function startServer(opts: {
           return paneHistory(cfg, journals, transcripts, rt.engine, rt.herdr, paneId, url, req);
         if (action === "reply" && req.method === "POST") return replyPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "keys" && req.method === "POST") return keysPane(herdr, cfg, paneId, req, audit, device, session);
+        if (action === "start" && req.method === "POST") return startAgentPane(herdr, paneId, req, audit, device, session);
         if (action === "upload" && req.method === "POST") return uploadPane(cfg, paneId, req, audit, device, session);
         if (action === "close" && req.method === "POST") return closePane(herdr, paneId, req, audit, device, session);
         if (action === "rename" && req.method === "POST") return renamePane(herdr, paneId, req, audit, device, session);
@@ -648,16 +652,19 @@ export async function replyPane(
   device: string | null,
   session: string,
 ): Promise<Response> {
-  let body: { text?: string; submit?: boolean; expected_prompt?: unknown };
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    rawBody = await req.json();
   } catch {
     return text("bad body", 400);
   }
+  const parsed = parseReplyBody(rawBody);
+  if (!parsed.ok) return text(parsed.error, 400);
+  const body = parsed.value;
   const expected = expectedPrompt(body);
   if (!expected.ok) return text("bad expected_prompt", 400);
-  const txt = body.text ?? "";
-  const submit = body.submit ?? true;
+  const txt = body.text;
+  const submit = body.submit;
   const ae = req.headers.get("accept-encoding");
   const binding = expected.present
     ? await checkPromptBinding(herdr, cfg, paneId, expected.value)
@@ -698,6 +705,96 @@ export async function replyPane(
     { ok: false, error: outcome.error, textDelivered: outcome.textDelivered } satisfies ActionResponse,
     ae,
   );
+}
+
+export async function startAgentPane(
+  herdr: HerdrClient,
+  paneId: string,
+  req: Request,
+  audit: AuditLog,
+  device: string | null,
+  session: string,
+): Promise<Response> {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return text("bad body", 400);
+  }
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return text("bad body", 400);
+  }
+  const record = body as Record<string, unknown>;
+  if (typeof record.kind !== "string") return text("bad kind", 400);
+  if (Object.keys(record).some((key) => key !== "kind")) return text("bad field", 400);
+  const profile = managedLaunchFor(record.kind);
+  if (profile === null) return text("unsupported agent kind", 400);
+
+  try {
+    const started = await herdr.startAgent(
+      managedAgentName(profile.kind, paneId),
+      profile.kind,
+      paneId,
+      profile.args,
+    );
+    audit.record({
+      action: "agent.start",
+      paneId,
+      session,
+      device,
+      detail: { kind: profile.kind, argv: started.argv },
+    });
+    return json({ ok: true }, req.headers.get("accept-encoding"));
+  } catch (error) {
+    return json(
+      { ok: false, error: error instanceof Error ? error.message : String(error) },
+      req.headers.get("accept-encoding"),
+      502,
+    );
+  }
+}
+
+interface ParsedReplyBody {
+  text: string;
+  submit: boolean;
+  expected_prompt?: string;
+}
+
+type ReplyBodyParseResult =
+  | { ok: true; value: ParsedReplyBody }
+  | { ok: false; error: "bad body" | "bad text" | "bad submit" | "bad expected_prompt" | "bad field" };
+
+export function parseReplyBody(body: unknown): ReplyBodyParseResult {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return { ok: false, error: "bad body" };
+  }
+  const record = body as Record<string, unknown>;
+  if (typeof record.text !== "string") return { ok: false, error: "bad text" };
+  if (record.submit !== undefined && typeof record.submit !== "boolean") {
+    return { ok: false, error: "bad submit" };
+  }
+  if (
+    record.expected_prompt !== undefined &&
+    (typeof record.expected_prompt !== "string" ||
+      record.expected_prompt.length > MAX_EXPECTED_PROMPT_CHARS)
+  ) {
+    return { ok: false, error: "bad expected_prompt" };
+  }
+  const known = new Set(["text", "submit", "expected_prompt"]);
+  if (Object.keys(record).some((key) => !known.has(key))) {
+    return { ok: false, error: "bad field" };
+  }
+
+  return {
+    ok: true,
+    value: {
+      text: record.text,
+      submit: record.submit ?? true,
+      ...(record.expected_prompt === undefined
+        ? {}
+        : { expected_prompt: record.expected_prompt }),
+    },
+  };
 }
 
 export async function keysPane(

@@ -76,6 +76,8 @@ interface DirectTypingOptions {
 // timer. And the reply guard's `composerReady` pre-flight is NOT run on these keystrokes: it refuses
 // to type into an unrecognised screen, and typing into an unrecognised screen is the whole point.
 // Don't "harden" this path by adding it.
+const DIRECT_TYPING_STATUS = "Typing into the terminal — keys send as you type.";
+
 export function useDirectTyping({
   paneKey,
   inputRef,
@@ -90,7 +92,11 @@ export function useDirectTyping({
   const [value, setValue] = useState("");
   const composing = useRef(false);
   const committedComposition = useRef<string | null>(null);
-  const sender = useOrderedKeySender(sendKeys, () => {
+  const sender = useOrderedKeySender(async (keys) => {
+    const ok = await sendKeys(keys);
+    if (ok) setStatus(DIRECT_TYPING_STATUS, "success");
+    return ok;
+  }, () => {
     setActive(false);
     setValue("");
     composing.current = false;
@@ -114,7 +120,7 @@ export function useDirectTyping({
     composing.current = false;
     committedComposition.current = null;
     setActive(true);
-    setStatus("Typing into the terminal — keys send as you type.", "success");
+    setStatus(DIRECT_TYPING_STATUS, "success");
     // Focus synchronously while the long-press/contextmenu gesture still carries browser user
     // activation; a deferred focus selects the field but mobile browsers may refuse to open their
     // software keyboard once that activation has expired. The existing callback still runs after

@@ -635,3 +635,23 @@ describe("composerPrompt — the region a destructive write is bound to", () => 
     }
   });
 });
+
+describe("OMO rule prompt — tail ownership", () => {
+  it("does not revive an old prompt underneath a newer modal", () => {
+    const buffer = lines(
+      [
+        "────────────",
+        "❯ stale draft",
+        "────────────",
+        "(OmO Native) mem:dev",
+        "╭─ Select model ─────────────────────────╮",
+        "│ ❯ Default                              │",
+        "│   Fast                                 │",
+        "╰─ Enter select · Esc cancel ────────────╯",
+      ].join("\n"),
+    );
+
+    expect(hasComposer(buffer)).toBe(false);
+    expect(extractInputDraft(buffer)).toBeNull();
+  });
+});

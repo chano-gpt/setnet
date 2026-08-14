@@ -69,6 +69,7 @@ export interface EngineSnapshot {
   workspaces: WorkspaceView[];
   tabs: TabView[];
   bridge: BridgeStatus;
+  herdr: { version: string; protocol: number } | null;
 }
 
 type TransitionListener = (agent: AgentView, from: AgentStatus, to: AgentStatus) => void;
@@ -81,6 +82,7 @@ export class StateEngine {
   private workspaces: WorkspaceView[] = [];
   private tabs: TabView[] = [];
   private bridge: BridgeStatus = "disconnected";
+  private herdrRuntime: { version: string; protocol: number } | null = null;
   private readonly prevStatus = new Map<string, AgentStatus>();
   // Last-known claude `/rename` session name per pane. Kept sticky so the name doesn't flicker away
   // when a pane momentarily hides its input box (a dialog / working spinner) — only cleared when the
@@ -132,6 +134,7 @@ export class StateEngine {
       workspaces: this.workspaces,
       tabs: this.tabs,
       bridge: this.bridge,
+      herdr: this.herdrRuntime,
     };
   }
 
@@ -181,10 +184,12 @@ export class StateEngine {
     if (this.supportsSnapshot) {
       try {
         const snap = await this.herdr.sessionSnapshot();
+        this.herdrRuntime = { version: snap.version, protocol: snap.protocol };
         return { workspaces: snap.workspaces, panes: snap.panes, tabs: snap.tabs };
       } catch (err) {
         if (!(err instanceof Error && err.message.includes("unknown variant"))) throw err;
         this.supportsSnapshot = false;
+        this.herdrRuntime = null;
         console.log("[state] herdr predates session.snapshot — using list-call polling");
       }
     }

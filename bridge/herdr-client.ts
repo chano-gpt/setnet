@@ -113,6 +113,11 @@ export interface PaneRead {
   revision: number;
 }
 
+export interface ManagedAgentStart {
+  agent: Record<string, unknown>;
+  argv: string[];
+}
+
 interface PaneProcessInfo {
   foreground_process_group_id?: number | null;
 }
@@ -441,6 +446,21 @@ export class HerdrClient {
   /** Type literal text into a pane's terminal (does not submit). */
   sendPaneText(paneId: string, text: string): Promise<void> {
     return this.request<void>("pane.send_text", { pane_id: paneId, text });
+  }
+
+  startAgent(
+    name: string,
+    kind: string,
+    paneId: string,
+    args: readonly string[],
+  ): Promise<ManagedAgentStart> {
+    return this.request<ManagedAgentStart>("agent.start", {
+      name,
+      kind,
+      pane_id: paneId,
+      args: [...args],
+      timeout_ms: 45_000,
+    });
   }
 
   /** Send key names (e.g. ["Enter"]) to a pane — used to submit a reply. */

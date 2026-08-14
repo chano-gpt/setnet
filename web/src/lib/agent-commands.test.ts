@@ -1,27 +1,59 @@
-import { commandsFor } from "./agent-commands";
+import { commandCatalogFor, commandsFor } from "./agent-commands";
 
 describe("commandsFor", () => {
+  it("marks bundled catalogs as partial references that only insert for review", () => {
+    expect(commandCatalogFor("claude")).toMatchObject({
+      completeness: "partial",
+      freshness: "bundled",
+      execution: "insert-only",
+      provenance: { kind: "bundled" },
+    });
+    expect(commandCatalogFor("codex")).toMatchObject({
+      completeness: "partial",
+      freshness: "bundled",
+      execution: "insert-only",
+    });
+  });
+
+  it("provides a conservative AGY built-in fallback without claiming dynamic commands", () => {
+    const catalog = commandCatalogFor("antigravity");
+    expect(catalog.commands.some((command) => command.command === "/help")).toBe(true);
+    expect(catalog.commands.some((command) => command.command === "/tasks")).toBe(true);
+    expect(catalog.completeness).toBe("partial");
+  });
+
+  it("returns an explicit unknown catalog for unrecognized identities", () => {
+    expect(commandCatalogFor("constructor")).toMatchObject({
+      commands: [],
+      completeness: "unknown",
+      freshness: "none",
+      provenance: { kind: "none" },
+    });
+  });
+
   it("returns the Claude catalog for 'claude'", () => {
     const cmds = commandsFor("claude");
     expect(cmds.length).toBeGreaterThan(0);
     expect(cmds.some((c) => c.command === "/compact")).toBe(true);
   });
 
-  it("exposes the complete Senpi catalog for omo", () => {
+  it("keeps OMO's installed Senpi fallback distinct from the older OMP corpus", () => {
     const commands = commandsFor("omo");
-    expect(commands.length).toBeGreaterThanOrEqual(27);
+    expect(commands.length).toBeGreaterThanOrEqual(50);
     expect(commands.map((command) => command.command)).toEqual(
       expect.arrayContaining([
         "/settings",
         "/favorite-models",
-        "/export",
-        "/hotkeys",
-        "/login",
-        "/reload",
-        "/shake",
-        "/plan-review",
+        "/tasks",
+        "/task-kill",
+        "/doctor",
+        "/memory",
+        "/websearch",
       ]),
     );
+    expect(commands.some((command) => command.command === "/branch")).toBe(false);
+    expect(commands.some((command) => command.command === "/drop")).toBe(false);
+    expect(commands.some((command) => command.command === "/shake")).toBe(false);
   });
 
   it("returns the Codex catalog for 'codex'", () => {
@@ -56,6 +88,7 @@ describe("commandsFor", () => {
     expect(cmds.some((c) => c.command === "/shake")).toBe(true); // omp's tip line names it
     expect(cmds.some((c) => c.command === "/model")).toBe(true); // typed to produce a fixture
     expect(cmds.some((c) => c.command === "/init")).toBe(false); // vouched for by nothing in the corpus
+    expect(cmds).not.toBe(commandsFor("omo"));
   });
 
   // omp is NOT pi: the two are different CLIs with different command sets, and `commandsFor`'s prefix
