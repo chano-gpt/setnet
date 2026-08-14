@@ -1,3 +1,5 @@
+import { stat } from "node:fs/promises";
+
 import type { AgentStatus } from "./types.ts";
 import { dialHerdr, type DialMode, type SockHandle } from "./dial.ts";
 import { decodeReplyLine, decodeStreamLine } from "./wire.ts";
@@ -109,6 +111,10 @@ export interface PaneRead {
   text: string;
   truncated: boolean;
   revision: number;
+}
+
+interface PaneProcessInfo {
+  foreground_process_group_id?: number | null;
 }
 
 // Wire names are snake_case: `recent-unwrapped` is REJECTED by the server (`unknown variant`,
@@ -226,6 +232,20 @@ export class HerdrClient {
   async listWorkspaces(): Promise<WireWorkspace[]> {
     const r = await this.request<{ workspaces: WireWorkspace[] }>("workspace.list");
     return r.workspaces;
+  }
+
+  async paneProcessStartedAt(paneId: string): Promise<number | null> {
+    if (process.platform !== "linux") return null;
+    const response = await this.request<{
+      process_info: PaneProcessInfo;
+    }>("pane.process_info", { pane_id: paneId });
+    const processId = response.process_info.foreground_process_group_id;
+    if (!processId) return null;
+    try {
+      return (await stat(`/proc/${processId}`)).mtimeMs;
+    } catch {
+      return null;
+    }
   }
 
   async listPanes(): Promise<WirePane[]> {

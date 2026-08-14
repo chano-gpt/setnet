@@ -19,7 +19,7 @@ import type { UpdateMonitor } from "./update.ts";
 import type { StateEngine } from "./state-engine.ts";
 import { adapterFor, buildJournalRegistry } from "./journal/registry.ts";
 import { TranscriptStore } from "./journal/store.ts";
-import type { JournalAdapter } from "./journal/types.ts";
+import type { AgentSessionRef, JournalAdapter } from "./journal/types.ts";
 import { toPaneWire } from "./types.ts";
 import type {
   ActionResponse,
@@ -275,7 +275,7 @@ export function startServer(opts: {
 
         if (!action && req.method === "GET") return readPane(herdr, cfg, paneId, url, req);
         if (action === "history" && req.method === "GET")
-          return paneHistory(cfg, journals, transcripts, rt.engine, paneId, url, req);
+          return paneHistory(cfg, journals, transcripts, rt.engine, rt.herdr, paneId, url, req);
         if (action === "reply" && req.method === "POST") return replyPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "keys" && req.method === "POST") return keysPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "upload" && req.method === "POST") return uploadPane(cfg, paneId, req, audit, device, session);
@@ -524,6 +524,7 @@ async function paneHistory(
   journals: Record<string, JournalAdapter> | null,
   transcripts: TranscriptStore | null,
   engine: StateEngine,
+  herdr: HerdrClient,
   paneId: string,
   url: URL,
   req: Request,
@@ -536,21 +537,50 @@ async function paneHistory(
 
   const { agents, shellPanes } = engine.current();
   const pane = [...agents, ...shellPanes].find((a) => a.paneId === paneId);
-  // No pane, or an agent that named no session (a shell, or a harness whose integration isn't
-  // installed): nothing to read, and that's an ordinary answer rather than an error.
-  if (!pane?.agentSession) return unavailable("no-session");
   // An agent with no adapter has no journal. Same answer — the UI shouldn't distinguish "this
   // harness isn't supported" from "this pane never started one"; both mean there's nothing to show.
+  if (!pane) return unavailable("no-session");
   const adapter = adapterFor(journals, pane.agent);
   if (adapter === undefined) return unavailable("no-session");
+  const session = await resolvePaneSession(
+    pane,
+    [...agents, ...shellPanes],
+    adapter,
+    await herdr.paneProcessStartedAt(paneId),
+  );
+  if (session === null) return unavailable("no-session");
 
   try {
-    const page = await transcripts.page(adapter, pane.agentSession, historyParams(url));
+    const page = await transcripts.page(adapter, session, historyParams(url));
     if (page === null) return unavailable("no-log");
     return json({ paneId, available: true, ...page } satisfies PaneHistoryResponse, accept);
   } catch (err) {
     return text(`transcript read failed: ${(err as Error).message}`, 502);
   }
+}
+
+export async function resolvePaneSession(
+  pane: AgentView,
+  panes: readonly AgentView[],
+  adapter: JournalAdapter,
+  processStartedAtMs: number | null = null,
+): Promise<AgentSessionRef | null> {
+  if (pane.agentSession) return pane.agentSession;
+  if (!pane.cwd) return null;
+  const paneSession =
+    processStartedAtMs === null
+      ? null
+      : await adapter.discoverPaneSession?.(pane.cwd, processStartedAtMs);
+  if (paneSession) return paneSession;
+  if (!adapter.discoverSession) return null;
+
+  const ambiguous = panes.some(
+    (candidate) =>
+      candidate.paneId !== pane.paneId &&
+      candidate.agent === pane.agent &&
+      candidate.cwd === pane.cwd,
+  );
+  return ambiguous ? null : adapter.discoverSession(pane.cwd);
 }
 
 /** Just the two one-shot RPCs a reply needs — real HerdrClient in the bridge, fake in tests. */

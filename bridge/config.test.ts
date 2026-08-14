@@ -23,6 +23,7 @@ const KEYS = [
   // too — otherwise a developer with CODEX_HOME set gets different results than CI.
   "CODEX_HOME",
   "PI_CODING_AGENT_DIR",
+  "OMO_CODING_AGENT_DIR",
   "XDG_DATA_HOME",
   "COLLIE_SUBMIT_KEYS",
   "COLLIE_TRUSTED_USER",

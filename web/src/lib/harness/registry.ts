@@ -17,6 +17,7 @@ import { ompAdapter } from "./omp";
 const ADAPTERS: Record<string, HarnessAdapter> = Object.fromEntries(
   [claudeAdapter, ompAdapter].map((a) => [a.agent, a]),
 );
+ADAPTERS.omo = ompAdapter;
 
 /** The adapter for `agent`, or undefined when the agent is unknown/absent (→ raw fallback). `Object.hasOwn`
  *  (not a truthy `ADAPTERS[agent]`) so an inherited Object.prototype key ("toString", "constructor",

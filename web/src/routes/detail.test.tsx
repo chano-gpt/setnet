@@ -10,8 +10,19 @@ import { DetailRoute } from "./detail";
 // Stub the heavy terminal view: this test is about DetailRoute's routing/freshPane logic, not the
 // composer. The stub reports which pane it was handed and whether an agent resolved for it.
 vi.mock("@/components/agent-chat", () => ({
-  AgentChat: ({ paneId, agent }: { paneId: string; agent?: AgentView }) => (
-    <div data-testid="chat">{`pane:${paneId}:${agent ? "live" : "gone"}`}</div>
+  AgentChat: ({
+    paneId,
+    agent,
+    initialAgentPicker,
+  }: {
+    paneId: string;
+    agent?: AgentView;
+    initialAgentPicker?: boolean;
+  }) => (
+    <div
+      data-testid="chat"
+      data-agent-picker={initialAgentPicker ? "open" : "closed"}
+    >{`pane:${paneId}:${agent ? "live" : "gone"}`}</div>
   ),
 }));
 
@@ -93,6 +104,21 @@ describe("DetailRoute — freshPane bootstrap", () => {
 
     expect(await screen.findByTestId("chat")).toHaveTextContent("pane:w1:p2:live");
     expect(router.state.location.pathname).toBe(panePath("w1:p2"));
+  });
+
+  it("opens the agent picker for a freshly-created tab", async () => {
+    const router = makeRouter("/", () => connected([]));
+    render(<RouterProvider router={router} />);
+    await screen.findByTestId("home");
+
+    const fresh = agentView("w1:p2", "shell");
+    await act(async () => {
+      await router.navigate(panePath("w1:p2"), {
+        state: { freshPane: fresh, selectAgent: true },
+      });
+    });
+
+    expect(await screen.findByTestId("chat")).toHaveAttribute("data-agent-picker", "open");
   });
 
   it("shows a tab created from inside an open pane instead of bouncing Home", async () => {

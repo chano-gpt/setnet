@@ -13,6 +13,7 @@
 import { claudeJournal } from "./claude.ts";
 import { codexJournal } from "./codex.ts";
 import { opencodeJournal } from "./opencode.ts";
+import { omoJournal } from "./omo.ts";
 import { piJournal } from "./pi.ts";
 import type { JournalAdapter } from "./types.ts";
 
@@ -32,6 +33,8 @@ export interface JournalRoots {
   codex: readonly string[];
   /** pi's `$PI_CODING_AGENT_DIR/sessions`. */
   pi: readonly string[];
+  /** omo's `$OMO_CODING_AGENT_DIR/sessions` (Pi-compatible JSONL). */
+  omo: readonly string[];
   /** OpenCode's data dir — the SQLite `opencode.db` lives at its top level. */
   opencode: readonly string[];
 }
@@ -47,6 +50,7 @@ export function buildJournalRegistry(roots: JournalRoots): Record<string, Journa
     claudeJournal(roots.claude),
     codexJournal(roots.codex),
     piJournal(roots.pi),
+    omoJournal(roots.omo),
     opencodeJournal(roots.opencode),
   ];
   return Object.fromEntries(adapters.map((a) => [a.agent, a]));

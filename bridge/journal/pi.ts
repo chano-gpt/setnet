@@ -206,6 +206,23 @@ export class PiTranscriptSource implements TranscriptSource {
     return null;
   }
 
+  async latestForCwd(cwd: string): Promise<AgentSessionRef | null> {
+    const dir = `--${cwd.replace(/^[/\\]+/, "").replace(/[/\\:]+/g, "-")}--`;
+    for (const root of this.roots) {
+      let names: string[];
+      try {
+        names = await readdir(join(root, dir));
+      } catch {
+        continue;
+      }
+      const latest = names.filter((name) => name.endsWith(".jsonl")).sort().at(-1);
+      if (latest === undefined) continue;
+      const path = await containedRealpath(join(root, dir, latest), root);
+      if (path !== null) return { kind: "path", value: path };
+    }
+    return null;
+  }
+
   /** The log whose name ends in `suffix` under one sessions root, contained by that root. */
   private async findUnder(root: string, suffix: string): Promise<string | null> {
     let dirs: string[];
@@ -234,10 +251,15 @@ export class PiTranscriptSource implements TranscriptSource {
 }
 
 /** pi's journal adapter. `agent` matches the Herdr snapshot's `agent` string. */
-export function piJournal(roots: string | readonly string[]): JournalAdapter {
+export function piJournal(
+  roots: string | readonly string[],
+  agent: "pi" | "omo" = "pi",
+): JournalAdapter {
+  const source = new PiTranscriptSource(roots);
   return {
-    agent: "pi",
-    source: new PiTranscriptSource(roots),
+    agent,
+    source,
+    discoverSession: (cwd) => source.latestForCwd(cwd),
     parse: parsePiTranscript,
   };
 }

@@ -193,30 +193,37 @@ const OPENCODE: readonly AgentCommand[] = [
 // palette off the mirror (harness/omp/chrome.ts), and `commandsFor` returning [] is what would leave
 // an omp user with no palette at all, since composer.tsx renders the button only when it is non-empty.
 const OMP: readonly AgentCommand[] = [
-  // (a) Palette rows — omp--slash-palette--filtered.txt, verbatim names and summaries.
-  { command: "/new", description: "Start a new session", takesArg: false, argHint: "", common: true, dangerous: true },
+  // Senpi built-ins, synchronized from core/slash-commands.ts. Omo also loads extension/skill
+  // commands at runtime; the Collie-specific rows below cover the stable Omo additions.
+  { command: "/settings", description: "Open settings menu", takesArg: false, argHint: "", common: true, dangerous: false },
+  { command: "/model", description: "Select model (opens selector UI)", takesArg: true, argHint: "<provider/model>", common: true, dangerous: false },
+  { command: "/favorite-models", description: "Manage favorite models for Ctrl+P cycling", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/export", description: "Export session (HTML default, or specify path)", takesArg: true, argHint: "[path]", common: false, dangerous: false },
+  { command: "/import", description: "Import and resume a session from a JSONL file", takesArg: true, argHint: "<path>", common: false, dangerous: false },
+  { command: "/share", description: "Share session as a secret GitHub gist", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/copy", description: "Copy last agent message to clipboard", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/name", description: "Set session display name", takesArg: true, argHint: "<name>", common: false, dangerous: false },
+  { command: "/session", description: "Show session info and stats", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/changelog", description: "Show changelog entries", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/hotkeys", description: "Show all keyboard shortcuts", takesArg: false, argHint: "", common: false, dangerous: false },
   { command: "/branch", description: "Create a new branch from a previous message", takesArg: false, argHint: "", common: true, dangerous: false },
   { command: "/fork", description: "Create a new fork from a previous message", takesArg: false, argHint: "", common: true, dangerous: false },
+  { command: "/clone", description: "Duplicate the current session at the current position", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/tree", description: "Navigate session tree (switch branches)", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/trust", description: "Save project trust decision for future sessions", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/login", description: "Configure provider authentication", takesArg: true, argHint: "<provider>", common: false, dangerous: false },
+  { command: "/logout", description: "Remove provider authentication", takesArg: false, argHint: "", common: false, dangerous: true },
+  { command: "/new", description: "Start a new session", takesArg: false, argHint: "", common: true, dangerous: true },
+  { command: "/compact", description: "Manually compact the session context", takesArg: false, argHint: "", common: true, dangerous: false },
+  { command: "/resume", description: "Resume a different session", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/reload", description: "Reload keybindings, extensions, skills, prompts, themes, and context files", takesArg: false, argHint: "", common: false, dangerous: false },
+  { command: "/quit", description: "Quit Senpi", takesArg: false, argHint: "", common: false, dangerous: true },
+  { command: "/exit", description: "Quit Senpi (alias of /quit)", takesArg: false, argHint: "", common: false, dangerous: true },
+
+  // Stable Omo extension commands.
   { command: "/drop", description: "Delete the current session and start a new one", takesArg: false, argHint: "", common: false, dangerous: true },
-  // The capture's own summary for this one reads "Plan review: plan mode inactive" — omp prints the
-  // command's LIVE availability there, not what it does. Described by what the row says it needs.
   { command: "/plan-review", description: "Review the current plan; needs plan mode active", takesArg: false, argHint: "", common: false, dangerous: false },
-
-  // (b) omp's own tip line, printed above the composer in 8 of the 20 captures: "`/shake` rips heavy
-  //     tool results out of context to reclaim tokens without a full /compact — `/shake images` drops
-  //     just images". That one sentence names both commands and gives /shake its description and its
-  //     optional argument; /compact it names only as the fuller operation /shake avoids.
-  { command: "/compact", description: "Compact the whole conversation to reclaim context", takesArg: false, argHint: "", common: true, dangerous: false },
   { command: "/shake", description: "Drop heavy tool results from context without a full compact", takesArg: true, argHint: "[images]", common: true, dangerous: false },
-
-  // (c) The capture log — each of these was typed to produce a fixture, so its screen is in the
-  //     corpus and the command demonstrably exists. All three open a MODAL, and this adapter
-  //     up-levels none of omp's modals: from a phone they land the user on the raw mirror, to be
-  //     driven with the special-keys pad and dismissed with Escape, and `composerReady` refuses
-  //     free-text sends until it is. Useful, but not what to surface first — hence `common: false`.
-  { command: "/model", description: "Open the provider/model picker", takesArg: false, argHint: "", common: false, dangerous: false },
-  { command: "/settings", description: "Open the settings panel", takesArg: false, argHint: "", common: false, dangerous: false },
-  { command: "/resume", description: "Open the session picker", takesArg: false, argHint: "", common: false, dangerous: false },
 ];
 
 const CATALOG: Record<string, readonly AgentCommand[]> = {
@@ -246,8 +253,8 @@ export function commandsFor(agent: string | undefined | null): readonly AgentCom
   if (key.startsWith("codex")) return CODEX;
   if (key.startsWith("opencode")) return OPENCODE;
   if (key === "pi" || key.startsWith("pi-") || key.startsWith("pi.")) return PI;
-  // `omp` is its own prefix — no other agent string in this file starts with it, and it must NOT be
-  // reached by the `pi` rules above: oh-my-pi ships a different command set from pi.dev's.
-  if (key.startsWith("omp")) return OMP;
+  // omo is the current harness name; omp is retained for older Herdr detections. Both expose the
+  // same captured palette and must NOT be reached by the pi rules above.
+  if (key.startsWith("omo") || key.startsWith("omp")) return OMP;
   return [];
 }

@@ -15,6 +15,7 @@ import {
   normalizeTabLabel,
   paneReadResponse,
   replyPane,
+  resolvePaneSession,
   resolveStaticPath,
   sendReplySteps,
   startupWarnings,
@@ -24,6 +25,8 @@ import {
 import { AuditLog } from "./audit.ts";
 import type { Config } from "./config.ts";
 import type { HerdrClient, PaneRead } from "./herdr-client.ts";
+import type { JournalAdapter } from "./journal/types.ts";
+import type { AgentView } from "./types.ts";
 
 // checkAccess is the API security gate (same-origin/CSRF + optional Tailscale identity). A
 // regression here silently opens remote shell access, so it gets the most direct coverage.
@@ -50,6 +53,7 @@ function cfg(overrides: Partial<Config> = {}): Config {
       claude: ["/tmp/claude-projects"],
       codex: ["/nope/codex"],
       pi: ["/nope/pi"],
+      omo: ["/nope/omo"],
       opencode: ["/nope/opencode"],
     },
     submitKeys: ["Enter"],
@@ -617,6 +621,67 @@ describe("historyParams — transcript paging params", () => {
 
   test("an empty cursor is omitted, not passed as an empty match", () => {
     expect(params("?before=")).toEqual({ limit: 200 });
+  });
+});
+
+describe("resolvePaneSession — fallback isolation", () => {
+  const pane = (paneId: string): AgentView => ({
+    paneId,
+    workspaceId: "w1",
+    workspaceLabel: "repo",
+    workspaceNumber: 1,
+    tabId: "t1",
+    agent: "omo",
+    status: "idle",
+    cwd: "/repo",
+    focused: false,
+  });
+
+  const adapter: JournalAdapter = {
+    agent: "omo",
+    source: {
+      resolve: async () => null,
+      stat: async () => null,
+      load: async () => ({ text: "", complete: true, size: 0, mtimeMs: 0 }),
+    },
+    discoverSession: async () => ({ kind: "path", value: "/sessions/latest.jsonl" }),
+    parse: () => [],
+  };
+
+  test("does not assign one cwd fallback to multiple OMO panes", async () => {
+    const first = pane("p1");
+    const second = pane("p2");
+
+    expect(await resolvePaneSession(first, [first, second], adapter)).toBeNull();
+  });
+
+  test("keeps the cwd fallback for a single OMO pane", async () => {
+    const only = pane("p1");
+
+    expect(await resolvePaneSession(only, [only], adapter)).toEqual({
+      kind: "path",
+      value: "/sessions/latest.jsonl",
+    });
+  });
+
+  test("prefers a pane's reported session even when another OMO pane shares its cwd", async () => {
+    const first = {
+      ...pane("p1"),
+      agentSession: { kind: "path", value: "/sessions/first.jsonl" } as const,
+    };
+    const second = pane("p2");
+
+    expect(await resolvePaneSession(first, [first, second], adapter)).toEqual(first.agentSession);
+  });
+
+  test("does not give an unreported pane its sibling's newer reported session", async () => {
+    const first = {
+      ...pane("p1"),
+      agentSession: { kind: "path", value: "/sessions/first.jsonl" } as const,
+    };
+    const second = pane("p2");
+
+    expect(await resolvePaneSession(second, [first, second], adapter)).toBeNull();
   });
 });
 

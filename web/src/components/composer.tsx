@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import type { ChangeEvent, ClipboardEvent, ReactNode } from "react";
+import type { ChangeEvent, ClipboardEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { useRevalidator } from "react-router";
 import { Check, ImagePlus, Keyboard, Loader2, Send, Settings2, Slash, Terminal, X, Zap } from "lucide-react";
 
@@ -12,11 +12,12 @@ import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { NavTray } from "@/components/nav-tray";
 import { CommandPalette } from "@/components/command-palette";
+import { InlineCommandMenu } from "@/components/inline-command-menu";
 import { QuickActionsContent } from "@/components/quick-actions";
 import { DisplayPrefsContent } from "@/components/display-prefs";
 import { SectionLabel } from "@/components/ui/section-label";
 import * as api from "@/lib/api";
-import { commandsFor } from "@/lib/agent-commands";
+import { commandsFor, type AgentCommand } from "@/lib/agent-commands";
 import { isDestructiveInput } from "@/lib/destructive";
 import { loadDraft, saveDraft } from "@/lib/drafts";
 import { useHoldReload } from "@/lib/reload-guard";
@@ -183,6 +184,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     setInput(restored);
   }, [session, paneId]);
   const [sending, setSending] = useState(false);
+  const [commandMenuDismissed, setCommandMenuDismissed] = useState(false);
+  const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
   // Pending-send preview: set on a successful send, cleared when the mirror catches up (next text
   // update) or after a 6s safety timeout. Shows "You sent: …" so the user knows the message landed.
@@ -381,6 +384,58 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   }
 
   const commands = commandsFor(agent);
+  const commandQuery = !direct.active && /^\/[^\s]*$/.test(input) ? input.toLowerCase() : null;
+  const commandMatches =
+    commandQuery === null
+      ? []
+      : commands.filter((command) => command.command.toLowerCase().startsWith(commandQuery));
+  const commandMenuOpen =
+    commandQuery !== null && !commandMenuDismissed && !locked && commands.length > 0;
+
+  function updateComposerInput(value: string) {
+    updateInput(value);
+    setCommandMenuDismissed(false);
+    setSelectedCommandIndex(0);
+  }
+
+  function chooseInlineCommand(command: AgentCommand) {
+    setCommandMenuDismissed(true);
+    setSelectedCommandIndex(0);
+    if (command.takesArg || command.dangerous) {
+      updateInput(`${command.command} `);
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return;
+    }
+    void send(command.command, true);
+  }
+
+  function handleComposerKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>) {
+    if (commandMenuOpen) {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        setSelectedCommandIndex((current) => {
+          if (commandMatches.length === 0) return 0;
+          return (current + direction + commandMatches.length) % commandMatches.length;
+        });
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setCommandMenuDismissed(true);
+        return;
+      }
+      if (event.key === "Enter" && !event.shiftKey && commandMatches.length > 0) {
+        event.preventDefault();
+        chooseInlineCommand(commandMatches[selectedCommandIndex] ?? commandMatches[0]!);
+        return;
+      }
+    }
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      onSendClick();
+    }
+  }
 
   function focusInputImmediately() {
     const el = inputRef.current;
@@ -724,17 +779,22 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             which is what squeezed the toggles; absolute costs nothing and the row gets the width
             back. `pt-3` on the row reserves the space it occupies so it can't collide with whatever
             sits above. */}
-        <div className="relative mb-2 flex items-center gap-2 pt-3">
+        <div className="relative mb-2 pt-3">
           <SectionLabel className="absolute left-0 top-0 text-[10px] leading-none opacity-80">
             Controls
           </SectionLabel>
+          <div
+            role="group"
+            aria-label="Controls"
+            className="flex snap-x items-center gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
           {/* Keys and Quick are TOGGLES for the in-flow dock above (not overlays): tap to open, tap
               again to close. aria-expanded ties each to the dock; secondary variant marks it pressed
               while open. Both share the single-valued `drawer`, so opening one closes the other. */}
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 flex-1 gap-1.5", drawer === "keys" ? CONTROL_ON : CONTROL_OFF)}
+            className={cn("h-8 shrink-0 snap-start gap-1.5 px-4", drawer === "keys" ? CONTROL_ON : CONTROL_OFF)}
             disabled={locked}
             aria-expanded={drawer === "keys"}
             onClick={() => requestDrawer(drawer === "keys" ? null : "keys")}
@@ -756,7 +816,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 flex-1 gap-1.5", direct.active ? CONTROL_ON : CONTROL_OFF)}
+            className={cn("h-8 shrink-0 snap-start gap-1.5 px-4", direct.active ? CONTROL_ON : CONTROL_OFF)}
             disabled={locked || sending}
             aria-pressed={direct.active}
             aria-label="Type into terminal"
@@ -778,7 +838,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 flex-1 gap-1.5", drawer === "quick" ? CONTROL_ON : CONTROL_OFF)}
+            className={cn("h-8 shrink-0 snap-start gap-1.5 px-4", drawer === "quick" ? CONTROL_ON : CONTROL_OFF)}
             disabled={locked}
             aria-expanded={drawer === "quick"}
             onClick={() => requestDrawer(drawer === "quick" ? null : "quick")}
@@ -790,7 +850,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 flex-1 gap-1.5 text-muted-foreground"
+              className="h-8 shrink-0 snap-start gap-1.5 px-4 text-muted-foreground"
               disabled={locked}
               onClick={() => requestDrawer("cmd")}
             >
@@ -803,13 +863,14 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           <Button
             variant="ghost"
             size="icon"
-            className={cn("size-8 shrink-0", drawer === "display" ? CONTROL_ON : CONTROL_OFF)}
+            className={cn("size-8 shrink-0 snap-start", drawer === "display" ? CONTROL_ON : CONTROL_OFF)}
             aria-label="Display settings"
             aria-expanded={drawer === "display"}
             onClick={() => requestDrawer(drawer === "display" ? null : "display")}
           >
             <Settings2 className="size-4" />
           </Button>
+          </div>
         </div>
         {/* Terminal-draft preview: a read-only view of a stranded "❯"-line draft (a message queued
             then recalled on the HOST, which stripChrome hides from the mirror). It appears only after
@@ -840,21 +901,23 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
               padding the text was not using anyway. `pr-11` on the textarea reserves that strip so a
               long line can never run underneath the icon. */}
           <div className="relative min-w-0 flex-1">
+          {commandMenuOpen && (
+            <InlineCommandMenu
+              commands={commandMatches}
+              selectedIndex={selectedCommandIndex}
+              onSelect={chooseInlineCommand}
+            />
+          )}
           <ChatInput
             ref={inputRef}
             value={direct.active ? direct.value : input}
-            onChange={direct.active ? direct.onChange : (e) => updateInput(e.target.value)}
+            onChange={direct.active ? direct.onChange : (e) => updateComposerInput(e.target.value)}
             onCompositionStart={direct.active ? direct.onCompositionStart : undefined}
             onCompositionEnd={direct.active ? direct.onCompositionEnd : undefined}
             onKeyDown={
               direct.active
                 ? direct.onKeyDown
-                : (e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      onSendClick();
-                    }
-                  }
+                : handleComposerKeyDown
             }
             onPaste={onPasteImage}
             placeholder={

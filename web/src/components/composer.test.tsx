@@ -9,6 +9,7 @@ import { clearStatus, useStatus } from "@/lib/status";
 import { isReloadHeld, __resetReloadGuard } from "@/lib/reload-guard";
 import { server } from "@/test/setup";
 import { recordReply } from "@/test/handlers";
+import { commandsFor } from "@/lib/agent-commands";
 import { Composer } from "./composer";
 
 // A guarded send is TWO reply calls: type (submit:false), then — once the text is verified on the
@@ -94,6 +95,107 @@ function renderComposerWithStatus(overrides: Partial<ComponentProps<typeof Compo
   render(<RouterProvider router={router} />);
   return props;
 }
+
+describe("Composer — inline slash commands", () => {
+  it("shows the complete Omo command catalog for a bare slash", async () => {
+    const user = userEvent.setup();
+    renderComposer({ agent: "omo" });
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await user.type(box, "/");
+
+    expect(screen.getAllByRole("option")).toHaveLength(commandsFor("omo").length);
+    expect(screen.getByRole("option", { name: "/favorite-models" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "/plan-review" })).toBeInTheDocument();
+  });
+
+  it("opens suggestions while typing and previews the matching command", async () => {
+    const user = userEvent.setup();
+    renderComposer();
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await user.type(box, "/doc");
+
+    expect(screen.getByRole("listbox", { name: /agent command suggestions/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /\/doctor/i })).toBeInTheDocument();
+    expect(screen.getByText("Diagnose and verify your Claude Code installation")).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /\/status/i })).not.toBeInTheDocument();
+  });
+
+  it("inserts an argument-taking command and keeps focus in the composer", async () => {
+    const user = userEvent.setup();
+    renderComposer();
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await user.type(box, "/comp");
+    await user.click(screen.getByRole("option", { name: /\/compact/i }));
+
+    expect(box).toHaveValue("/compact ");
+    expect(box).toHaveFocus();
+    expect(screen.queryByRole("listbox", { name: /agent command suggestions/i })).not.toBeInTheDocument();
+  });
+
+  it("runs a safe no-argument command with the keyboard", async () => {
+    const user = userEvent.setup();
+    const sent: string[] = [];
+    server.use(replyHandler((text) => sent.push(text)));
+    renderComposer();
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await user.type(box, "/status");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(sent).toEqual(["/status"]);
+      expect(box).toHaveValue("");
+    });
+  });
+
+  it("inserts a dangerous command for review instead of running it", async () => {
+    const user = userEvent.setup();
+    const sent: string[] = [];
+    server.use(replyHandler((text) => sent.push(text)));
+    renderComposer();
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await user.type(box, "/clear");
+    await user.keyboard("{Enter}");
+
+    expect(sent).toEqual([]);
+    expect(box).toHaveValue("/clear ");
+    expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
+  });
+
+  it("supports arrow selection and Escape dismissal", async () => {
+    const user = userEvent.setup();
+    renderComposer();
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await user.type(box, "/");
+    const listbox = screen.getByRole("listbox", { name: /agent command suggestions/i });
+    expect(listbox).toBeInTheDocument();
+
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute("aria-selected", "true");
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("listbox", { name: /agent command suggestions/i })).not.toBeInTheDocument();
+
+    await user.type(box, "s");
+    expect(screen.getByRole("listbox", { name: /agent command suggestions/i })).toBeInTheDocument();
+  });
+});
+
+describe("Composer — controls strip", () => {
+  it("scrolls horizontally while hiding its scrollbar", () => {
+    renderComposer({ agent: "omo" });
+    expect(screen.getByRole("group", { name: "Controls" })).toHaveClass(
+      "overflow-x-auto",
+      "[scrollbar-width:none]",
+      "[&::-webkit-scrollbar]:hidden",
+    );
+  });
+});
 
 describe("Composer — send", () => {
   // #34: a dialog owns the TUI's keyboard. Sending free text at one loses the message AND makes the

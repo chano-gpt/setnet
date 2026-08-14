@@ -79,4 +79,9 @@ describe("CommandPalette", () => {
     expect(screen.queryByText("/status")).toBeNull();
     expect(screen.queryByText("/compact")).toBeNull();
   });
+
+  it("uses the omp catalog for the current omo harness name", () => {
+    setup({ agent: "omo" });
+    expect(screen.getByText("/shake")).toBeInTheDocument();
+  });
 });

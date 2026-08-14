@@ -108,5 +108,9 @@ export interface TranscriptSource {
 export interface JournalAdapter {
   readonly agent: string;
   readonly source: TranscriptSource;
+  /** Pane-specific fallback for harnesses whose integration has not reported a session reference. */
+  discoverPaneSession?(cwd: string, processStartedAtMs: number): Promise<AgentSessionRef | null>;
+  /** Optional fallback for integrations that report a cwd but not a session reference. */
+  discoverSession?(cwd: string): Promise<AgentSessionRef | null>;
   parse(text: string): TranscriptEntry[];
 }

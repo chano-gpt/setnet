@@ -29,6 +29,33 @@ import {
   rstrip,
 } from "./markers";
 
+const RULE_PROMPT = /^❯(?:\s+(.*?))?\s*$/;
+const RULE_CONT = /^\s{2,}(\S.*?)\s*$/;
+const RULE_ROW = /^─{8,}$/;
+const OMO_NATIVE_STATUS = /\(.*OmO Native.*\)/i;
+
+function locateRulePrompt(lines: StyledLine[]): { row: number; draft: string } | null {
+  const texts = lines.map((line) => rstrip(lineText(line)));
+  for (let row = texts.length - 2; row >= Math.max(1, texts.length - 100); row--) {
+    const match = RULE_PROMPT.exec(texts[row]!);
+    if (match === null) continue;
+    if (!RULE_ROW.test(texts[row - 1]!)) continue;
+
+    const parts = [match[1]?.trim() ?? ""];
+    let bottom = row + 1;
+    while (bottom < texts.length && !RULE_ROW.test(texts[bottom]!)) {
+      const continuation = RULE_CONT.exec(texts[bottom]!);
+      if (continuation === null) break;
+      parts.push(continuation[1]!.trim());
+      bottom++;
+    }
+    if (!RULE_ROW.test(texts[bottom]!)) continue;
+    if (!texts.slice(bottom + 1, bottom + 7).some((text) => OMO_NATIVE_STATUS.test(text))) continue;
+    return { row, draft: parts.filter(Boolean).join(" ") };
+  }
+  return null;
+}
+
 // Rows omp may paint BELOW the composer box: the slash palette (`/` autocomplete) and its kin. Bounded
 // so a torn or foreign buffer can't reach an arbitrarily distant `╰─ … ─╯` and claim everything under
 // it as chrome.
@@ -333,7 +360,10 @@ export function extractStatusLines(lines: StyledLine[]): StyledLine[] {
  */
 export function extractInputDraft(lines: StyledLine[]): string | null {
   const box = locateComposer(lines);
-  if (box === null) return null;
+  if (box === null) {
+    const current = locateRulePrompt(lines);
+    return current?.draft ? current.draft : null;
+  }
   const texts = lines.map((l) => rstrip(lineText(l)));
 
   const parts: string[] = [];
@@ -365,7 +395,7 @@ export function extractInputDraft(lines: StyledLine[]): string | null {
  * last 64 rows", which a dialog stacked straight onto the composer satisfies.
  */
 export function hasComposer(lines: StyledLine[]): boolean {
-  return locateComposer(lines) !== null;
+  return locateComposer(lines) !== null || locateRulePrompt(lines) !== null;
 }
 
 /** `DEFAULT_PROMPT_TAIL_LINES` in bridge/prompt-binding.ts — mirrored, the way web mirrors wire types. */
@@ -389,7 +419,10 @@ const BRIDGE_PROMPT_TAIL_LINES = 6;
  */
 export function composerPrompt(lines: StyledLine[]): string | null {
   const box = locateComposer(lines);
-  if (box === null) return null;
+  if (box === null) {
+    const current = locateRulePrompt(lines);
+    return current === null ? null : "❯";
+  }
 
   // Decline the binding when omp has painted too much below the box for the bridge to accept it.
   // `verifyExpectedPrompt` (bridge/prompt-binding.ts) matches the region against the fresh read's

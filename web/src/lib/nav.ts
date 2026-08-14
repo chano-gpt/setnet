@@ -3,6 +3,8 @@
 // navigation stays scoped to the session you're viewing (see lib/session.ts) — omitted on primary.
 import { sessionSearch } from "./session";
 
+export type HomeSection = "herd" | "spaces";
+
 export function panePath(paneId: string, session?: string): string {
   return `/pane/${encodeURIComponent(paneId)}${sessionSearch(session)}`;
 }
@@ -24,6 +26,17 @@ export function spacePath(spaceId: string, session?: string): string {
 /** The dashboard path, carrying the current session so "go home" doesn't drop you back to primary. */
 export function homePath(session?: string): string {
   return `/${sessionSearch(session)}`;
+}
+
+export function homeSectionPath(section: HomeSection, session?: string): string {
+  const params = new URLSearchParams(sessionSearch(session));
+  if (section === "spaces") params.set("view", section);
+  const search = params.toString();
+  return `/${search ? `?${search}` : ""}`;
+}
+
+export function homeSectionFromSearch(search: string): HomeSection {
+  return new URLSearchParams(search).get("view") === "spaces" ? "spaces" : "herd";
 }
 
 /** The settings route, carrying the current session like the other path helpers. */

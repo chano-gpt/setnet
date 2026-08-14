@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useNavigate, useRevalidator } from "react-router";
-import { ArrowUpToLine, Loader2, ScrollText, Search, TerminalSquare } from "lucide-react";
+import {
+  ArrowUpToLine,
+  Loader2,
+  MessageSquareText,
+  ScrollText,
+  Search,
+  TerminalSquare,
+} from "lucide-react";
 import { useSwipeUp } from "@/hooks/use-swipe";
 import { useSpaceActions } from "@/hooks/use-spaces";
 import { useDashPrefs, openForCount } from "@/hooks/use-dash-prefs";
@@ -20,8 +27,10 @@ import { splitLines } from "@/lib/blocks";
 import { adapterFor } from "@/lib/harness";
 import { FindBar } from "@/components/find-bar";
 import { Composer, type ComposerHandle } from "@/components/composer";
+import { LiveConversation } from "@/components/live-conversation";
 import { ThreadSidebar } from "@/components/agent-sidebar";
 import { AgentIcon } from "@/components/agent-icon";
+import { AgentLauncher } from "@/components/agent-launcher";
 import { TabStrip } from "@/components/tab-strip";
 import { PaneStrip } from "@/components/pane-strip";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
@@ -72,6 +81,8 @@ interface AgentChatProps {
   bridge?: BridgeStatus | undefined;
   error?: boolean;
   stalled?: boolean;
+  /** A just-created tab opens with an agent choice before exposing its bare shell. */
+  initialAgentPicker?: boolean;
   onBack: () => void;
   onSelect: (paneId: string) => void;
 }
@@ -104,6 +115,7 @@ export function AgentChat({
   bridge = "connected",
   error = false,
   stalled = false,
+  initialAgentPicker = false,
   onBack,
   onSelect,
 }: AgentChatProps) {
@@ -127,6 +139,9 @@ export function AgentChat({
   // Drawers/sheets are mutually exclusive — at most one open. A single value makes that invariant
   // unrepresentable to violate.
   const [drawer, setDrawer] = useState<Drawer>(null);
+  const [surface, setSurface] = useState<"conversation" | "terminal">(
+    agent?.agent === "omo" || agent?.agent === "omp" ? "conversation" : "terminal",
+  );
   const closeDrawer = () => setDrawer(null);
   const listRef = useRef<ChatMessageListHandle>(null);
   const composerRef = useRef<ComposerHandle>(null);
@@ -606,6 +621,28 @@ export function AgentChat({
                   <ScrollText className="size-4" />
                 </button>
               )}
+              {!isShell && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSurface((current) =>
+                      current === "conversation" ? "terminal" : "conversation",
+                    )
+                  }
+                  aria-label={
+                    surface === "conversation"
+                      ? "Open terminal view"
+                      : "Open conversation view"
+                  }
+                  className="-mr-1 flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted/60"
+                >
+                  {surface === "conversation" ? (
+                    <TerminalSquare className="size-4" />
+                  ) : (
+                    <MessageSquareText className="size-4" />
+                  )}
+                </button>
+              )}
               {isShell ? (
                 <ShellBadge stale={connecting} />
               ) : (
@@ -712,7 +749,21 @@ export function AgentChat({
             straight into terminal output — the chrome and the mirror read as one surface. Drawing it
             here rather than as a border-b on PaneStrip covers the case where that strip is absent
             (a tab holding a single pane), which is the common one. */}
-        <div className="min-h-0 min-w-0 flex-1 border-t border-border/40" onClick={focusFromMirror}>
+        <div className="relative min-h-0 min-w-0 flex-1 border-t border-border/40">
+          {isShell && initialAgentPicker ? (
+            <AgentLauncher
+              paneId={paneId}
+              session={session}
+            />
+          ) : surface === "conversation" && !isShell ? (
+            <LiveConversation
+              paneId={paneId}
+              session={session}
+              agent={agent?.agent}
+              onTerminal={() => setSurface("terminal")}
+            />
+          ) : (
+          <div className="h-full" onClick={focusFromMirror}>
           <ChatMessageList
             ref={listRef}
             dep={display}
@@ -780,6 +831,8 @@ export function AgentChat({
               <div className="py-16 text-center text-sm text-muted-foreground">(no recent output)</div>
             )}
           </ChatMessageList>
+          </div>
+          )}
         </div>
 
         {/* Bottom region: the pane-switch handle + composer. The status line USED to float here as an

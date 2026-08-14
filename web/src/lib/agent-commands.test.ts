@@ -7,6 +7,23 @@ describe("commandsFor", () => {
     expect(cmds.some((c) => c.command === "/compact")).toBe(true);
   });
 
+  it("exposes the complete Senpi catalog for omo", () => {
+    const commands = commandsFor("omo");
+    expect(commands.length).toBeGreaterThanOrEqual(27);
+    expect(commands.map((command) => command.command)).toEqual(
+      expect.arrayContaining([
+        "/settings",
+        "/favorite-models",
+        "/export",
+        "/hotkeys",
+        "/login",
+        "/reload",
+        "/shake",
+        "/plan-review",
+      ]),
+    );
+  });
+
   it("returns the Codex catalog for 'codex'", () => {
     const cmds = commandsFor("codex");
     expect(cmds.length).toBeGreaterThan(0);
@@ -45,7 +62,7 @@ describe("commandsFor", () => {
   // tolerance has to keep them apart in both directions or an omp user gets pi's palette.
   it("does not route omp to the Pi catalog, or pi to omp's", () => {
     expect(commandsFor("omp")).not.toBe(commandsFor("pi"));
-    expect(commandsFor("omp").some((c) => c.command === "/tree")).toBe(false); // Pi-specific
+    expect(commandsFor("omp").some((c) => c.command === "/tree")).toBe(true); // Senpi built-in
     expect(commandsFor("pi").some((c) => c.command === "/plan-review")).toBe(false); // omp-specific
   });
 

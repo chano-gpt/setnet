@@ -1,4 +1,4 @@
-import { homePath, panePath } from "./nav";
+import { homePath, homeSectionFromSearch, homeSectionPath, panePath } from "./nav";
 
 describe("panePath", () => {
   it("URL-encodes the colon in a pane id", () => {
@@ -35,5 +35,28 @@ describe("homePath", () => {
 
   it("carries a named session as ?s=", () => {
     expect(homePath("collie-demo")).toBe("/?s=collie-demo");
+  });
+});
+
+describe("homeSectionPath", () => {
+  it("keeps the herd at the canonical home URL", () => {
+    expect(homeSectionPath("herd")).toBe("/");
+    expect(homeSectionPath("herd", "collie-demo")).toBe("/?s=collie-demo");
+  });
+
+  it("preserves the active session while opening spaces", () => {
+    expect(homeSectionPath("spaces")).toBe("/?view=spaces");
+    expect(homeSectionPath("spaces", "collie-demo")).toBe("/?s=collie-demo&view=spaces");
+  });
+});
+
+describe("homeSectionFromSearch", () => {
+  it("defaults unknown and absent values to the herd", () => {
+    expect(homeSectionFromSearch("")).toBe("herd");
+    expect(homeSectionFromSearch("?view=recent")).toBe("herd");
+  });
+
+  it("restores the spaces section from the URL", () => {
+    expect(homeSectionFromSearch("?s=collie-demo&view=spaces")).toBe("spaces");
   });
 });

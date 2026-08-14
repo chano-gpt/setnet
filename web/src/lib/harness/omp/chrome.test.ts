@@ -29,6 +29,56 @@ function lines(text: string): StyledLine[] {
   return splitLines(parseAnsi(text));
 }
 
+describe("current Omo composer", () => {
+  const idle = lines(
+    [
+      "Todo",
+      "────────────────────────────────────────",
+      "❯ ",
+      "────────────────────────────────────────",
+      "~/dev · main · gpt-5.6-sol:medium",
+      "(OmO Native) mem:dev",
+    ].join("\n"),
+  );
+
+  it("recognises the current rule-delimited prompt", () => {
+    expect(hasComposer(idle)).toBe(true);
+    expect(extractInputDraft(idle)).toBeNull();
+    expect(composerPrompt(idle)).toBe("❯");
+  });
+
+  it("reads text typed into the current prompt", () => {
+    const typed = lines(
+      [
+        "────────────────────────────────────────",
+        "❯ conversation reply",
+        "────────────────────────────────────────",
+        "~/dev · main",
+        "(OmO Native) mem:dev",
+      ].join("\n"),
+    );
+    expect(extractInputDraft(typed)).toBe("conversation reply");
+  });
+
+  it("reads a long reply wrapped across the current rule-delimited prompt", () => {
+    const typed = lines(
+      [
+        "────────────────────────────────────────",
+        "❯ conversation | terminal 토글도 지금 위치는 너무 내용을",
+        "  블록하는 것 같아. 새 탭에서 에이전트를 선택하고 싶어.",
+        "────────────────────────────────────────",
+        "~/dev · main",
+        "(OmO Native) mem:dev",
+      ].join("\n"),
+    );
+
+    expect(hasComposer(typed)).toBe(true);
+    expect(extractInputDraft(typed)).toBe(
+      "conversation | terminal 토글도 지금 위치는 너무 내용을 블록하는 것 같아. 새 탭에서 에이전트를 선택하고 싶어.",
+    );
+  });
+});
+
 // Synthesise omp's composer box at a caller-chosen width. Nothing in the scanner measures a row any
 // more, so the padding is here only to keep these buffers shaped like the captures they stand in for.
 function boxRows(

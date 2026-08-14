@@ -52,7 +52,9 @@ export function useSpaceActions() {
       };
       setStatus(`New ${what} ready — launch your agent`, "success");
       revalidatorRef.current.revalidate();
-      navigate(panePath(p.paneId, sessionRef.current), { state: { freshPane: fresh } });
+      navigate(panePath(p.paneId, sessionRef.current), {
+        state: { freshPane: fresh, selectAgent: what === "tab" },
+      });
     },
     [navigate],
   );

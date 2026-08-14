@@ -83,6 +83,81 @@ describe("AgentChat — reply flow", () => {
   });
 });
 
+describe("AgentChat — pane surface", () => {
+  it("keeps the Conversation/Terminal switch in the header instead of over the content", async () => {
+    const user = userEvent.setup();
+    const agent = { ...fixtureAgents[0]!, agent: "omo", hasSession: true };
+    renderChat({ agent, agents: [agent] });
+
+    const openTerminal = screen.getByRole("button", { name: "Open terminal view" });
+    expect(openTerminal.closest("header")).not.toBeNull();
+
+    await user.click(openTerminal);
+    expect(screen.getByRole("button", { name: "Open conversation view" })).toBeInTheDocument();
+    expect(screen.getByText("recent pane output")).toBeInTheDocument();
+  });
+});
+
+describe("AgentChat — fresh tab agent picker", () => {
+  it("launches Omo with full-access defaults before showing the shell", async () => {
+    const user = userEvent.setup();
+    const shell = { ...fixtureAgents[0]!, kind: "shell" as const, agent: "shell" };
+    let reply: { text?: string; submit?: boolean } | null = null;
+    server.use(
+      http.post(/\/api\/pane\/[^/]+\/reply$/, async ({ request }) => {
+        reply = (await request.json()) as { text?: string; submit?: boolean };
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    renderChat({
+      agent: shell,
+      agents: [],
+      shellPanes: [shell],
+      initialAgentPicker: true,
+    });
+
+    expect(screen.getByRole("heading", { name: "Choose an agent" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Omo/ }));
+
+    await waitFor(() =>
+      expect(reply).toEqual({
+        text: "omo --approve --permission-preset full-access",
+        submit: true,
+      }),
+    );
+    expect(screen.queryByRole("heading", { name: "Choose an agent" })).not.toBeInTheDocument();
+  });
+
+  it("launches Antigravity with permission prompts disabled", async () => {
+    const user = userEvent.setup();
+    const shell = { ...fixtureAgents[0]!, kind: "shell" as const, agent: "shell" };
+    let reply: { text?: string; submit?: boolean } | null = null;
+    server.use(
+      http.post(/\/api\/pane\/[^/]+\/reply$/, async ({ request }) => {
+        reply = (await request.json()) as { text?: string; submit?: boolean };
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    renderChat({
+      agent: shell,
+      agents: [],
+      shellPanes: [shell],
+      initialAgentPicker: true,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Launch Antigravity/ }));
+
+    await waitFor(() =>
+      expect(reply).toEqual({
+        text: "agy --dangerously-skip-permissions",
+        submit: true,
+      }),
+    );
+  });
+});
+
 // Echoes the space passed via navigation state, so a test can assert the header lands on the space
 // overview ("/") for the right workspace.
 function SpaceOverviewSentinel() {

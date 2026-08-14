@@ -12,6 +12,7 @@ describe("hasBlockGrammar", () => {
   // and does not claim to. What this predicate actually answers is "does an adapter exist".
   it("is true for every registered adapter", () => {
     expect(hasBlockGrammar("claude")).toBe(true);
+    expect(hasBlockGrammar("omo")).toBe(true);
     expect(hasBlockGrammar("omp")).toBe(true);
   });
 

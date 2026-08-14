@@ -24,7 +24,10 @@ export function DetailRoute() {
   const location = useLocation();
   const stalled = useLoadingStalled();
 
-  const fresh = (location.state as { freshPane?: AgentView } | null)?.freshPane;
+  const navigationState = location.state as
+    | { freshPane?: AgentView; selectAgent?: boolean }
+    | null;
+  const fresh = navigationState?.freshPane;
   const inSnapshot =
     root.agents.some((a) => a.paneId === paneId) ||
     root.shellPanes.some((p) => p.paneId === paneId);
@@ -75,6 +78,7 @@ export function DetailRoute() {
       bridge={root.bridge}
       error={root.error}
       stalled={stalled}
+      initialAgentPicker={navigationState?.selectAgent === true}
       onBack={() => navigate(homePath(session))}
       onSelect={(id) => navigate(panePath(id, session))}
     />
