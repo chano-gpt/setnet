@@ -50,7 +50,7 @@ We own its lifecycle end to end — `collie-ctl.sh` publishes it, records the ma
 record.
 
 **Every other tunnel is `COLLIE_SKIP_SERVE=1` plus [README Variant
-E](../README.md#variant-e--any-other-mesh-or-tunnel-netbird-zerotier-cloudflare-tunnel).** The
+E](../OPERATIONS.md#variant-e--any-other-mesh-or-tunnel-netbird-zerotier-cloudflare-tunnel).** The
 operator owns the ingress; Collie publishes nothing, supervises nothing, and tears down nothing.
 
 The criterion is not popularity or quality. It is: **we manage only what we run and can test.**

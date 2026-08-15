@@ -7,7 +7,7 @@
 #   systemctl --user daemon-reload && systemctl --user enable --now collie
 
 [Unit]
-Description=Collie
+Description=setnet
 After=default.target
 # Never give up restarting — a phone-only operator can't run 'systemctl reset-failed'.
 StartLimitIntervalSec=0

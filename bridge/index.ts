@@ -74,8 +74,11 @@ const currentVersion = (
 const updateStore = new UpdateStateStore(cfg);
 await updateStore.load();
 
-// The repo the release check + release links point at. Defaults to Collie's own; overridable for a
-// fork (or a synthetic test target) via COLLIE_UPDATE_REPO.
+// The repo the release check + release links point at. Still upstream Collie's, NOT setnet's: the
+// check reads the repo's git tags, and chano-gpt/setnet has no tags pushed yet, so pointing it at
+// setnet would make latestReleaseTag() return null and silence the update banner entirely. Flip this
+// to "chano-gpt/setnet" in the same change that pushes setnet's first vX.Y.Z tag, not before.
+// Overridable for a fork (or a synthetic test target) via COLLIE_UPDATE_REPO.
 const updateRepo = process.env.COLLIE_UPDATE_REPO?.trim() || "AltanS/collie";
 const updateMonitor = new UpdateMonitor({
   repo: updateRepo,
@@ -93,7 +96,7 @@ const updateMonitor = new UpdateMonitor({
       tag: "collie:update",
       // No command in the body — the tap opens Settings (target below), and the update banner / linked
       // release page carry the location-independent Herdr actions. Keeps this off the cwd-dependent path.
-      title: "Collie update available",
+      title: "setnet update available",
       body: `Version ${latest} is available`,
       target: "settings",
     }),

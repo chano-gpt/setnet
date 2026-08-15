@@ -2,7 +2,7 @@
 
 The Collie **bridge** has run on Windows since 0.15.0: Herdr exposes its control socket there as a
 *named pipe*, and Collie dials it through `node:net` — see [`bridge/dial.ts`](../../bridge/dial.ts)
-and [Windows](../../README.md#windows-experimental) in the main README. What was missing is the
+and [Windows](../../OPERATIONS.md#windows-experimental) in the main README. What was missing is the
 **lifecycle** around it: a supervisor, and the start/stop/update commands. That's what lives here —
 a PowerShell control script that mirrors [`scripts/collie-ctl.sh`](../../scripts/collie-ctl.sh)
 against **Task Scheduler** instead of `systemd --user`.
@@ -46,7 +46,7 @@ release from Windows.
 
 ## Security defaults
 
-The posture is the one in [§Security](../../README.md#%EF%B8%8F-security--read-before-you-run-it) —
+The posture is the one in [§Security](../../OPERATIONS.md#%EF%B8%8F-security--read-before-you-run-it) —
 nothing is relaxed here.
 
 - **The scheduled task runs at limited privilege.** `COLLIE_TASK_RUN_LEVEL=highest` is an explicit
@@ -57,7 +57,7 @@ nothing is relaxed here.
   touches Tailscale Serve state — not on `start`, not on `uninstall`. Create the mapping yourself,
   once, in an Administrator PowerShell (`tailscale serve --bg 8787`), or run
   `COLLIE_SKIP_SERVE=1` behind your own reverse proxy per
-  [Variant C](../../README.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale). This
+  [Variant C](../../OPERATIONS.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale). This
   is the [one managed front door](../../.adr/0001-one-managed-front-door.md) rule holding: Collie
   manages exactly one, and it isn't this one.
 

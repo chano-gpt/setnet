@@ -1,8 +1,8 @@
 id = "herdr.collie"
-name = "Collie"
-version = "0.28.0"
+name = "setnet"
+version = "0.29.0"
 min_herdr_version = "0.7.0"
-description = "Mobile web UI to monitor and reply to your agent herd, served over Tailscale"
+description = "Mobile web UI to herd multi-harness coding agents, served over Tailscale"
 platforms = ["linux", "macos"]
 
 # This plugin is a thin launcher. The actual bridge runs as a systemd --user service so it

@@ -129,9 +129,9 @@ export default defineConfig({
       filename: "sw.ts", // source; compiled to dist/sw.js (the bridge sets Service-Worker-Allowed: /)
       includeAssets: ["favicon.svg", "favicon.ico", "favicon-96x96.png", "apple-touch-icon.png"],
       manifest: {
-        name: "Collie",
-        short_name: "Collie",
-        description: "Monitor and reply to your Herdr agent herd from your phone",
+        name: "setnet",
+        short_name: "setnet",
+        description: "Herd your Herdr coding agents from your phone",
         id: "/",
         start_url: "/",
         scope: "/",

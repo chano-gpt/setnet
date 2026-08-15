@@ -1,9 +1,9 @@
 {
-  "name": "collie",
-  "version": "0.28.0",
+  "name": "setnet",
+  "version": "0.29.0",
   "private": true,
   "license": "MIT",
-  "description": "Collie — a mobile web UI to monitor and reply to your Herdr agent herd over Tailscale",
+  "description": "setnet — a mobile web UI to herd multi-harness coding agents on Herdr, over Tailscale",
   "type": "module",
   "scripts": {
     "start": "bun run bridge/index.ts",

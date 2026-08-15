@@ -1,10 +1,28 @@
 # Changelog
 
-All notable changes to Collie are recorded here. The format follows
+All notable changes to setnet are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [Semantic Versioning](https://semver.org/). The newest `## [x.y.z]` heading **must** match the
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
+
+## [0.29.0] - 2026-08-15
+
+The fork takes its own name. Nothing an operator runs changes: the plugin id stays `herdr.collie`,
+the systemd unit stays `collie`, the state dir stays `~/.local/state/collie`, and every `COLLIE_*`
+variable keeps its name. Only what you read changed.
+
+### Changed
+
+- **Renamed to setnet.** PWA name, page title, service `Description=`, banners, notifications and
+  release titles. Identity-bearing strings were deliberately frozen — plugin id, unit/launchd label,
+  config and state paths, `COLLIE_*` variables, `x-collie-*` headers, `collie:*` localStorage keys,
+  and the push topics (Apple rejects a 13-character topic, so `collie-updates` was not renamed)
+- **README is setnet's own, in Korean first**, then English, Simplified Chinese and Japanese. The
+  inherited install/security/deployment reference moved to `OPERATIONS.md` and stays English —
+  a mistranslated proxy or ACL rule is an incident, not a typo
+- **The checkout-recovery hint points at `chano-gpt/setnet`**, not upstream, so a broken setnet
+  install no longer repairs itself into Collie
 
 ## [0.28.0] - 2026-08-12
 
@@ -212,7 +230,7 @@ top. Thank you: measured rather than estimated, with the reasoning written down 
 argued about again.
 
 ### Added
-- **Light and system themes.** Collie follows your phone's appearance by default; pin Light or Dark from **Settings → Appearance**. Per device, and documented under [Dark mode / light mode](./README.md#dark-mode--light-mode) (#41, 59bcfe1, df47112)
+- **Light and system themes.** Collie follows your phone's appearance by default; pin Light or Dark from **Settings → Appearance**. Per device, and documented under [Dark mode / light mode](./OPERATIONS.md#dark-mode--light-mode) (#41, 59bcfe1, df47112)
 - ANSI slots 0–15 are now CSS variables (`--ansi-*`), so indexed terminal colour is defined in one place and reaches the mirror through both `31m` and `38;5;1` spellings (59bcfe1)
 - **The dashboard is triaged, not listed.** Needs you → Ready · unseen → Working → Recent; the first three are pinned, Recent sorts by when you last used each pane (#42, da4f44c)
 - **Ready · unseen** — agents that finished while you weren't looking. Opening one clears it, on every device (2f4d691)
