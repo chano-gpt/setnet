@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { ChevronRight, Info, TriangleAlert, User, Wrench } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Circle,
+  Info,
+  LoaderCircle,
+  TriangleAlert,
+  User,
+  Wrench,
+  X,
+} from "lucide-react";
 
 import { AgentIcon } from "@/components/agent-icon";
 import { MarkdownText } from "@/components/markdown-text";
@@ -99,9 +109,73 @@ function ToolPart({ part, query }: { part: Extract<TranscriptPart, { kind: "tool
   );
 }
 
+function PlanPart({ part, query }: { part: Extract<TranscriptPart, { kind: "plan" }>; query: string }) {
+  const tasks = part.phases.flatMap((phase) => phase.tasks);
+  const completed = tasks.filter((task) => task.status === "completed").length;
+  return (
+    <section
+      role="region"
+      aria-label="Plan"
+      className="rounded-xl border border-border/70 bg-muted/30 p-3"
+    >
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h3 className="text-xs font-semibold tracking-wide uppercase">Plan</h3>
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {completed}/{tasks.length}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {part.phases.map((phase) => (
+          <div key={phase.name}>
+            <h4 className="mb-1 text-xs font-medium text-muted-foreground">{phase.name}</h4>
+            <ul className="space-y-1.5">
+              {phase.tasks.map((task) => {
+                const Icon =
+                  task.status === "completed"
+                    ? Check
+                    : task.status === "in_progress"
+                      ? LoaderCircle
+                      : task.status === "abandoned"
+                        ? X
+                        : Circle;
+                return (
+                  <li
+                    key={`${task.content}:${task.status}`}
+                    className="flex items-start gap-2 text-sm"
+                    data-status={task.status}
+                  >
+                    <Icon
+                      className={`mt-0.5 size-3.5 shrink-0 ${
+                        task.status === "in_progress"
+                          ? "animate-spin text-status-working"
+                          : "text-muted-foreground"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={
+                        task.status === "completed" || task.status === "abandoned"
+                          ? "text-muted-foreground line-through"
+                          : undefined
+                      }
+                    >
+                      <Highlight text={task.content} query={query} />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Part({ part, query }: { part: TranscriptPart; query: string }) {
   // Tool output is COMMAND output, not prose — it stays verbatim in a monospace block (see ToolPart).
   if (part.kind === "tool") return <ToolPart part={part} query={query} />;
+  if (part.kind === "plan") return <PlanPart part={part} query={query} />;
   // Prose is Markdown, so it renders formatted. MarkdownText emits React elements only — never
   // markup — so this keeps the same XSS boundary the raw text node had.
   return (

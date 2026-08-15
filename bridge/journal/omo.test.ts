@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { chooseSessionCandidate, sessionStartedAt } from "./omo.ts";
+import { parsePiTranscript } from "./pi.ts";
 
 describe("sessionStartedAt", () => {
   test("parses Pi's filesystem-safe ISO timestamp", () => {
@@ -28,5 +29,44 @@ describe("chooseSessionCandidate", () => {
         { path: "/sessions/new.jsonl", startedAtMs: 50_000 },
       ]),
     ).toBeNull();
+  });
+});
+
+describe("OMO transcript plan progress", () => {
+  test("surfaces todo plan progress", () => {
+    const entries = parsePiTranscript(
+      JSON.stringify({
+        type: "custom",
+        id: "plan-1",
+        timestamp: "2026-08-15T00:58:24.455Z",
+        customType: "senpi.todo-state",
+        data: {
+          schema: "v2",
+          phases: [
+            {
+              name: "Build",
+              tasks: [
+                { content: "Add dashboard composer", status: "in_progress" },
+                { content: "Verify mobile layout", status: "pending" },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.parts[0]).toEqual({
+      kind: "plan",
+      phases: [
+        {
+          name: "Build",
+          tasks: [
+            { content: "Add dashboard composer", status: "in_progress" },
+            { content: "Verify mobile layout", status: "pending" },
+          ],
+        },
+      ],
+    });
   });
 });

@@ -66,6 +66,40 @@ interface PiRow {
   id?: unknown;
   timestamp?: unknown;
   message?: unknown;
+  customType?: unknown;
+  data?: unknown;
+}
+
+const PLAN_STATUSES = new Set(["pending", "in_progress", "completed", "abandoned"]);
+
+function parsePlan(data: unknown): Extract<TranscriptPart, { kind: "plan" }> | null {
+  if (data === null || typeof data !== "object" || Array.isArray(data)) return null;
+  const record = data as Record<string, unknown>;
+  if (record.schema !== "v2" || !Array.isArray(record.phases)) return null;
+  const phases: Extract<TranscriptPart, { kind: "plan" }>["phases"] = [];
+  for (const value of record.phases) {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+    const phase = value as Record<string, unknown>;
+    if (typeof phase.name !== "string" || !Array.isArray(phase.tasks)) return null;
+    const tasks: (typeof phases)[number]["tasks"] = [];
+    for (const taskValue of phase.tasks) {
+      if (taskValue === null || typeof taskValue !== "object" || Array.isArray(taskValue)) return null;
+      const task = taskValue as Record<string, unknown>;
+      if (
+        typeof task.content !== "string" ||
+        typeof task.status !== "string" ||
+        !PLAN_STATUSES.has(task.status)
+      ) {
+        return null;
+      }
+      tasks.push({
+        content: task.content,
+        status: task.status as (typeof tasks)[number]["status"],
+      });
+    }
+    phases.push({ name: phase.name, tasks });
+  }
+  return { kind: "plan", phases };
 }
 
 /**
@@ -85,6 +119,22 @@ export function parsePiTranscript(text: string): TranscriptEntry[] {
     try {
       row = JSON.parse(line) as PiRow;
     } catch {
+      continue;
+    }
+    if (row.type === "custom" && row.customType === "senpi.todo-state") {
+      const plan = parsePlan(row.data);
+      if (plan !== null) {
+        const previous = entries.findIndex((entry) =>
+          entry.parts.some((part) => part.kind === "plan"),
+        );
+        if (previous >= 0) entries.splice(previous, 1);
+        entries.push({
+          uuid: typeof row.id === "string" ? row.id : "",
+          ts: typeof row.timestamp === "string" ? row.timestamp : "",
+          role: "assistant",
+          parts: [plan],
+        });
+      }
       continue;
     }
     // `session`, `model_change`, `thinking_level_change` are bookkeeping — nothing to render.

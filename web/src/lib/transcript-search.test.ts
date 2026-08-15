@@ -31,6 +31,24 @@ describe("searchableText", () => {
     expect(searchableText(e)).toContain("git push");
   });
 
+  it("includes visible plan phase and task text", () => {
+    const e = entry({
+      parts: [
+        {
+          kind: "plan",
+          phases: [
+            {
+              name: "Build",
+              tasks: [{ content: "Add dashboard composer", status: "in_progress" }],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(searchableText(e)).toBe("Build\nAdd dashboard composer");
+  });
+
   // Matching inside a collapsed body would jump you to a turn where nothing on screen matches.
   it("excludes collapsed tool result bodies", () => {
     const e = entry({

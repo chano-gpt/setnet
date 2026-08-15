@@ -193,6 +193,16 @@ export type TranscriptPart =
   | { kind: "text"; text: string; truncated?: boolean }
   | { kind: "thinking"; text: string; truncated?: boolean }
   | {
+      kind: "plan";
+      phases: Array<{
+        name: string;
+        tasks: Array<{
+          content: string;
+          status: "pending" | "in_progress" | "completed" | "abandoned";
+        }>;
+      }>;
+    }
+  | {
       kind: "tool";
       name: string;
       summary: string;

@@ -99,20 +99,37 @@ describe("LiveConversation", () => {
     });
   });
 
-  it("stops polling after the adapter reports history unavailable", async () => {
-    mockedFetchHistory.mockResolvedValue({
-      paneId: "w1:p1",
-      available: false,
-      reason: "no-log",
-    });
+  it("recovers when the transcript appears after session creation", async () => {
+    mockedFetchHistory
+      .mockResolvedValueOnce({
+        paneId: "w1:p1",
+        available: false,
+        reason: "no-log",
+      })
+      .mockResolvedValue({
+        paneId: "w1:p1",
+        available: true,
+        entries: [
+          {
+            uuid: "u1",
+            ts: "2026-08-15T01:00:00Z",
+            role: "user",
+            parts: [{ kind: "text", text: "session arrived" }],
+          },
+        ],
+        hasMore: false,
+        total: 1,
+        fileTruncated: false,
+      });
 
     render(<LiveConversation paneId="w1:p1" agent="agy" onTerminal={vi.fn()} />);
     await act(async () => {
       await Promise.resolve();
-      await vi.advanceTimersByTimeAsync(4_500);
+      await vi.advanceTimersByTimeAsync(1_500);
     });
 
-    expect(mockedFetchHistory).toHaveBeenCalledTimes(1);
+    expect(mockedFetchHistory).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("session arrived")).toBeInTheDocument();
   });
 
   it("waits for a visible document before loading or polling", async () => {

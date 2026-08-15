@@ -22,6 +22,7 @@ import { submitPromptOption } from "@/lib/prompt-action";
 import { submitWizardKeys } from "@/lib/wizard-action";
 import { fixtureAgents } from "@/test/handlers";
 import { AgentChat } from "./agent-chat";
+import { LiveConversation } from "./live-conversation";
 
 // The detail view's core job: type a reply and submit it to the bridge. This drives the whole wired
 // path (composer → api.sendReply → MSW → optimistic clear / error surfacing) end-to-end, which no
@@ -542,6 +543,48 @@ describe("AgentChat — history affordance", () => {
     const pill = screen.getByText("needs you"); // fixtureAgents[0] is blocked → "needs you"
     // Node.compareDocumentPosition: FOLLOWING (4) means the pill comes after History in the DOM.
     expect(history.compareDocumentPosition(pill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("renders OMO plan progress", async () => {
+    server.use(
+      http.get(/\/api\/pane\/[^/]+\/history/, () =>
+        HttpResponse.json({
+          paneId: "w1:p1",
+          available: true,
+          entries: [
+            {
+              uuid: "plan-1",
+              timestamp: "2026-08-15T00:58:24.455Z",
+              role: "assistant",
+              parts: [
+                {
+                  kind: "plan",
+                  phases: [
+                    {
+                      name: "Build",
+                      tasks: [
+                        { content: "Add dashboard composer", status: "in_progress" },
+                        { content: "Verify mobile layout", status: "pending" },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          hasMore: false,
+          total: 1,
+          fileTruncated: false,
+        }),
+      ),
+    );
+    render(
+      <LiveConversation paneId="w1:p1" agent="omo" onTerminal={vi.fn()} />,
+    );
+
+    expect(await screen.findByRole("region", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByText("Add dashboard composer")).toBeInTheDocument();
+    expect(screen.getByText("Verify mobile layout")).toBeInTheDocument();
   });
 });
 

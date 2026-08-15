@@ -29,10 +29,9 @@ export function LiveConversation({
     let controller: AbortController | null = null;
     let stopped = false;
     let inFlight = false;
-    let unavailable = false;
 
     const refresh = async () => {
-      if (stopped || inFlight || unavailable || document.visibilityState === "hidden") return;
+      if (stopped || inFlight || document.visibilityState === "hidden") return;
       inFlight = true;
       const activeController = new AbortController();
       controller = activeController;
@@ -45,7 +44,6 @@ export function LiveConversation({
         );
         if (stopped) return;
         if (!response.available) {
-          unavailable = true;
           setState("unavailable");
           return;
         }

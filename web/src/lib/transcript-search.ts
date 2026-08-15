@@ -5,7 +5,7 @@
 // human turns in 900 is typical), so stepping between them is the fastest way to navigate.
 //
 // WHAT IS SEARCHED — deliberately, only what is VISIBLE with tool output collapsed: prose text and
-// the one-line tool summaries. Tool RESULT bodies are excluded even though we hold them, because
+// the one-line tool summaries and visible plan labels. Tool RESULT bodies are excluded even though we hold them, because
 // matching inside a collapsed body would jump you to a turn where nothing on screen matches. Every
 // hit this returns is a hit you can actually see.
 
@@ -17,6 +17,12 @@ export function searchableText(entry: TranscriptEntry): string {
   for (const part of entry.parts) {
     if (part.kind === "tool") {
       parts.push(part.name, part.summary);
+    } else if (part.kind === "plan") {
+      parts.push(
+        part.phases
+          .flatMap((phase) => [phase.name, ...phase.tasks.map((task) => task.content)])
+          .join("\n"),
+      );
     } else {
       parts.push(part.text);
     }
