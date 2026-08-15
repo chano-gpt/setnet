@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { AgentList } from "./agent-list";
@@ -313,5 +313,29 @@ describe("AgentList — the age column", () => {
     );
     expect(screen.getByText("comm_cli").className).toMatch(/max-w-\[45%\]/);
     expect(screen.getByText("main").className).toMatch(/flex-1/);
+  });
+});
+
+describe("AgentList — active duration", () => {
+  it("shows working elapsed time", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-15T01:01:06.000Z"));
+    render(
+      <AgentList
+        agents={[
+          agent("p", "working", {
+            agent: "omo",
+            workspaceLabel: "collie-ux",
+            lastActiveAt: Date.parse("2026-08-15T01:00:01.000Z"),
+          }),
+        ]}
+        onOpen={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("01:05")).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1_000));
+    expect(screen.getByText("01:06")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });

@@ -319,6 +319,17 @@ export function sendReply(
   );
 }
 
+export function promptAgent(
+  paneId: string,
+  text: string,
+  session?: string,
+): Promise<ActionResponse> {
+  return req<ActionResponse>(withSession(`/api/pane/${encodeURIComponent(paneId)}/prompt`, session), {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+}
+
 export function startAgent(
   paneId: string,
   kind: string,

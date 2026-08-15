@@ -91,7 +91,8 @@ const SECURITY_HEADERS: Record<string, string> = {
 // (or a co-located proxy) can reach the bridge's port, so a loopback caller is the on-host operator.
 const LOOPBACK_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 
-const PANE_ROUTE = /^\/api\/pane\/([^/]+)(?:\/(reply|keys|upload|close|rename|history|start))?$/;
+const PANE_ROUTE =
+  /^\/api\/pane\/([^/]+)(?:\/(reply|prompt|keys|upload|close|rename|history|start))?$/;
 // Turns per history page. "Show entire history" means the WHOLE conversation, so the client asks for
 // everything and this ceiling is a safety net against a pathological log, not the normal path — a
 // 1400-turn session is ~1.4 MB raw / ~400 KB gzipped, which a tailnet link serves fine. The default
@@ -124,7 +125,7 @@ export const SEEN_HEADER = "x-collie-seen";
  * doing so promotes it to a preflighted CORS request, and the bridge answers no preflight. Our own
  * same-origin `fetch` sets it freely.
  *
- * Write actions (reply/keys/upload/close/rename) need no header: they already cleared
+ * Write actions (reply/prompt/keys/upload/close/rename) need no header: they already cleared
  * `guard(…, "write")`, which requires an `Origin`. `history` is a read despite being an action
  * segment, so it needs the header like any other read.
  */
@@ -279,7 +280,10 @@ export function startServer(opts: {
         if (!action && req.method === "GET") return readPane(herdr, cfg, paneId, url, req);
         if (action === "history" && req.method === "GET")
           return paneHistory(cfg, journals, transcripts, rt.engine, rt.herdr, paneId, url, req);
-        if (action === "reply" && req.method === "POST") return replyPane(herdr, cfg, paneId, req, audit, device, session);
+        if (action === "reply" && req.method === "POST")
+          return replyPane(herdr, cfg, paneId, req, audit, device, session);
+        if (action === "prompt" && req.method === "POST")
+          return promptPane(herdr, paneId, req, audit, device, session);
         if (action === "keys" && req.method === "POST") return keysPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "start" && req.method === "POST") return startAgentPane(herdr, paneId, req, audit, device, session);
         if (action === "upload" && req.method === "POST") return uploadPane(cfg, paneId, req, audit, device, session);
@@ -705,6 +709,59 @@ export async function replyPane(
     { ok: false, error: outcome.error, textDelivered: outcome.textDelivered } satisfies ActionResponse,
     ae,
   );
+}
+
+export async function promptPane(
+  herdr: HerdrClient,
+  paneId: string,
+  req: Request,
+  audit: AuditLog,
+  device: string | null,
+  session: string,
+): Promise<Response> {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return text("bad body", 400);
+  }
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return text("bad body", 400);
+  }
+  const record = body as Record<string, unknown>;
+  if (
+    typeof record.text !== "string" ||
+    record.text.trim() === "" ||
+    Object.keys(record).some((key) => key !== "text")
+  ) {
+    return text("bad text", 400);
+  }
+  const prompt = record.text.trim();
+  const ae = req.headers.get("accept-encoding");
+  try {
+    await herdr.promptAgent(paneId, prompt);
+    audit.record({
+      action: "prompt",
+      paneId,
+      session,
+      device,
+      detail: { text: prompt, submitted: true },
+    });
+    return json({ ok: true } satisfies ActionResponse, ae);
+  } catch (err) {
+    audit.record({
+      action: "prompt",
+      paneId,
+      session,
+      device,
+      detail: { text: prompt, submitted: false, error: (err as Error).message },
+    });
+    return json(
+      { ok: false, error: (err as Error).message } satisfies ActionResponse,
+      ae,
+      502,
+    );
+  }
 }
 
 export async function startAgentPane(

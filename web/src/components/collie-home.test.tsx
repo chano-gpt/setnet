@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { CollieHome } from "./collie-home";
+import { AgentList } from "./agent-list";
 
 describe("CollieHome", () => {
   it("returns home when tapped", async () => {
@@ -45,5 +46,34 @@ describe("CollieHome", () => {
     expect(screen.queryByText("Collie")).toBeNull();
     rerender(<CollieHome trouble={false} wordmark />);
     expect(screen.getByText("Collie")).toBeInTheDocument();
+  });
+});
+
+describe("Dashboard message entry", () => {
+  it("opens a focused message composer from the agent card", async () => {
+    const onMessage = vi.fn();
+    render(
+      <AgentList
+        agents={[
+          {
+            paneId: "w1:p1",
+            workspaceId: "w1",
+            workspaceLabel: "collie-ux",
+            workspaceNumber: 1,
+            tabId: "w1:t1",
+            agent: "omo",
+            status: "idle",
+            cwd: "/home/noah/dev/projects/collie",
+            focused: false,
+          },
+        ]}
+        onOpen={vi.fn()}
+        onMessage={onMessage}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Message collie-ux" }));
+
+    expect(onMessage).toHaveBeenCalledWith("w1:p1");
   });
 });

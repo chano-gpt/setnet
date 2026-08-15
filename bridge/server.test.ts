@@ -15,6 +15,7 @@ import {
   normalizeTabLabel,
   paneReadResponse,
   parseReplyBody,
+  promptPane,
   replyPane,
   resolvePaneSession,
   resolveStaticPath,
@@ -29,6 +30,57 @@ import type { Config } from "./config.ts";
 import type { HerdrClient, PaneRead } from "./herdr-client.ts";
 import type { JournalAdapter } from "./journal/types.ts";
 import type { AgentView } from "./types.ts";
+
+test("promptPane sends one managed agent prompt", async () => {
+  const calls: Array<[string, string]> = [];
+  const herdr = {
+    promptAgent: async (paneId: string, text: string) => {
+      calls.push([paneId, text]);
+    },
+  } as unknown as HerdrClient;
+  const request = new Request("http://collie/api/pane/w1%3Ap1/prompt", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text: "상태 알려줘" }),
+  });
+
+  const response = await promptPane(
+    herdr,
+    "w1:p1",
+    request,
+    { record: () => undefined } as unknown as AuditLog,
+    "phone",
+    "default",
+  );
+
+  expect(response.status).toBe(200);
+  expect(calls).toEqual([["w1:p1", "상태 알려줘"]]);
+});
+
+test("promptPane reports managed prompt failures as non-success HTTP", async () => {
+  const herdr = {
+    promptAgent: async () => {
+      throw new Error("agent is not interactive");
+    },
+  } as unknown as HerdrClient;
+  const request = new Request("http://collie/api/pane/w1%3Ap1/prompt", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text: "상태 알려줘" }),
+  });
+
+  const response = await promptPane(
+    herdr,
+    "w1:p1",
+    request,
+    { record: () => undefined } as unknown as AuditLog,
+    "phone",
+    "default",
+  );
+
+  expect(response.status).toBe(502);
+  expect(await response.json()).toEqual({ ok: false, error: "agent is not interactive" });
+});
 
 // checkAccess is the API security gate (same-origin/CSRF + optional Tailscale identity). A
 // regression here silently opens remote shell access, so it gets the most direct coverage.

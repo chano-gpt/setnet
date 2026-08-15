@@ -163,6 +163,7 @@ export const handlers = [
     recordReply((await request.json()) as { text?: string; submit?: boolean });
     return HttpResponse.json({ ok: true });
   }),
+  http.post(/\/api\/pane\/[^/]+\/prompt$/, () => HttpResponse.json({ ok: true })),
   http.post(/\/api\/pane\/[^/]+\/keys$/, () => HttpResponse.json({ ok: true })),
   http.post(/\/api\/pane\/[^/]+\/close$/, () => HttpResponse.json({ ok: true })),
   http.post(/\/api\/pane\/[^/]+\/rename$/, () => HttpResponse.json({ ok: true })),

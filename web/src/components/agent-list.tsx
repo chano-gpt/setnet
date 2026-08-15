@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Check, Inbox } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Inbox, MessageCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "@/components/section-header";
@@ -10,6 +10,7 @@ interface AgentListProps {
   agents: AgentView[];
   bridge?: BridgeStatus | undefined;
   onOpen: (paneId: string) => void;
+  onMessage?: (paneId: string) => void;
   /** Which way Recent runs, and how to flip it. Omit to render Recent newest-first with no toggle. */
   recentDir?: RecentDir;
   onRecentDirChange?: (dir: RecentDir) => void;
@@ -40,6 +41,7 @@ export function AgentList({
   agents,
   bridge,
   onOpen,
+  onMessage,
   recentDir = "newest",
   onRecentDirChange,
   recentOpen = true,
@@ -110,14 +112,26 @@ export function AgentList({
                 {/* statusStyle="dot": the section heading already says the status, so a pill on
                     every row restates it and costs the width the title needs. */}
                 {s.agents.map((a) => (
-                  <AgentCard
-                    key={a.paneId}
-                    agent={a}
-                    onClick={() => onOpen(a.paneId)}
-                    statusStyle="dot"
-                    density={ATTENTION.has(s.key) ? "card" : "row"}
-                    {...(age ? { age } : {})}
-                  />
+                  <div className="relative" key={a.paneId}>
+                    <AgentCard
+                      agent={a}
+                      onClick={() => onOpen(a.paneId)}
+                      className={onMessage ? "pr-14" : undefined}
+                      statusStyle="dot"
+                      density={ATTENTION.has(s.key) ? "card" : "row"}
+                      {...(age ? { age } : {})}
+                    />
+                    {onMessage && a.kind !== "shell" && (
+                      <button
+                        type="button"
+                        aria-label={`Message ${a.workspaceLabel}`}
+                        className="absolute right-2 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent"
+                        onClick={() => onMessage(a.paneId)}
+                      >
+                        <MessageCircle className="size-4" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

@@ -56,6 +56,21 @@ describe("commandsFor", () => {
     expect(commands.some((command) => command.command === "/shake")).toBe(false);
   });
 
+  it("exposes OMO ultrawork commands", () => {
+    expect(commandsFor("omo").map((command) => command.command)).toEqual(
+      expect.arrayContaining(["/ulw", "/ulw-plan", "/ulw-research"]),
+    );
+  });
+
+  it("keeps OMO ultrawork commands in the bare-slash viewport", () => {
+    expect(commandsFor("omo").slice(0, 4).map((command) => command.command)).toEqual([
+      "/settings",
+      "/ulw",
+      "/ulw-plan",
+      "/ulw-research",
+    ]);
+  });
+
   it("returns the Codex catalog for 'codex'", () => {
     const cmds = commandsFor("codex");
     expect(cmds.length).toBeGreaterThan(0);

@@ -11,6 +11,7 @@ import { StatusArea } from "@/components/status-area";
 import { BuildStamp } from "@/components/build-stamp";
 import { UpdateBanner } from "@/components/update-banner";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
+import { DashboardComposer } from "@/components/dashboard-composer";
 import { useDashPrefs, openForCount } from "@/hooks/use-dash-prefs";
 import { useLoadingStalled } from "@/hooks/use-loading-stalled";
 import { useSpaceActions } from "@/hooks/use-spaces";
@@ -32,6 +33,7 @@ export function HomeRoute() {
   const navigate = useNavigate();
   const { newSpace } = useSpaceActions();
   const [newSpaceOpen, setNewSpaceOpen] = useState(false);
+  const [messagePaneId, setMessagePaneId] = useState<string | null>(null);
   const { prefs, setSpacesOpen, setRecentOpen, setRecentDir } = useDashPrefs();
   // No stored choice yet? The space count decides — a two-space install shouldn't be handed a
   // mystery collapsed header, and a forty-space one shouldn't be handed a wall.
@@ -69,6 +71,7 @@ export function HomeRoute() {
               agents={data.agents}
               bridge={data.bridge}
               onOpen={open}
+              onMessage={setMessagePaneId}
               recentDir={prefs.recentDir}
               onRecentDirChange={setRecentDir}
               recentOpen={prefs.recentOpen}
@@ -107,6 +110,12 @@ export function HomeRoute() {
       </div>
 
       <NewSpaceSheet open={newSpaceOpen} onClose={() => setNewSpaceOpen(false)} onCreate={newSpace} />
+      <DashboardComposer
+        agent={data.agents.find((candidate) => candidate.paneId === messagePaneId) ?? null}
+        session={data.session}
+        readOnly={data.device?.enforced === true && data.device.authorized !== true}
+        onClose={() => setMessagePaneId(null)}
+      />
     </div>
   );
 }

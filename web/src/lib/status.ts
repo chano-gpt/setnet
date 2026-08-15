@@ -12,6 +12,15 @@ export interface StatusMessage {
   tone: StatusTone;
 }
 
+export function workingElapsedLabel(startedAt: number, now = Date.now()): string {
+  const totalSeconds = Math.max(0, Math.floor((now - startedAt) / 1_000));
+  const seconds = totalSeconds % 60;
+  const minutes = Math.floor(totalSeconds / 60) % 60;
+  const hours = Math.floor(totalSeconds / 3_600);
+  const tail = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return hours > 0 ? `${hours}:${tail}` : tail;
+}
+
 let current: StatusMessage | null = null;
 let nextId = 1;
 let timer: ReturnType<typeof setTimeout> | null = null;

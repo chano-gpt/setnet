@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 
-import { clearStatus, setStatus, useStatus } from "./status";
+import { clearStatus, setStatus, useStatus, workingElapsedLabel } from "./status";
 
 // The global status channel: latest-wins, errors persist, everything else auto-clears on a TTL.
 // We observe it through useStatus (the public read) and drive the TTL with fake timers.
@@ -53,5 +53,12 @@ describe("status channel", () => {
     act(() => setStatus("sticky", "info", null));
     act(() => vi.advanceTimersByTime(10_000));
     expect(result.current?.text).toBe("sticky");
+  });
+});
+
+describe("working status duration", () => {
+  it("derives active OMO working duration", () => {
+    expect(workingElapsedLabel(1_000, 66_000)).toBe("01:05");
+    expect(workingElapsedLabel(1_000, 3_662_000)).toBe("1:01:01");
   });
 });

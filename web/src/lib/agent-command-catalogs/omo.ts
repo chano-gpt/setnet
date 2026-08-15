@@ -17,6 +17,21 @@ const command = (
 // skills, prompt templates, MCP prompts, and conditional extensions remain outside this fallback.
 export const OMO: readonly AgentCommand[] = [
   command("settings", "Open settings", { common: true }),
+  command("ulw", "Run a task in ultrawork mode", {
+    takesArg: true,
+    argHint: "<task>",
+    common: true,
+  }),
+  command("ulw-plan", "Create a decision-complete work plan", {
+    takesArg: true,
+    argHint: "<goal>",
+    common: true,
+  }),
+  command("ulw-research", "Run an exhaustive research workflow", {
+    takesArg: true,
+    argHint: "<question>",
+    common: true,
+  }),
   command("model", "Choose a model", { takesArg: true, argHint: "[provider/model]", common: true }),
   command("favorite-models", "Manage favorite models", { common: true }),
   command("export", "Export the current session"),

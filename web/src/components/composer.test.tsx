@@ -334,6 +334,51 @@ describe("Composer — send", () => {
     expect(props.onSent).toHaveBeenCalled();
   });
 
+  it("keeps IME text and sends once", async () => {
+    const calls: string[] = [];
+    server.use(replyHandler((text) => calls.push(text), () => calls.push("submit")));
+    renderComposer();
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    fireEvent.compositionStart(box);
+    fireEvent.change(box, { target: { value: "상태 알려줘" } });
+    const keyWasAllowed = fireEvent.keyDown(box, {
+      key: "Enter",
+      code: "Enter",
+      ctrlKey: true,
+      isComposing: true,
+    });
+
+    expect(keyWasAllowed).toBe(true);
+    expect(calls).toEqual([]);
+    expect(box).toHaveValue("상태 알려줘");
+
+    fireEvent.compositionEnd(box, { data: "상태 알려줘" });
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(box).toHaveValue(""));
+    expect(calls).toEqual(["상태 알려줘", "submit"]);
+  });
+
+  it("uses the managed prompt path for OMO without Type anyway", async () => {
+    let received: string | null = null;
+    server.use(
+      http.post(/\/api\/pane\/[^/]+\/prompt$/, async ({ request }) => {
+        received = ((await request.json()) as { text: string }).text;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderComposer({ agent: "omo" });
+    const box = screen.getByPlaceholderText(/type a reply/i);
+
+    await userEvent.type(box, "상태 알려줘");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(received).toBe("상태 알려줘"));
+    expect(screen.queryByText(/type anyway/i)).not.toBeInTheDocument();
+    expect(box).toHaveValue("");
+  });
+
   it("clears the terminal line with ctrl+k and backspaces before sendReply when a draft is stranded", async () => {
     const user = userEvent.setup();
     const callOrder: string[] = [];

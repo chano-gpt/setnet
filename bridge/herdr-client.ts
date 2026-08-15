@@ -448,6 +448,11 @@ export class HerdrClient {
     return this.request<void>("pane.send_text", { pane_id: paneId, text });
   }
 
+  /** Submit a prompt through Herdr's managed agent lifecycle instead of typing into the PTY. */
+  promptAgent(paneId: string, text: string): Promise<void> {
+    return this.request<void>("agent.prompt", { target: paneId, text });
+  }
+
   startAgent(
     name: string,
     kind: string,

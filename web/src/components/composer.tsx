@@ -411,6 +411,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   }
 
   function handleComposerKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>) {
+    if (event.nativeEvent.isComposing) return;
     if (commandMenuOpen) {
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
@@ -469,7 +470,10 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     try {
       // Guarded: types the text, verifies it reached the input box, and only THEN sends the submit
       // key. A "stalled" outcome means nothing was submitted and the draft must survive (#34).
-      const res = await sendGuardedReply({
+      const res =
+        agent?.toLowerCase() === "omo"
+          ? await api.promptAgent(paneId, t, session).then(() => ({ status: "sent" as const }))
+          : await sendGuardedReply({
         paneId,
         text: t,
         agent,
@@ -542,7 +546,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           // it.
           return { ok: true as const, keysSent: true };
         },
-      });
+            });
       if (res.status === "sent") {
         // Phone-owned input — cleared once the reply is on its way. Via updateInput, so the stored
         // draft goes with it (an empty value removes the key).

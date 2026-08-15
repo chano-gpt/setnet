@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { TerminalSquare } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -8,10 +9,12 @@ import { timeAgoShort } from "@/lib/format";
 import { paneParts, paneTitleInTab } from "@/lib/pane-name";
 import { STATUS_LABEL } from "@/lib/types";
 import type { AgentView } from "@/lib/types";
+import { workingElapsedLabel } from "@/lib/status";
 
 interface AgentCardProps {
   agent: AgentView;
   onClick: () => void;
+  className?: string;
   /**
    * Show "how long ago" on the second line, and which timestamp it means: "seen" for the Recent
    * section (when you last opened it), "active" for Ready · unseen (when it finished). Omitted
@@ -44,8 +47,18 @@ interface AgentCardProps {
 
 /** The row's age, in the trailing slot of whichever line it sits on. Not mono — it's a footnote,
  *  not data; mono made it read like the path it replaced. */
-function Age({ at }: { at: number }) {
-  return <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{timeAgoShort(at)}</span>;
+function Age({ at, working = false }: { at: number; working?: boolean }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!working) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [working]);
+  return (
+    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+      {working ? workingElapsedLabel(at, now) : timeAgoShort(at)}
+    </span>
+  );
 }
 
 // A pane row, used by the triage home and the space view. Usually an agent; for a bare shell pane
@@ -58,6 +71,7 @@ function Age({ at }: { at: number }) {
 export function AgentCard({
   agent,
   onClick,
+  className,
   age,
   scope = "herd",
   statusStyle = "badge",
@@ -88,6 +102,7 @@ export function AgentCard({
         // line that doesn't follow them. A radius here would need a real border to belong to; the
         // rows that DO have one (blocked) keep theirs below.
         flat && "transition-colors hover:bg-muted/50",
+        className,
       )}
     >
       <Shell
@@ -153,7 +168,7 @@ export function AgentCard({
               )}
               {/* The age rides the title row: alone on a line of its own it claimed the same
                   vertical presence as the title, for a footnote. */}
-              {stamp !== undefined && <Age at={stamp} />}
+              {stamp !== undefined && <Age at={stamp} working={agent.status === "working"} />}
             </div>
           )}
 
@@ -161,7 +176,9 @@ export function AgentCard({
           {secondary && (
             <div className="flex min-w-0 items-baseline gap-2 text-xs text-muted-foreground">
               <span className="min-w-0 flex-1 truncate font-mono">{secondary}</span>
-              {inTab && stamp !== undefined && <Age at={stamp} />}
+              {inTab && stamp !== undefined && (
+                <Age at={stamp} working={agent.status === "working"} />
+              )}
             </div>
           )}
         </div>
