@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { Config } from "./config.ts";
 
 // When did each pane last DO something, and when did you last LOOK at it? Herdr answers neither —
-// its pane records carry no timestamps at all (HERDR_API.md) — so Collie derives and owns both.
+// its pane records carry no timestamps at all (HERDR_API.md) — so setnet derives and owns both.
 //
 // Two numbers per pane are enough for the whole dashboard:
 //   • activeAt — the last agent status transition this bridge observed
@@ -17,11 +17,11 @@ import type { Config } from "./config.ts";
 // desk in Herdr itself — see .adr/0003-one-shared-seen.md. Persisted to the state dir like Snooze
 // and NotifyPrefsStore, so it survives the `systemctl restart` every backend change needs.
 
-/** The two timestamps Collie keeps for a pane. Epoch ms. */
+/** The two timestamps setnet keeps for a pane. Epoch ms. */
 export interface PaneActivity {
   /** Last agent status transition observed by the state engine. */
   activeAt: number;
-  /** Last time you opened or drove this pane through Collie. */
+  /** Last time you opened or drove this pane through setnet. */
   seenAt: number;
 }
 
@@ -137,7 +137,7 @@ export class ActivityLedger {
     this.markDirty();
   }
 
-  /** You opened or drove the pane through Collie. Clears its unread state by construction. */
+  /** You opened or drove the pane through setnet. Clears its unread state by construction. */
   noteSeen(session: string, paneId: string): void {
     const panes = this.panesFor(session);
     const t = this.now();

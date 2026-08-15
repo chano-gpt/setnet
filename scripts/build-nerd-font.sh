@@ -3,7 +3,7 @@
 #
 # NOT part of the build. The .woff2 files are committed, because a webfont is a release artifact,
 # not a build step: this script needs Python + fonttools + brotli, and requiring those to build
-# Collie would be a worse trade than 1.1 MB in git. Run it only to move to a new Nerd Fonts
+# setnet would be a worse trade than 1.1 MB in git. Run it only to move to a new Nerd Fonts
 # release, then update the filenames and the sizes quoted in web/src/index.css.
 #
 # It splits the font at the plane boundary so `unicode-range` can be selective — a Powerline-only

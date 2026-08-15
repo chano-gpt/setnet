@@ -105,7 +105,7 @@ Why incremental wins here:
   the FRESH buffer, compare against what the user tapped, send one key. A batch replay of
   N digits has no such per-key guard — one drifted step mis-answers everything after it.
 - **No client-side form state to drift.** The TUI is the single source of truth for selections;
-  the stepper glyphs and the review step echo it back. Collie never has to reconcile "what I think
+  the stepper glyphs and the review step echo it back. setnet never has to reconcile "what I think
   you picked" against "what the terminal thinks".
 - Cost: one poll round-trip between steps (~1 revalidation; the post-send revalidate makes it
   feel immediate). Acceptable on the phone; correctness beats latency here.

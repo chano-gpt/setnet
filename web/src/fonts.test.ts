@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { FONT_URLS } from "@/lib/sw-routes";
 
-// The bundled Nerd Font faces are the only webfont Collie ships, and the design rests on three facts
+// The bundled Nerd Font faces are the only webfont setnet ships, and the design rests on three facts
 // that are silent when broken: the stylesheet, the service worker and the disk agree on which files
 // exist; each face is range-restricted so it stays lazy; and neither file re-enters the precache. A
 // renamed file is a tofu box again (#70); a woff2 back in `globPatterns` charges every install

@@ -1,6 +1,6 @@
 # Adding a harness adapter
 
-Collie up-levels an agent's terminal dialogs (permission prompts, AskUserQuestion menus, plan
+setnet up-levels an agent's terminal dialogs (permission prompts, AskUserQuestion menus, plan
 approvals, …) into native phone buttons. The per-agent knowledge that makes this safe lives in a
 **harness adapter**. Claude Code is the one verified adapter today; this is how you add another
 (codex, pi, opencode, …).

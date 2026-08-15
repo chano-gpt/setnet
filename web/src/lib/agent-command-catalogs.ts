@@ -193,7 +193,7 @@ export const OPENCODE: readonly AgentCommand[] = [
 // an omp user with no palette at all, since composer.tsx renders the button only when it is non-empty.
 export const OMP: readonly AgentCommand[] = [
   // Senpi built-ins, synchronized from core/slash-commands.ts. Omo also loads extension/skill
-  // commands at runtime; the Collie-specific rows below cover the stable Omo additions.
+  // commands at runtime; the setnet-specific rows below cover the stable Omo additions.
   { command: "/settings", description: "Open settings menu", takesArg: false, argHint: "", common: true, dangerous: false },
   { command: "/model", description: "Select model (opens selector UI)", takesArg: true, argHint: "<provider/model>", common: true, dangerous: false },
   { command: "/favorite-models", description: "Manage favorite models for Ctrl+P cycling", takesArg: false, argHint: "", common: false, dangerous: false },

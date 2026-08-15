@@ -126,7 +126,7 @@ describe("ConnectionBanner — the single connection surface", () => {
     setOnline(false);
     renderBanner();
     await act(async () => {});
-    expect(screen.getByText("Offline — can't reach Collie")).toBeInTheDocument();
+    expect(screen.getByText("Offline — can't reach setnet")).toBeInTheDocument();
     expect(screen.getByRole("alert").className).toMatch(/bg-status-blocked/); // offline is always red
   });
 

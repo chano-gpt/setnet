@@ -76,7 +76,7 @@ await updateStore.load();
 
 // The repo the release check + release links point at. setnet's own, now that it has tags to read:
 // the check compares the running version against the repo's git tags, so while this pointed at
-// upstream Collie a setnet release could never surface as an update, and an upstream release could
+// upstream setnet a setnet release could never surface as an update, and an upstream release could
 // surface as one that `update` would not actually install. Whatever this names must keep publishing
 // vX.Y.Z tags, or latestReleaseTag() returns null and the banner goes quiet.
 // Overridable for a fork (or a synthetic test target) via COLLIE_UPDATE_REPO.

@@ -1,6 +1,6 @@
 # CLAUDE.md — working agreement for this repo
 
-**Collie** (repo `AltanS/collie`) — a phone web UI for your Herdr agent herd, served over
+**setnet** (repo `chano-gpt/setnet`, forked from `AltanS/collie`) — a phone web UI for your Herdr agent herd, served over
 Tailscale. A mobile-first PWA (Vite + React + TS + Tailwind v4 + shadcn) plus a Bun/TS bridge that
 talks to Herdr's Unix socket, letting you monitor and reply to agents from a phone. The Herdr
 plugin id is `herdr.collie` (manifest: `herdr-plugin.toml`). Orientation:
@@ -68,7 +68,7 @@ line — do it as part of the change, not after**:
 
 **Tag the release when you push it.** Cutting a release means the three version files + the newest
 `CHANGELOG.md` heading agree on `x.y.z` (steps 1–3). When that release lands on `main` and you push,
-**always push a matching annotated git tag with it** — `git tag -a vX.Y.Z -m "Collie X.Y.Z" && git
+**always push a matching annotated git tag with it** — `git tag -a vX.Y.Z -m "setnet X.Y.Z" && git
 push origin vX.Y.Z` (or `git push --follow-tags` so the tag ships *with* the release). One `v<x.y.z>`
 tag per shipped version on the remote. Not hook-enforced — it's on you. (Adding/adjusting this note is
 a doc-only change and needs no version bump.)
@@ -122,7 +122,7 @@ the unit name; the Herdr action runs from anywhere.
   followed by `revalidator.revalidate()`. There is **no TanStack Query** — don't reintroduce it.
 - Routes (`web/src/router.tsx`): `/`, `/space/:spaceId`, `/settings`, `/pane/:paneId` and
   `/pane/:paneId/history`. The router instance is module-scoped so it keeps its location.
-- **The idle lock pauses; it does not gate.** It only appears when Collie is left *open, visible and
+- **The idle lock pauses; it does not gate.** It only appears when setnet is left *open, visible and
   untouched* — a hidden page never locks, and returning to the foreground auto-resumes. It covers a
   still-mounted router (unmounting it ate in-progress composer drafts) and pauses polling through
   `lib/idle.ts`. Don't restore it as a security control or re-describe it as one
@@ -152,7 +152,7 @@ the unit name; the Herdr action runs from anywhere.
   threshold by chunking sends ([ADR 0010](./.adr/0010-long-sends-are-verified-via-the-paste-placeholder.md)).
 - Pane output is rendered as **React text nodes** (never `innerHTML`); the ANSI parser only derives
   colors/weights. Keep it that way — it's the XSS boundary. Strict CSP + same-origin gate stay.
-- **Collie runs no terminal emulator** — `pane.read` returns Herdr's already-rendered grid, so the
+- **setnet runs no terminal emulator** — `pane.read` returns Herdr's already-rendered grid, so the
   parser needs colour and nothing else. Don't add one on either side, and don't reach for
   `terminal session observe`/`control`: a stale mirror is a transport problem, cursor position is an
   upstream ask, and `control` resizes the *shared* PTY
@@ -194,8 +194,8 @@ conforming reverse proxy per README Variant C (`COLLIE_SKIP_SERVE=1`) · same-or
 identity/device gates · strict CSP. A socket call can type into a real terminal — treat the bridge as
 remote shell access.
 
-**Collie manages exactly one front door: `tailscale serve`** — `collie-ctl.sh` publishes it, records
+**setnet manages exactly one front door: `tailscale serve`** — `collie-ctl.sh` publishes it, records
 the mapping in `tailscale-managed-handler`, and only ever tears down a mapping matching that record.
 Every other tunnel (NetBird, ZeroTier, Cloudflare Tunnel) is `COLLIE_SKIP_SERVE=1` + README Variant
-E: the operator owns the ingress, Collie publishes nothing. **Don't add a second managed front
+E: the operator owns the ingress, setnet publishes nothing. **Don't add a second managed front
 door** — [ADR 0001](./.adr/0001-one-managed-front-door.md).

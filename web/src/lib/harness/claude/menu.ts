@@ -3,7 +3,7 @@
 // Claude Code paints a growing family of full-screen pickers (`/model`, and whatever ships next)
 // that are not AskUserQuestion dialogs: they have no numbered-menu recipe, no `Enter to select`
 // footer, and — the part that bit us — no input box at the tail. Before this grammar existed, none
-// of the specific detectors claimed the `/model` picker, so Collie showed no buttons, `dialogPresent`
+// of the specific detectors claimed the `/model` picker, so setnet showed no buttons, `dialogPresent`
 // stayed false, and a composer send typed the user's message straight INTO the picker.
 //
 // What makes a generic claim safe is that the screen NAMES ITS OWN KEYS: the footer is a

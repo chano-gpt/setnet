@@ -27,7 +27,7 @@ export interface WizardBlockProps {
 
 // Native, tappable rendering of Claude's multi-question AskUserQuestion wizard. Mirrors exactly
 // what the TUI shows — the stepper chips, then the CURRENT step's body — because the terminal is
-// the single source of truth for selections; Collie holds no form state of its own. Every visible
+// the single source of truth for selections; setnet holds no form state of its own. Every visible
 // string (chip labels, question, options, answers) is a React text node — the XSS boundary is
 // unchanged. One control can be in flight at a time (spinner shows, the rest lock).
 export function WizardBlock({ wizard, onAction, disabled }: WizardBlockProps) {

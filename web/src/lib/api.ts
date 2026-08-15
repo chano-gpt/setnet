@@ -26,7 +26,7 @@ export type { NotifyPrefs, UpdateInfo };
  * unauthenticated request with a REDIRECT never produces one: `fetch` follows the 302 to the
  * identity provider's origin, that response carries no CORS headers, and the call rejects as a
  * `TypeError` — a transport failure with no status. The user then gets the connection banner
- * ("can't reach Collie") and, worse, loses the Sign-in link that would have fixed it, since a
+ * ("can't reach setnet") and, worse, loses the Sign-in link that would have fixed it, since a
  * missing session is precisely the thing it recovers from.
  *
  * Measured against Cloudflare Access with no session: a plain request, `Accept: application/json`

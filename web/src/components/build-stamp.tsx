@@ -9,7 +9,7 @@ import { checkForUpdate } from "@/lib/pwa";
 
 // Tiny build stamp for the UI footer. The id is baked into THIS bundle, so it travels with the
 // cached bundle — meaning the footer tells you which bundle you're actually running. It reads the
-// bridge's current build id from the shared store (fed live by the `X-Collie-Build` header on every
+// bridge's current build id from the shared store (fed live by the `X-setnet-Build` header on every
 // poll, see lib/server-build.ts) and, if they differ (you're on a stale bundle), flags it with a
 // one-tap update — appearing/disappearing in real time as the server rebuilds. See README →
 // Troubleshooting.

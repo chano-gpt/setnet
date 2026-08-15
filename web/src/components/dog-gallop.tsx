@@ -12,7 +12,7 @@ interface DogGallopProps {
   className?: string;
 }
 
-// The Collie mascot doubling as the app's activity indicator: a 6-frame gallop sprite
+// The setnet mascot doubling as the app's activity indicator: a 6-frame gallop sprite
 // (public/dog-gallop.png — a 768×128 strip of six 128px cells, transparent background) stepped
 // through with a pure-CSS steps(6) animation. No JS timers, no layout thrash, GPU-cheap — the whole
 // cycle is one repainting background-position. It gallops while the app is loading/reconnecting

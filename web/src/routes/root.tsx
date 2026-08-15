@@ -56,7 +56,7 @@ export function RootLayout() {
 // on "Connecting to the herd…" indefinitely, with no way to retry. So once we've been stuck here for
 // CONNECTION_LOST_MS (the same wall-clock threshold as the in-app prompt — `connecting` is trivially
 // true the whole time we're mounted), the splash escalates to an honest, actionable "Not connected"
-// state: the dog rests, the copy says we can't reach Collie, and a Retry re-runs the loaders from
+// state: the dog rests, the copy says we can't reach setnet, and a Retry re-runs the loaders from
 // scratch (a full reload clears most transient failures). Below the threshold it's unchanged.
 export function BootSplash() {
   const stuck = useConnectionLost(true);

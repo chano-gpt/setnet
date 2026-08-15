@@ -11,7 +11,7 @@ import type { UpdateInfo } from "@/lib/types";
 // names it with the one command that fixes it. Everything renders as plain React text nodes.
 
 export interface UpdateNotice {
-  /** The human line, e.g. "Bridge restart needed" / "Collie 0.12.0 available". */
+  /** The human line, e.g. "Bridge restart needed" / "setnet 0.12.0 available". */
   line: string;
   /** A copyable command that resolves it — a Herdr plugin action, so it runs from ANY directory
    *  (Herdr resolves the plugin's checkout). Only the RESTART case carries one: it has no page to link
@@ -39,7 +39,7 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
   // Guard on `latest` too: without a version string there's nothing meaningful to name. The release
   // page (linked) carries the update commands, so the footer just links there.
   if (update.releaseAvailable && update.latest) {
-    return { line: `Collie ${update.latest} available`, href: update.latestUrl ?? undefined };
+    return { line: `setnet ${update.latest} available`, href: update.latestUrl ?? undefined };
   }
   return null;
 }

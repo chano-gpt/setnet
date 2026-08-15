@@ -6,6 +6,19 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.29.4] - 2026-08-15
+
+### Changed
+
+- **The last of the old name is gone from anything you read** — status banner, settings copy, update
+  prompts, the operations manual, and every code comment. 239 occurrences across 75 files
+- **The identifiers deliberately did not move**: plugin id, systemd unit, `collie-ctl.sh`, the state
+  dir, every `COLLIE_*` variable, the `x-collie-*` headers, `collie:*` browser keys and the push
+  topics. Each is an external contract that fails silently when renamed, so the operations manual now
+  says so at the top instead of pretending the mismatch is an oversight
+- Upstream Collie is still called Collie where the docs compare against it or credit it, and the
+  changelog and decision records keep the name they were written under
+
 ## [0.29.3] - 2026-08-15
 
 ### Fixed

@@ -119,7 +119,7 @@ async function handlePush(event: PushEvent): Promise<void> {
   }
 
   const decision = decidePush(payload, await anyVisibleClient());
-  if (decision.kind === "suppress") return; // a visible Collie tab already surfaces it in-app
+  if (decision.kind === "suppress") return; // a visible setnet tab already surfaces it in-app
   if (decision.kind === "clear") {
     // Retraction: close the slot and show nothing. Chrome's silent-push budget tolerates this.
     const stale = await self.registration.getNotifications({ tag: decision.tag });
@@ -173,7 +173,7 @@ async function openPane(paneId: string | undefined, session?: string): Promise<v
   await openPath(`${base}${sessionSearchParam(session)}`);
 }
 
-// Focus an existing Collie tab (navigating it to `path`) or open a new one. `path` is origin-relative.
+// Focus an existing setnet tab (navigating it to `path`) or open a new one. `path` is origin-relative.
 async function openPath(path: string): Promise<void> {
   const url = new URL(path, self.location.origin).href;
   const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

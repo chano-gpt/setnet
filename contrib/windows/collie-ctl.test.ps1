@@ -162,12 +162,12 @@ COLLIE_HOST="127.0.0.1"
   }
   Remove-Item Env:COLLIE_TASK_RUN_LEVEL
 
-  Stop-Collie | Out-Null
+  Stop-setnet | Out-Null
   Assert-Equal ($script:disabled -join ",") "herdr.collie-test" "stop disables only Collie's task"
   Assert-Equal ($script:stopped -join ",") "herdr.collie-test" "stop stops only Collie's task"
 
   $script:unregistered = @()
-  $uninstallOutput = Uninstall-Collie | Out-String
+  $uninstallOutput = Uninstall-setnet | Out-String
   Assert-Equal ($script:unregistered -join ",") "herdr.collie-test" "uninstall always removes Collie's task"
   Assert-Contains $uninstallOutput "operator-managed" "uninstall leaves Tailscale Serve unchanged"
 
@@ -185,10 +185,10 @@ COLLIE_HOST="127.0.0.1"
   function Ensure-CollieBuild {}
   function Test-HerdrReady([int]$Attempts = 1) { $false }
   function Show-CollieStatus {}
-  $startOutput = Start-Collie 3>&1 | Out-String
+  $startOutput = Start-setnet 3>&1 | Out-String
   Assert-Contains $startOutput "temporarily unavailable" "temporary Herdr outage warning"
   Assert-Equal ($script:started -join ",") "herdr.collie-test" "start launches Collie's task"
-  Assert-Equal ($script:disabled -join ",") "" "temporary Herdr outage keeps Collie's task enabled"
+  Assert-Equal ($script:disabled -join ",") "" "temporary Herdr outage keeps setnet's task enabled"
 
   function Invoke-TestGit([string]$Repo, [string[]]$GitArgs) {
     & git -c user.name=collie-test -c user.email=test@example.invalid -C $Repo @GitArgs | Out-Null

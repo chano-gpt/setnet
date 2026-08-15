@@ -1,6 +1,6 @@
-# Architecture — Collie (a Herdr web bridge over Tailscale)
+# Architecture — setnet (a Herdr web bridge over Tailscale)
 
-> **Why Collie is shaped the way it is.** The deployment model, the interaction loop, and especially
+> **Why setnet is shaped the way it is.** The deployment model, the interaction loop, and especially
 > the security posture — the reasoning the code can't state itself. This describes what is built; a
 > few deliberate *non*-decisions are called out as such, and §8 parks ideas that are not built on
 > purpose. For how to run it see [`README.md`](./README.md); for repo conventions
@@ -8,7 +8,7 @@
 
 ## 1. The problem (real workflow, real pain)
 
-The route Collie replaces: **Termux on Android → SSH into a tailnet machine → run the Herdr TUI.**
+The route setnet replaces: **Termux on Android → SSH into a tailnet machine → run the Herdr TUI.**
 Three pains:
 
 1. The on-screen **terminal keyboard is terrible** to type on.
@@ -19,7 +19,7 @@ The goal: a **mobile web interface, reachable over Tailscale, that you don't hav
 into** — so you can check on and steer your agent herd from a phone with the native keyboard and
 voice, no SSH.
 
-## 2. What Collie is
+## 2. What setnet is
 
 A Herdr web bridge — a long-lived local process that
 
@@ -40,7 +40,7 @@ The browser never touches the socket directly; the bridge is the only thing that
    tailscale serve  ── injects identity headers, terminates TLS   (Variant C: a reverse proxy instead)
         │  127.0.0.1:PORT   (bridge binds loopback ONLY)
         ▼
-   Collie (this project)
+   setnet (this project)
      • static web app + small JSON API (browser polls /api/snapshot)
      • herdr-client adapter (the ONLY code that knows socket method names)
      • snapshot poll, event-poked (see §5)
@@ -94,7 +94,7 @@ agent goes blocked
 Product details that shaped the loop:
 
 - **Don't show a raw screenful.** A "last screenful" is often a mid-stack-trace — the actual
-  question is lines above. Collie parses recognised prompts out of the pane text into interactive
+  question is lines above. setnet parses recognised prompts out of the pane text into interactive
   blocks (`web/src/lib/blocks.ts`), so answering a permission dialog or a menu is a tap, not a
   transcription exercise. The raw pane stays below for context.
   - **Where this stops short of the design.** The original intent was for the *bridge* to capture the
@@ -179,7 +179,7 @@ app. Closing this needs the server-side blocking-message capture described above
 - **Render `pane.read` safely** (see §6): strip ANSI **server-side** to plain text and render it as
   React text nodes; never `innerHTML` raw terminal output.
 - **PWA cache-busting.** Service workers serve stale clients after an update, so the build stamp
-  travels in every response (`X-Collie-Build` header + `/api/config`); on mismatch the footer offers
+  travels in every response (`X-setnet-Build` header + `/api/config`); on mismatch the footer offers
   "new build — tap to update."
 
 ## 6. Security model
@@ -222,7 +222,7 @@ default). These four are genuine RCE vectors and are **load-bearing — do not r
 - **A same-origin gate on every API request** — accepted only when the browser's `Origin` host equals
   the `Host` header the bridge receives (loopback always allowed), so a page on any other tailnet
   device can't CSRF the bridge. With a plain `tailscale serve` on the MagicDNS name these match
-  automatically (no config). When Collie is fronted by a *different* public hostname or an extra
+  automatically (no config). When setnet is fronted by a *different* public hostname or an extra
   reverse proxy / TLS terminator (custom domain, load balancer, Headscale + upstream TLS, or a
   reverse-proxy front door — [README → Variant C](./OPERATIONS.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale)),
   the public origin no longer matches the forwarded `Host` — list that exact origin in
@@ -267,7 +267,7 @@ so they don't get re-discovered from scratch or acted on by accident.
   a pane as NDJSON live ANSI frames — `observe` is read-only; `control` additionally accepts stdin
   commands (`terminal.input`, `terminal.resize`, `terminal.scroll`, `terminal.release`) with
   one-controller-at-a-time semantics (`--takeover` to steal control). Consuming either would mean
-  running a terminal emulator, and **Collie doesn't** — the emulation already happened one process
+  running a terminal emulator, and **setnet doesn't** — the emulation already happened one process
   upstream, so `pane.read` hands us a rendered grid rather than a byte stream. Latency is a transport
   question and cursor position is an upstream ask; `control` would resize the *shared* PTY and fight
   the desktop. The full argument, the costs the proposal hides, and the narrow shape that would be

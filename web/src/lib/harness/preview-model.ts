@@ -20,7 +20,7 @@ export interface PreviewNote {
   /**
    * `none`: the dim "press n to add notes" hint — no note attached.
    * `editing`: the TUI's note input is FOCUSED (footer shows "ctrl+g to edit …") — keystrokes go
-   * into the input, so Collie must not drive the dialog until it blurs.
+   * into the input, so setnet must not drive the dialog until it blurs.
    * `attached`: a committed note is on the question (input blurred).
    */
   state: "none" | "editing" | "attached";

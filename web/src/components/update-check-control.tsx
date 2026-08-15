@@ -16,7 +16,7 @@ import type { UpdateInfo } from "@/lib/types";
 // banner; here we only confirm an up-to-date result or surface a check failure.
 
 function describe(update: UpdateInfo | undefined): string {
-  if (!update) return "Check whether a new Collie version is available.";
+  if (!update) return "Check whether a new setnet version is available.";
   const checked = update.checkedAt ? ` · checked ${timeAgo(update.checkedAt)}` : "";
   return `Running v${update.current}${checked}`;
 }

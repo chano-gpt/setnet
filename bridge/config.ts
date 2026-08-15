@@ -45,7 +45,7 @@ function envList(name: string): string[] {
 /**
  * A journal root setting: a list of directories, or `fallback` when unset.
  *
- * Comma-separated, like every other list Collie reads ({@link envList}) — deliberately NOT `PATH`'s
+ * Comma-separated, like every other list setnet reads ({@link envList}) — deliberately NOT `PATH`'s
  * separator, which is `:` on Unix and `;` on Windows and would make the same setting mean different
  * things on the two platforms this bridge supports. One path stays one path, so an existing value
  * parses to exactly what it always meant.
@@ -235,7 +235,7 @@ export function loadConfig(): Config {
       // projects tree, and a herd routinely mixes them (issue #92); one value is still one root.
       claude: envRoots("COLLIE_TRANSCRIPT_ROOT", join(homedir(), ".claude", "projects")),
       // Each harness's own home var is honoured first, so relocating the agent relocates its journal
-      // without a second Collie setting to keep in sync. The Collie override takes a list too — the
+      // without a second setnet setting to keep in sync. The setnet override takes a list too — the
       // multi-home case isn't Claude's alone, and one setting shouldn't behave differently per agent.
       codex: envRoots(
         "COLLIE_CODEX_ROOT",

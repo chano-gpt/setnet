@@ -29,12 +29,12 @@ function target(args: GuardArgs): DialogTarget<"preview-select"> & { sleep?: Sle
   return { ...args, kind: "preview-select", model: args.preview };
 }
 
-/** Longest note Collie will type (the editor enforces it). The TUI itself windows the display at
+/** Longest note setnet will type (the editor enforces it). The TUI itself windows the display at
  *  ~60 columns, so long notes can't be read back faithfully anyway — keep them phone-sized. */
 export const NOTE_MAX_LENGTH = 300;
 // The deterministic clear for an existing note: ctrl+k kills cursor→end, the Backspace sweep kills
 // the head (surplus presses at position 0 are no-ops). Sized past NOTE_MAX_LENGTH so any note
-// Collie itself attached is always fully cleared; ctrl+u/ctrl+a are NOT supported by the input.
+// setnet itself attached is always fully cleared; ctrl+u/ctrl+a are NOT supported by the input.
 const CLEAR_SWEEP = NOTE_MAX_LENGTH + 20;
 
 /** The preview identity comparators, part of the neutral contract (harness/preview-model.ts).

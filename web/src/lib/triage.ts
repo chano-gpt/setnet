@@ -5,7 +5,7 @@
 //
 // It runs on the two timestamps the bridge keeps per pane (bridge/activity.ts):
 //   lastActiveAt — when the agent last changed status
-//   lastSeenAt   — when you last opened or drove it through Collie
+//   lastSeenAt   — when you last opened or drove it through setnet
 import type { AgentStatus, AgentView } from "./types";
 
 /** Which way the Recent section runs. Attention sections never invert. */

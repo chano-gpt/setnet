@@ -51,7 +51,7 @@ Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel
   column is the anchor `preview-select.ts` uses to split "option label" from "preview content".
 - "Type something." does not appear (the note IS the free-text channel here). "Chat about this"
   appears **unnumbered** below the rule — and is NOT reachable with `Down` (Down clamps at the last
-  option), so Collie doesn't up-level it; Esc on the keys pad still cancels.
+  option), so setnet doesn't up-level it; Esc on the keys pad still cancels.
 - The footer is a `select`-family footer (`Enter to select`) **plus the discriminator
   `n to add notes`** — the single most specific anchor for this variant.
 
@@ -99,7 +99,7 @@ Further hazards, all observed:
 - In a wizard, the preview step's digit does **not** instant-select (unlike the no-preview wizard
   step where a digit answers and advances) — it only moves the pointer; `Enter` answers+advances.
 
-## Collie's choreography recipes (what `preview-action.ts` sends)
+## setnet's choreography recipes (what `preview-action.ts` sends)
 
 Select an option (race-guarded at step 1, verified at step 3):
 

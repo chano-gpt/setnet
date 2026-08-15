@@ -25,7 +25,7 @@ export interface PushPayload {
 export type PushDecision =
   /** Close any notification on this tag (retraction) — runs regardless of client visibility. */
   | { kind: "clear"; tag: string }
-  /** A Collie tab is already visible and showing this; don't raise a redundant system notification. */
+  /** A setnet tab is already visible and showing this; don't raise a redundant system notification. */
   | { kind: "suppress" }
   /** Show (or replace) the notification on this tag. */
   | {
@@ -46,7 +46,7 @@ export type PushDecision =
 export const tagFor = (paneId?: string): string => (paneId ? `collie:${paneId}` : "collie");
 
 /**
- * Decide what the SW should do with a push. `hasVisibleClient` = a Collie tab is open and visible
+ * Decide what the SW should do with a push. `hasVisibleClient` = a setnet tab is open and visible
  * (the in-app status already surfaces the alert, so the redundant system notification is suppressed
  * — but a clear still runs, since a retraction must close regardless).
  */

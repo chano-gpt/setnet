@@ -313,7 +313,7 @@ describe("sendGuardedReply", () => {
     expect(first).toEqual({
       status: "blocked",
       error:
-        "Collie has no verified composer grammar for this agent. Open the terminal to inspect it, or confirm Type anyway.",
+        "setnet has no verified composer grammar for this agent. Open the terminal to inspect it, or confirm Type anyway.",
     });
     expect(calls).toEqual([]);
 

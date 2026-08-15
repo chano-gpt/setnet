@@ -6,7 +6,7 @@
 // exactly `viewport_rows + 1` lines no matter how many you ask for (200, 600, 5000, 10000 — all 52).
 // A plain bash pane on the primary screen, by contrast, reports 6895 and pages fine. So "load older"
 // against a Claude pane can never work: the bytes were never retained. This is upstream terminal
-// behaviour, not a Collie bug and not a config knob.
+// behaviour, not a setnet bug and not a config knob.
 //
 // The history does exist, though — Claude Code writes every turn to its own session log at
 // `~/.claude/projects/<mangled-cwd>/<session-uuid>.jsonl`, and Herdr hands us that uuid on the pane

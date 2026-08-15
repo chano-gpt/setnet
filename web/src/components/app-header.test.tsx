@@ -23,7 +23,7 @@ describe("AppHeader — the one shared header shell", () => {
 
   it("is calm in the PANE variant while live — breadcrumb + status badge, no pill, no wordmark", () => {
     // Connection copy lives in the top ConnectionBanner now; the header carries none. A healthy pane
-    // header shows its own bits and a resting (static) Collie mark.
+    // header shows its own bits and a resting (static) setnet mark.
     const { container } = renderHeader(
       <AppHeader
         bridge="connected"
@@ -50,7 +50,7 @@ describe("AppHeader — the one shared header shell", () => {
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 
-  it("returns to the dashboard via onHome when the Collie mark is tapped", async () => {
+  it("returns to the dashboard via onHome when the setnet mark is tapped", async () => {
     const onHome = vi.fn();
     renderHeader(<AppHeader bridge="connected" error={false} onHome={onHome} wordmark />);
     await userEvent.click(screen.getByRole("button", { name: "setnet home" }));

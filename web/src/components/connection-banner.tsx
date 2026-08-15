@@ -263,7 +263,7 @@ function ConnectionStateBanner({ bridge, error }: Omit<ConnectionBannerProps, "a
 }
 
 // Copy + tint + icon per tone. Green/amber are fixed; red names the cause — the bridge answering means
-// Herdr is the outage, otherwise onLine decides between a true offline drop and an unreachable Collie.
+// Herdr is the outage, otherwise onLine decides between a true offline drop and an unreachable setnet.
 function resolveView(tone: Tone, online: boolean, probe: Probe) {
   if (tone === "green") {
     return { copy: "Connected", Icon: CheckCircle2, row: TINT.done.row, icon: TINT.done.icon } as const;
@@ -277,7 +277,7 @@ function resolveView(tone: Tone, online: boolean, probe: Probe) {
     probe === "reachable"
       ? { copy: "Herdr is down on the host", Icon: TriangleAlert }
       : probe === "unreachable" && !online
-        ? { copy: "Offline — can't reach Collie", Icon: WifiOff }
+        ? { copy: "Offline — can't reach setnet", Icon: WifiOff }
         : { copy: "Can't reach setnet", Icon: TriangleAlert };
   return { copy: cause.copy, Icon: cause.Icon, row: TINT.blocked.row, icon: TINT.blocked.icon } as const;
 }

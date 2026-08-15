@@ -8,7 +8,7 @@ import {
 
 // These rules are the difference between an installed PWA that can reach its front door and one that
 // is bricked behind a refused session, and the failure is silent in both directions: too narrow and
-// the sign-in page is invisible, too wide and Collie's own deep links stop resolving offline. The
+// the sign-in page is invisible, too wide and setnet's own deep links stop resolving offline. The
 // regexes are what the service worker actually installs, so pin the contract here.
 describe("service-worker navigation passthrough", () => {
   it("never answers the API from the precache", () => {
@@ -40,13 +40,13 @@ describe("service-worker navigation passthrough", () => {
     expect(isNetworkOnlyNavigation("/cdn-cgi/access/callback?code=abc")).toBe(true);
   });
 
-  it("does not leak a Collie route that merely carries a query string", () => {
+  it("does not leak a setnet route that merely carries a query string", () => {
     expect(isNetworkOnlyNavigation("/authors?x=1")).toBe(false);
     expect(isNetworkOnlyNavigation("/?s=collie-demo")).toBe(false);
     expect(isNetworkOnlyNavigation("/pane/w1:p1?s=demo")).toBe(false);
   });
 
-  it("still owns every Collie route, so deep links keep resolving offline", () => {
+  it("still owns every setnet route, so deep links keep resolving offline", () => {
     for (const path of [
       "/",
       "/settings",
@@ -58,7 +58,7 @@ describe("service-worker navigation passthrough", () => {
     }
   });
 
-  // A route merely STARTING with the reserved word is Collie's, not the proxy's: `/authors` must not
+  // A route merely STARTING with the reserved word is setnet's, not the proxy's: `/authors` must not
   // be handed to the network just because it shares five letters with `/auth`.
   it("does not leak a route that only shares the prefix", () => {
     expect(isNetworkOnlyNavigation("/authors")).toBe(false);

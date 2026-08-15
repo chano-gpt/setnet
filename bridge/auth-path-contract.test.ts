@@ -34,7 +34,7 @@ const CASES: { url: string; reserved: boolean }[] = [
 
 describe("the /auth reservation agrees across the service worker and the bridge", () => {
   for (const { url, reserved } of CASES) {
-    test(`${url} → ${reserved ? "reserved" : "Collie's"}`, () => {
+    test(`${url} → ${reserved ? "reserved" : "setnet's"}`, () => {
       const pathname = url.split("?")[0]!;
       expect(isReservedAuthPath(pathname)).toBe(reserved);
       // The API is network-only too, but it is not part of the reservation, so only /auth cases

@@ -21,7 +21,7 @@ describe("isConnecting (poll-truth — navigator.onLine is never an input)", () 
 
   it("is true when a load has stalled, even while connected/error-free", () => {
     // A stall is an in-flight fetch that hasn't settled — nothing has failed yet, but the data on
-    // screen isn't live, so the Collie mark should gallop.
+    // screen isn't live, so the setnet mark should gallop.
     expect(isConnecting({ bridge: "connected", error: false, stalled: true })).toBe(true);
   });
 });

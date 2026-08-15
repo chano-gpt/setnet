@@ -6,7 +6,7 @@ import { ROOT_ROUTE_ID, type HomeData } from "@/lib/loaders";
 import type { UpdateInfo } from "@/lib/types";
 import { UpdateBanner, updateNotice } from "./update-banner";
 
-// A real, existing Collie release (kept `current` below it so the "available" scenario is honest).
+// A real, existing setnet release (kept `current` below it so the "available" scenario is honest).
 const RELEASE_URL = "https://github.com/AltanS/collie/releases/tag/v0.10.3";
 const someUpdate = (over: Partial<UpdateInfo>): UpdateInfo => ({
   current: "0.9.0",
@@ -39,7 +39,7 @@ describe("updateNotice", () => {
 
   it("names the available release and links to it, with no command (the release page carries them)", () => {
     expect(updateNotice(someUpdate({ releaseAvailable: true, latest: "0.10.3" }))).toEqual({
-      line: "Collie 0.10.3 available",
+      line: "setnet 0.10.3 available",
       href: RELEASE_URL,
     });
   });
@@ -90,7 +90,7 @@ function renderBanner(update: UpdateInfo | undefined) {
 describe("UpdateBanner", () => {
   it("shows the release notice as a link to the release, with no command (the page carries it)", async () => {
     renderBanner(someUpdate({ releaseAvailable: true, latest: "0.10.3" }));
-    const link = await screen.findByRole("link", { name: "Collie 0.10.3 available" });
+    const link = await screen.findByRole("link", { name: "setnet 0.10.3 available" });
     expect(link).toHaveAttribute("href", RELEASE_URL);
     expect(screen.queryByRole("button")).toBeNull(); // no copyable command for the release case
   });

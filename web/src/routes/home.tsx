@@ -26,7 +26,7 @@ import { bucketOf } from "@/lib/triage";
 export function HomeRoute() {
   const data = useRouteLoaderData(ROOT_ROUTE_ID) as HomeData;
   // A stalled load (a black-holed poll, or a pane-open tap whose navigation hangs) gallops the
-  // Collie mark within the threshold — instant feedback while you're still on the dashboard, even
+  // setnet mark within the threshold — instant feedback while you're still on the dashboard, even
   // though the tap otherwise shows no visual change until its loader finally settles or times out.
   const stalled = useLoadingStalled();
   const location = useLocation();

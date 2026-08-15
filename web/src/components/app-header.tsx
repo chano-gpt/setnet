@@ -18,10 +18,10 @@ interface AppHeaderProps {
   error: boolean;
   stalled?: boolean;
 
-  /** Tapping the Collie mark returns to the dashboard. A callback, not a `<Link to="/">`: the
+  /** Tapping the setnet mark returns to the dashboard. A callback, not a `<Link to="/">`: the
    *  dashboard and the drilled-in space view share the "/" route, so a same-route link would no-op. */
   onHome?: () => void;
-  /** Show the "Collie" wordmark beside the mark (dashboard + space). Omit inside a pane — the
+  /** Show the "setnet" wordmark beside the mark (dashboard + space). Omit inside a pane — the
    *  breadcrumb in `children` carries the context there, and the mark stands alone to save width. */
   wordmark?: boolean;
 
@@ -40,7 +40,7 @@ interface AppHeaderProps {
   override?: ReactNode;
 }
 
-// The single header shell every screen mounts: the sticky, safe-area-aware zinc bar with the Collie
+// The single header shell every screen mounts: the sticky, safe-area-aware zinc bar with the setnet
 // mark on the left, an optional route breadcrumb in the middle, and the caller's right cluster. The
 // mark's connection animation is baked in here (not a slot), so no caller can forget it: it gallops on
 // sustained trouble and rests muted once lost, computed from the SAME shared clock as the top

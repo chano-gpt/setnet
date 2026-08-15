@@ -3,7 +3,7 @@
 // danger keys, cycle modifier state, and normalise the one-char chord input. No React, no I/O —
 // every string this produces is what goes on the wire to Herdr's `pane.send_keys`.
 
-// The modifiers Collie surfaces in the tray. Multi-modifier chords in ANY order — `ctrl+shift+p`,
+// The modifiers setnet surfaces in the tray. Multi-modifier chords in ANY order — `ctrl+shift+p`,
 // the triple `ctrl+alt+shift+p`, `alt+Up` — are now LIVE-VERIFIED against Herdr (0.7.3 sandbox +
 // 0.7.4 by the issue reporter), so compose freely combines them. The wire grammar also accepts
 // `cmd`/`super`, which we don't surface here (keyLabel still labels them if they ever appear).

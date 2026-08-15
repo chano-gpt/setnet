@@ -9,7 +9,7 @@ describe("decidePush", () => {
     expect(decidePush({ type: "clear", tag: "collie:herd" }, true)).toEqual(expected);
   });
 
-  test("suppresses a show when a Collie tab is visible", () => {
+  test("suppresses a show when a setnet tab is visible", () => {
     expect(decidePush({ title: "claude needs you", tag: "collie:herd" }, true)).toEqual({
       kind: "suppress",
     });
@@ -60,7 +60,7 @@ describe("decidePush", () => {
     expect(
       decidePush(
         {
-          title: "Collie 0.12.0 available",
+          title: "setnet 0.12.0 available",
           body: "collie-ctl.sh update",
           data: { target: "settings" },
         },
@@ -68,7 +68,7 @@ describe("decidePush", () => {
       ),
     ).toMatchObject({
       kind: "show",
-      title: "Collie 0.12.0 available",
+      title: "setnet 0.12.0 available",
       target: "settings",
       paneId: undefined,
     });

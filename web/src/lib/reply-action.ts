@@ -245,7 +245,7 @@ export type ComposerPrepResult =
 
 export async function sendGuardedReply(args: GuardedReplyArgs): Promise<ReplyOutcome> {
   const adapter = adapterFor(args.agent ?? undefined);
-  // Identity, history, and managed readiness do not prove that Collie can distinguish this agent's
+  // Identity, history, and managed readiness do not prove that setnet can distinguish this agent's
   // composer from its modals. Require the same explicit two-step override used for a refused live
   // composer before falling back to terminal-compatible one-shot input.
   if (!adapter) {
@@ -253,7 +253,7 @@ export async function sendGuardedReply(args: GuardedReplyArgs): Promise<ReplyOut
       return {
         status: "blocked",
         error:
-          "Collie has no verified composer grammar for this agent. Open the terminal to inspect it, or confirm Type anyway.",
+          "setnet has no verified composer grammar for this agent. Open the terminal to inspect it, or confirm Type anyway.",
       };
     }
     return oneShot(args);

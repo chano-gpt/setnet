@@ -120,7 +120,7 @@ EOF
   chmod +x "${BIN_DIR}/tailscale"
 }
 
-# Publishing must move cleanly between ports and modes, and must never clobber a root mount Collie
+# Publishing must move cleanly between ports and modes, and must never clobber a root mount setnet
 # didn't create.
 test_tailscale_cutovers_and_collisions() {
   setup_case tailscale
@@ -245,7 +245,7 @@ EOF
 }
 
 # If the ownership record can't be deleted, teardown must report failure and KEEP the record —
-# dropping it would orphan a live mapping with nothing left that knows Collie owns it.
+# dropping it would orphan a live mapping with nothing left that knows setnet owns it.
 test_state_delete_failures() {
   setup_case state-delete-failures
   cat > "${BIN_DIR}/tailscale" <<'EOF'
@@ -286,7 +286,7 @@ EOF
   bash "$harness" > "${CASE_DIR}/delete-failure.out" 2>&1
 }
 
-# An install that predates ownership tracking has Collie's OWN root mount and no record of it.
+# An install that predates ownership tracking has setnet's OWN root mount and no record of it.
 # Publishing must adopt that mount, not refuse it — refusing breaks start/restart/update on every
 # deployment that upgrades into this feature.
 test_adopts_preexisting_collie_mount() {
@@ -302,7 +302,7 @@ EOF
   [ ! -e "${CONFIG_DIR}/tailscale-managed-handler" ] || fail "fixture already had ownership state"
 
   run_ctl serve > "${CASE_DIR}/adopt-http.out" 2>&1 ||
-    fail "serve refused to adopt Collie's own pre-existing HTTP mount"
+    fail "serve refused to adopt setnet's own pre-existing HTTP mount"
   assert_eq "$(cat "${CONFIG_DIR}/tailscale-managed-handler")" \
     'http:8787|host.example:8787|http://127.0.0.1:8787'
 
@@ -314,7 +314,7 @@ EOF
 COLLIE_PORT=8787
 EOF
   run_ctl serve > "${CASE_DIR}/adopt-https.out" 2>&1 ||
-    fail "serve refused to adopt Collie's own pre-existing HTTPS mount"
+    fail "serve refused to adopt setnet's own pre-existing HTTPS mount"
   assert_eq "$(cat "${CONFIG_DIR}/tailscale-managed-handler")" \
     'https:443|host.example:443|http://127.0.0.1:8787'
 
@@ -634,7 +634,7 @@ test_qr_subcommand() {
   assert_contains "$out" "https://collie.example.com"
   assert_contains "$out" "█"
 
-  # Variant C/E without one: Collie doesn't know the ingress, so there's nothing true to encode.
+  # Variant C/E without one: setnet doesn't know the ingress, so there's nothing true to encode.
   if out="$(COLLIE_SKIP_SERVE=1 run_ctl qr 2>&1)"; then
     fail "qr invented a URL under COLLIE_SKIP_SERVE=1"
   fi
@@ -823,7 +823,7 @@ EOF
   assert_contains "$(cat "${CASE_DIR}/build.out")" 'bun not found'
 }
 
-# ── update: the checkout can be in either of the two shapes Collie is installed in ───────────────
+# ── update: the checkout can be in either of the two shapes setnet is installed in ───────────────
 #
 # `herdr plugin install` does NOT clone: it runs `git init` + `git fetch --depth 1 origin HEAD` +
 # `git checkout --detach FETCH_HEAD`, so the plugin lives in a detached, shallow checkout with no
@@ -831,7 +831,7 @@ EOF
 # which is issue #63 — the turnkey install could never self-update. These stage both shapes for real,
 # against a local origin, and drive the actual git logic.
 # `core.hooksPath=/dev/null` because these sandboxes make real commits: a developer who set
-# `core.hooksPath` globally (Collie's own install-hooks.sh sets it per-repo, but not everyone's does)
+# `core.hooksPath` globally (setnet's own install-hooks.sh sets it per-repo, but not everyone's does)
 # would otherwise have this repo's pre-commit fire inside a scratch repo that has no
 # scripts/check-version.sh, failing the suite for a reason that has nothing to do with the test.
 git_q() {

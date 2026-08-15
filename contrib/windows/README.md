@@ -1,7 +1,7 @@
-# Collie on Windows — community-maintained lifecycle
+# setnet on Windows — community-maintained lifecycle
 
-The Collie **bridge** has run on Windows since 0.15.0: Herdr exposes its control socket there as a
-*named pipe*, and Collie dials it through `node:net` — see [`bridge/dial.ts`](../../bridge/dial.ts)
+The setnet **bridge** has run on Windows since 0.15.0: Herdr exposes its control socket there as a
+*named pipe*, and setnet dials it through `node:net` — see [`bridge/dial.ts`](../../bridge/dial.ts)
 and [Windows](../../OPERATIONS.md#windows-experimental) in the main README. What was missing is the
 **lifecycle** around it: a supervisor, and the start/stop/update commands. That's what lives here —
 a PowerShell control script that mirrors [`scripts/collie-ctl.sh`](../../scripts/collie-ctl.sh)
@@ -53,12 +53,12 @@ nothing is relaxed here.
   opt-in for hosts where Herdr itself intentionally runs as Administrator, it refuses to register
   unless you're in an Administrator PowerShell — and every action you take from your phone then
   inherits Administrator. Prefer running Herdr normally.
-- **Ingress stays operator-owned. Collie publishes nothing on Windows.** The control script never
+- **Ingress stays operator-owned. setnet publishes nothing on Windows.** The control script never
   touches Tailscale Serve state — not on `start`, not on `uninstall`. Create the mapping yourself,
   once, in an Administrator PowerShell (`tailscale serve --bg 8787`), or run
   `COLLIE_SKIP_SERVE=1` behind your own reverse proxy per
   [Variant C](../../OPERATIONS.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale). This
-  is the [one managed front door](../../.adr/0001-one-managed-front-door.md) rule holding: Collie
+  is the [one managed front door](../../.adr/0001-one-managed-front-door.md) rule holding: setnet
   manages exactly one, and it isn't this one.
 
 ## Support
@@ -67,7 +67,7 @@ nothing is relaxed here.
 from [#71](https://github.com/AltanS/collie/pull/71). Verified against **0.27.x** at extraction
 time. It is **not covered by CI, not exercised by the release process, and not part of the
 supported tree** — the maintainer does not run Windows. Fixes arrive as pull requests, not as bug
-reports; if it breaks against a newer Collie, send the patch.
+reports; if it breaks against a newer setnet, send the patch.
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File contrib\windows\collie-ctl.test.ps1

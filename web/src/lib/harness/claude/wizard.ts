@@ -6,7 +6,7 @@
 // design: the TUI shows only the current step; a digit instantly selects AND advances one step
 // (no Enter, unlike single-question selects); the final step is a Submit review where digit `1`
 // (or Enter) submits and `2` cancels — and that review step has NO hint footer, so it needs its
-// own tail anchor. The round-trip model is INCREMENTAL: Collie mirrors the current step, each tap
+// own tail anchor. The round-trip model is INCREMENTAL: setnet mirrors the current step, each tap
 // sends exactly one keystroke, and the next poll re-derives the next step — the TUI is the single
 // source of truth for selections (no client-side form state to drift).
 //

@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useIdleLock } from "./use-idle-lock";
 import { resetIdleLock } from "@/lib/idle";
 
-// The lock exists for exactly one situation: Collie left OPEN, VISIBLE and untouched past the
+// The lock exists for exactly one situation: setnet left OPEN, VISIBLE and untouched past the
 // deadline. These pin the two rules that produce that, both of which reverse earlier behaviour —
 // a hidden page never locks, and returning to the foreground auto-resumes instead of locking.
 const IDLE = 1000;

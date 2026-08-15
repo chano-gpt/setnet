@@ -1004,7 +1004,7 @@ describe("normalizeTabLabel", () => {
   });
 });
 
-// The X-Collie-Build response header is what a no-service-worker client polls to notice a live
+// The X-setnet-Build response header is what a no-service-worker client polls to notice a live
 // rebuild (web/src/lib/server-build.ts). withBuildHeader is the pure attach helper; the handlers
 // that call it (snapshot/pane) stay untested by convention (they need Bun.serve + the socket).
 describe("withBuildHeader", () => {
@@ -1067,7 +1067,7 @@ describe("isReservedAuthPath — the namespace a fronting proxy owns", () => {
     expect(isReservedAuthPath("/auth/oidc/callback")).toBe(true);
   });
 
-  test("leaves Collie's own routes alone, including a mere prefix match", () => {
+  test("leaves setnet's own routes alone, including a mere prefix match", () => {
     for (const path of ["/", "/settings", "/pane/w1:p1", "/authors", "/api/snapshot"]) {
       expect(isReservedAuthPath(path)).toBe(false);
     }

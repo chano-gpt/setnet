@@ -16,7 +16,7 @@ export interface NotifyPrefs {
   blocked: boolean;
   /** Push when an agent finishes its task. Default off. */
   done: boolean;
-  /** Push when a newer Collie release is available. Default on — the off-switch for update alerts,
+  /** Push when a newer setnet release is available. Default on — the off-switch for update alerts,
    *  which otherwise bypass snooze (an update isn't quiet-hours material). Not an agent status, so it
    *  never flows through {@link isNotifiable}; the update monitor reads it directly. */
   updates: boolean;

@@ -129,7 +129,7 @@ describe("UpdateCheckControl", () => {
 
   it("prompts to check when the bridge reports no update info", async () => {
     renderControl(undefined);
-    expect(await screen.findByText(/whether a new collie version is available/i)).toBeInTheDocument();
+    expect(await screen.findByText(/whether a new setnet version is available/i)).toBeInTheDocument();
     expect(screen.queryByText(/up to date/i)).toBeNull();
   });
 });

@@ -18,7 +18,7 @@
 // a free-form path ref (pi reports one), no root built it, so any configured root may contain it and
 // each is tried in turn ({@link containedRealpathIn}). Both are the same sentence: containment is
 // checked per root, never against a union of them.
-// A journal is exactly as sensitive as the pane mirror Collie already serves (it is the same
+// A journal is exactly as sensitive as the pane mirror setnet already serves (it is the same
 // conversation), but it reaches further back — `COLLIE_TRANSCRIPT=off` disables the feature wholesale.
 
 import { realpath, stat } from "node:fs/promises";

@@ -222,7 +222,7 @@ export function HistoryRoute() {
             )}
           </>
         }
-        // Explicit exit from reading mode. The Collie mark also returns to the pane, but this is a
+        // Explicit exit from reading mode. The setnet mark also returns to the pane, but this is a
         // full-screen reading view you deliberately entered — it should be as obvious to leave as it
         // was to open, without relying on the phone's back gesture.
         rightTrail={

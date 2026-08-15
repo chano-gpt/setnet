@@ -20,7 +20,7 @@ describe("observeServerBuild — store semantics", () => {
     expect(getServerBuild()).toBeUndefined();
     observeServerBuild("0.13.0+abc.1");
     expect(getServerBuild()).toBe("0.13.0+abc.1");
-    observeServerBuild(null); // older bridge — no X-Collie-Build header
+    observeServerBuild(null); // older bridge — no X-setnet-Build header
     expect(getServerBuild()).toBe("0.13.0+abc.1"); // left as-is, not reset to undefined
   });
 
@@ -37,7 +37,7 @@ describe("observeServerBuild — store semantics", () => {
 });
 
 describe("header capture through the api fetch wrapper (MSW exposes the response header)", () => {
-  it("captures X-Collie-Build off a snapshot poll", async () => {
+  it("captures X-setnet-Build off a snapshot poll", async () => {
     server.use(
       http.get("/api/snapshot", () =>
         HttpResponse.json(fixtureSnapshot, { headers: { "x-collie-build": "0.13.0+srv.9" } }),

@@ -7,7 +7,7 @@ import type { UpdateStatus } from "./types.ts";
 // Update-availability signal, surfaced on the (access-gated) /api/snapshot as `update`. Two
 // independent questions the running plugin can answer about itself:
 //
-//   • releaseAvailable — is a newer Collie RELEASE published upstream? We read the repo's git tags
+//   • releaseAvailable — is a newer setnet RELEASE published upstream? We read the repo's git tags
 //     over anonymous HTTPS (the repo is public) and compare the newest `vX.Y.Z` to the running
 //     version. No `git` subprocess (the SSH origin has no agent under systemd --user, and a
 //     non-git install has no origin at all), no auth (the 60/hr anonymous limit is irrelevant at a
@@ -110,7 +110,7 @@ export function bridgeStampSync(bridgeDir: string, rootDir: string): string {
   return stampOf(entries);
 }
 
-/** The GitHub release page for a version, e.g. `…/releases/tag/v0.12.0`. Collie tags are `vX.Y.Z`
+/** The GitHub release page for a version, e.g. `…/releases/tag/v0.12.0`. setnet tags are `vX.Y.Z`
  *  (the versioning convention), so the `v` prefix is reconstructed from the bare version. GitHub
  *  serves the tag page even when there's no formal release attached, so this is always a live link. */
 export function githubReleaseUrl(repo: string, version: string): string {

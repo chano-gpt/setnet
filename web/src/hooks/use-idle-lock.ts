@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 
 import { setLocked, useLocked } from "@/lib/idle";
 
-// Pause an UNATTENDED, VISIBLY-OPEN Collie: after a stretch with no interaction we cover the app and
+// Pause an UNATTENDED, VISIBLY-OPEN setnet: after a stretch with no interaction we cover the app and
 // stop polling until it's resumed. Two rules define the feature, and both are load-bearing:
 //
 //   • We never lock a HIDDEN page. A backgrounded tab already polls nothing (use-polling skips every
@@ -11,7 +11,7 @@ import { setLocked, useLocked } from "@/lib/idle";
 //   • Returning to the foreground AUTO-RESUMES. A lock you meet on the way back is pure ceremony: it
 //     guards nothing a page reload didn't already bypass, and it costs a tap every single time.
 //
-// Together those mean the lock can only appear one way — you left Collie open, visible and untouched
+// Together those mean the lock can only appear one way — you left setnet open, visible and untouched
 // past the deadline (a desk, a tablet; almost never a phone, whose screen sleeps long first). That is
 // the case where covering the screen and dropping the poll actually earns its keep.
 //

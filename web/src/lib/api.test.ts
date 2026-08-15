@@ -238,7 +238,7 @@ describe("api client — session scoping", () => {
 });
 
 // The fetch layer is where liveness is stamped onto the shared lib/connection-health anchor (the same
-// interception point that captures X-Collie-Build). A live snapshot/pane stamps; a 200 that reports
+// interception point that captures X-setnet-Build). A live snapshot/pane stamps; a 200 that reports
 // the herd link down must NOT — otherwise the "Herdr is down" escalation could never fire.
 describe("api client — connection-health stamping", () => {
   it("stamps a live moment on a healthy snapshot (bridge connected)", async () => {
@@ -272,7 +272,7 @@ describe("api client — connection-health stamping", () => {
   });
 });
 
-// A proxy that REDIRECTS an unauthenticated request instead of refusing it strips Collie of the only
+// A proxy that REDIRECTS an unauthenticated request instead of refusing it strips setnet of the only
 // signal `isAuthError` (lib/loaders.ts) can act on: `fetch` follows the cross-origin 302, the call
 // rejects as a TypeError with no status, and the refusal banner — with the Sign-in link that would
 // restore the session — never renders. Marking requests as XHR is what makes such a proxy answer 401

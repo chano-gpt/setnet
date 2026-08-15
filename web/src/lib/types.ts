@@ -55,7 +55,7 @@ export interface AgentView {
    */
   lastActiveAt?: number;
   /**
-   * Epoch ms you last opened or drove this pane through Collie. Absent as above.
+   * Epoch ms you last opened or drove this pane through setnet. Absent as above.
    *
    * There is no "seen" flag anywhere: a `done` agent is unseen precisely when
    * `lastActiveAt > lastSeenAt`, so opening the pane clears it by construction.
@@ -138,7 +138,7 @@ export interface SessionSummary {
 }
 
 /**
- * Version / upgrade status for the running Collie (mirrors UpdateInfo in bridge/types.ts). Optional
+ * Version / upgrade status for the running setnet (mirrors UpdateInfo in bridge/types.ts). Optional
  * on the snapshot — an older bridge omits it entirely, which the client treats as "no info" (the
  * update banner renders nothing). `latest` is null when the newest upstream release isn't known.
  */
@@ -281,7 +281,7 @@ export interface NotifyPrefs {
   blocked: boolean;
   /** Push when an agent finishes its task. Default off. */
   done: boolean;
-  /** Push when a new Collie version is available (a restart or upgrade is waiting). Default on. */
+  /** Push when a new setnet version is available (a restart or upgrade is waiting). Default on. */
   updates: boolean;
 }
 

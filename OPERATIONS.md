@@ -2,7 +2,12 @@
 
 > **This is the full operational reference, inherited from upstream [Collie](https://github.com/AltanS/collie) and kept in English on purpose.** Install, security posture, deployment variants, Web Push, and troubleshooting all live here — the security and deployment sections especially are not translated, because a mistranslated proxy or ACL rule is a real incident. For what setnet *is* and how it differs from Collie, start at [`README.md`](./README.md).
 >
-> Where this document says "Collie", read it as setnet — the package name, plugin id (`herdr.collie`) and every `COLLIE_*` environment variable are unchanged. The one difference that matters here: **install from `chano-gpt/setnet`**, not `AltanS/collie`.
+> The prose says setnet; the identifiers still say collie, and that is deliberate. The plugin id
+> (`herdr.collie`), the systemd unit (`collie`), the state dir (`~/.local/state/collie`), the
+> control script (`collie-ctl.sh`) and every `COLLIE_*` variable keep their names, because each
+> is an external contract that fails silently when renamed — a dropped `COLLIE_TRUSTED_USER`
+> reverts the bridge to open-on-the-tailnet without saying so. Type them exactly as written.
+> The one thing that did change: **install from `chano-gpt/setnet`**, not `AltanS/collie`.
 
 <p align="center">
   <img src="assets/collie-hero.webp" alt="A collie herding a flock of sheep" width="640">
@@ -11,7 +16,7 @@
 A phone web UI for your [Herdr](https://herdr.dev) agent herd, served over Tailscale. Open a URL, see
 which agent is waiting on you, and answer it with your phone's keyboard.
 
-The reply box is an ordinary text field, so your phone's own voice dictation works in it; Collie
+The reply box is an ordinary text field, so your phone's own voice dictation works in it; setnet
 ships none of its own.
 
 - **React Router + Vite** — TypeScript, Tailwind, shadcn, and a Bun bridge
@@ -31,7 +36,7 @@ ships none of its own.
   [`.env.example`](./.env.example))
 - **Easily switch between Herdr sessions**
 
-- **In the works** — more than one machine under a single URL: one Collie leads, the others join it
+- **In the works** — more than one machine under a single URL: one setnet leads, the others join it
 
 ## Contents
 
@@ -61,7 +66,7 @@ a tap, switch between herds, and pick up a push notification the moment an agent
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="assets/dashboard.png" alt="Collie dashboard — Needs you, Recent, Spaces" width="250"><br><sub><b>Dashboard</b> — agents needing you float to the top</sub></td>
+    <td align="center" width="50%"><img src="assets/dashboard.png" alt="setnet dashboard — Needs you, Recent, Spaces" width="250"><br><sub><b>Dashboard</b> — agents needing you float to the top</sub></td>
     <td align="center" width="50%"><img src="assets/ask-question.png" alt="A Claude AskUserQuestion prompt up-leveled into tappable buttons" width="250"><br><sub><b>Ask</b> — Claude's own questions become tappable buttons</sub></td>
   </tr>
   <tr>
@@ -81,19 +86,19 @@ in, attach to the terminal — but driving a TUI through its on-screen controls 
 special keys are fiddly, `Ctrl`/`Esc`/arrows are buried behind chords, and every reply is a fight
 with the keyboard. I wanted something that feels like an app, not a terminal squeezed onto a
 touchscreen: tap the agent that needs you, type with your real keyboard, fire `Esc` or `Ctrl+C` with
-one thumb. Collie is that.
+one thumb. setnet is that.
 
 ## Who is this for
 
 You, if you run [Herdr](https://herdr.dev) agents on a machine and want to pick a session back up
 from your phone. It assumes a **[Tailscale](https://tailscale.com) tailnet**: your phone and the host
 are on the same tailnet, and `tailscale serve` is the only way in. It is **single-user** — one
-operator, one tailnet, no multi-tenant auth. If you need shared or public access, Collie isn't built
+operator, one tailnet, no multi-tenant auth. If you need shared or public access, setnet isn't built
 for it. Read the security note below either way.
 
 ## ⚠️ Security — read before you run it
 
-**Collie is remote shell access to your machine, by design.** One bridge call types arbitrary
+**setnet is remote shell access to your machine, by design.** One bridge call types arbitrary
 keystrokes into a live terminal pane, so anyone who can reach the URL can read every pane (source,
 secrets, env, agent output) and run any command as your user. No sandbox, no command allow-list
 (that would defeat the purpose). Treat the URL like a root login.
@@ -102,7 +107,7 @@ Four sharp edges:
 
 - **It acts as _you_**, with your full privileges — `~/.ssh`, `git push --force`, `rm -rf`, `sudo`.
 - **It's reachable by every uid on the host, not just yours.** Herdr's socket is a file, so its
-  permissions keep other local users out; Collie's port is TCP, so they're all in. An agent you
+  permissions keep other local users out; setnet's port is TCP, so they're all in. An agent you
   deliberately ran as another user to contain it can still `curl 127.0.0.1:8787` and type into any
   pane. Set the device gate below if that uid boundary was your containment — but it gates **writes
   only**. Snapshots, pane output and transcript history stay readable by any local uid, so the gate
@@ -143,7 +148,7 @@ It's built single-user and tailnet-only. The defenses:
   same-origin with the bridge.
 
 > 🚫 **Never `tailscale funnel` this** — funnel exposes it to the public internet; `serve` keeps it
-> tailnet-only. There is no scenario where funneling Collie is correct.
+> tailnet-only. There is no scenario where funneling setnet is correct.
 
 Narrow the blast radius with Tailscale ACLs and `COLLIE_TRUSTED_USER`. Provided as-is, no warranty.
 
@@ -154,7 +159,7 @@ On the **host** (the tailnet node your agents run on):
 | Tool | Why |
 | --- | --- |
 | [**Bun**](https://bun.sh) | Runs the bridge and builds the web UI — the only hard dependency. |
-| [**Herdr**](https://herdr.dev) ≥ 0.7.0 | The herd Collie mirrors; its CLI registers the plugin. |
+| [**Herdr**](https://herdr.dev) ≥ 0.7.0 | The herd setnet mirrors; its CLI registers the plugin. |
 | [**Tailscale**](https://tailscale.com) | Front door for the default variant (`tailscale serve`); optional if you run [Variant C](#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale) behind your own reverse proxy. Without any front door, the bridge is `127.0.0.1`-only. |
 | **git** | Clone, and the `update` command. |
 
@@ -218,14 +223,14 @@ building web UI (first run)…                    # linked clone only; a GitHub 
 bridge started (systemd --user: collie)
 tailscale serve (https) → tailnet :443 -> 127.0.0.1:8787
 
-  ✓ Collie is running  ·  v0.15.0+174c4e4
+  ✓ setnet is running  ·  v0.15.0+174c4e4
     service   systemd --user (collie) · active
     local     http://127.0.0.1:8787
     tailnet   https://myhost.tail1234.ts.net
 ```
 
 The `✓` is a real probe — the script connected to the bridge's port and got an answer, not just
-"the unit is active". If you get `⚠ Collie isn't answering on :8787 yet` instead, see
+"the unit is active". If you get `⚠ setnet isn't answering on :8787 yet` instead, see
 [Troubleshooting](#troubleshooting).
 
 ### What just happened
@@ -255,7 +260,7 @@ connected to the same tailnet as the host.
 
 Rather than typing a MagicDNS name on a phone keyboard, **`scripts/collie-ctl.sh qr` prints it as a
 QR code** you can point a camera at. It's its own subcommand rather than part of `start` because
-Collie is a PWA: once it's on your home screen you never need the URL again.
+setnet is a PWA: once it's on your home screen you never need the URL again.
 
 Then install it as an app: **iOS** — Safari → share sheet → *Add to Home Screen*. **Android** —
 Chrome → ⋮ menu → *Add to Home screen* (or *Install app*). Installing (and Web Push) needs the
@@ -269,7 +274,7 @@ A sixty-second check, host side then phone side:
 ```console
 $ scripts/collie-ctl.sh status
 
-  ✓ Collie is running  ·  v0.15.0+174c4e4
+  ✓ setnet is running  ·  v0.15.0+174c4e4
     service   systemd --user (collie) · active
     local     http://127.0.0.1:8787
     tailnet   https://myhost.tail1234.ts.net
@@ -299,7 +304,7 @@ see [Troubleshooting](#troubleshooting).
 ### Surviving reboots
 
 A `systemd --user` service only runs while you have a login session. On a host that should serve
-Collie unattended, enable lingering once:
+setnet unattended, enable lingering once:
 
 ```bash
 loginctl enable-linger $USER
@@ -312,11 +317,11 @@ The unit is `enable`d, so with lingering it starts at boot with your user manage
 (`~/Library/LaunchAgents/herdr.collie.plist`) with `RunAtLoad`, so the bridge comes back when you log
 in and launchd restarts it if it exits abnormally. Inspect it with
 `launchctl print gui/$(id -u)/herdr.collie`. It's a *LaunchAgent*, not a daemon, so it starts at
-**login** rather than at boot — a Mac sitting at the login window is not serving Collie.
+**login** rather than at boot — a Mac sitting at the login window is not serving setnet.
 
 ## Configure
 
-Out of the box Collie runs **open single-user**: anyone on your tailnet who can reach the URL has
+Out of the box setnet runs **open single-user**: anyone on your tailnet who can reach the URL has
 full control — that's exactly what the two startup WARNINGs are about. Close both in one sitting:
 
 ```bash
@@ -341,7 +346,7 @@ The bridge reads `.env` only at startup — after any edit, `scripts/collie-ctl.
 
 **Custom domain or reverse proxy?** See
 [Variant C](#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale) for the full reverse-proxy
-front-door setup. The one rule to know here: Collie is same-origin only. A plain `tailscale serve` on
+front-door setup. The one rule to know here: setnet is same-origin only. A plain `tailscale serve` on
 your MagicDNS name works as-is, but a different hostname or TLS terminator makes API calls fail with
 `403 cross-origin` (page loads, stays empty). Allow the exact origin:
 
@@ -351,7 +356,7 @@ COLLIE_ALLOWED_ORIGINS=https://collie.example.com
 
 ## Dark mode / light mode
 
-**Collie follows your phone by default.** Flip your device to dark at sunset and Collie goes with
+**setnet follows your phone by default.** Flip your device to dark at sunset and setnet goes with
 it, no setting touched.
 
 To pin it, open **Settings → Appearance** and pick **System**, **Light** or **Dark**. That's the
@@ -372,8 +377,8 @@ measurement is in [ADR 0002](./.adr/0002-invert-the-light-terminal-mirror.md).
 Two things follow that are worth knowing:
 
 - **Keep your agents on a dark theme** — the default for Claude Code, codex, opencode and pi. An
-  agent set to a *light* theme emits dark-on-light colours, which are unreadable in Collie under
-  either appearance. This is a property of what the agent sends, not of Collie's rendering.
+  agent set to a *light* theme emits dark-on-light colours, which are unreadable in setnet under
+  either appearance. This is a property of what the agent sends, not of setnet's rendering.
 - **Diffs and highlighted rows show as dark blocks** in light mode. Legibility is unaffected; only
   the visual weight flips.
 
@@ -392,7 +397,7 @@ below as `invoke <cmd>`). The ones you'll actually use:
 | **Start** — build if needed, serve, print the URL | `collie-ctl.sh start` | `invoke start` |
 | **Stop** — pause the bridge; removes nothing | `collie-ctl.sh stop` | `invoke stop` |
 | **Restart** | `collie-ctl.sh restart` | `invoke restart` |
-| **Status** — the *Collie is running* banner + URLs | `collie-ctl.sh status` | `invoke status` |
+| **Status** — the *setnet is running* banner + URLs | `collie-ctl.sh status` | `invoke status` |
 | **URL** — print the tailnet URL | `collie-ctl.sh url` | `invoke url` |
 | **QR** — the same URL as a scannable code | `collie-ctl.sh qr` | — (script only) |
 | **Version** — the running version (`0.x.y+sha`) | `collie-ctl.sh version` | `invoke version` |
@@ -400,7 +405,7 @@ below as `invoke <cmd>`). The ones you'll actually use:
 | **Uninstall** — remove the service; keep `.env` + checkout | `collie-ctl.sh uninstall` | `invoke uninstall` |
 | **Logs** — tail the journal / log file | `collie-ctl.sh logs` | — (script only) |
 
-`start` and `status` end with the **Collie is running** banner — annotated line by line in
+`start` and `status` end with the **setnet is running** banner — annotated line by line in
 [First run](#first-run--what-youll-see). Its version comes from the *served* bundle stamp, so it's
 the authoritative "what's running" — note `herdr plugin list --json` shows a different value cached
 at `plugin link` time; for a linked clone `update` re-links automatically so that self-heals (to
@@ -412,7 +417,7 @@ banner** — the human-readable output is the action's *captured stdout*, read w
 
 ### Herdr actions
 
-Collie registers these actions in `herdr-plugin.toml`; invoke any with
+setnet registers these actions in `herdr-plugin.toml`; invoke any with
 `herdr plugin action invoke <id> --plugin herdr.collie` (list them live with
 `herdr plugin action list --plugin herdr.collie`):
 
@@ -421,7 +426,7 @@ Collie registers these actions in `herdr-plugin.toml`; invoke any with
 | `start` | Start web bridge | Build if needed, start the service, `tailscale serve`, print URL + banner |
 | `stop` | Stop web bridge | Pause the bridge; removes nothing |
 | `restart` | Restart web bridge | `stop` + `start` |
-| `status` | Bridge status | The *Collie is running* banner — readiness ✓/⚠, version, URLs |
+| `status` | Bridge status | The *setnet is running* banner — readiness ✓/⚠, version, URLs |
 | `url` | Show bridge URL | Print the tailnet URL |
 | `version` | Show version | Print the running version (`0.x.y+sha`) |
 | `update` | Update plugin | Advance the checkout (pull, or fetch + re-detach) + rebuild + restart |
@@ -439,7 +444,7 @@ scripts/collie-ctl.sh stop      # or: herdr plugin action invoke stop --plugin h
 
 To tear the service down completely — stop + disable it, remove the service definition (the
 `systemd --user` unit, or the launchd agent plist on macOS), and remove
-Collie's own `tailscale serve` mapping (port-scoped, so other tailnet mappings on the host survive) —
+setnet's own `tailscale serve` mapping (port-scoped, so other tailnet mappings on the host survive) —
 use `uninstall`. It leaves your `.env` and the checkout untouched:
 
 ```bash
@@ -524,7 +529,7 @@ This is the right choice unless you specifically need per-device control.
 ### Variant B — identity-aware proxy + per-device authorisation
 
 Use this when some devices should **drive** agents and others should be **read-only** — e.g. your
-phone can reply, but a shared/less-trusted device can only watch. Collie reads an opaque device id
+phone can reply, but a shared/less-trusted device can only watch. setnet reads an opaque device id
 from a request header (`COLLIE_DEVICE_HEADER`) and checks it against `COLLIE_DEVICE_ALLOWLIST`:
 allow-listed → full access, any other id → read-only, header absent → read-only as well.
 
@@ -557,17 +562,17 @@ Your fronting proxy **must**:
 
 1. **Authenticate the device** by some means it controls — mTLS client certs, an SSO/forward-auth
    layer (oauth2-proxy, Pomerium, Cloudflare Access), Tailscale node identity, etc. How you derive a
-   stable per-device id is up to you; Collie treats it as opaque.
+   stable per-device id is up to you; setnet treats it as opaque.
 2. **Set (override) the device header** on *every* upstream request — never merely add it, so any
    client-supplied copy is discarded. This override is what makes the header trustworthy.
 3. **Proxy to the bridge on loopback** (`127.0.0.1:$COLLIE_PORT`). The loopback bind is the trust
    anchor — nothing but the proxy can reach the bridge to set the header.
-4. **Satisfy the same-origin gate.** Collie accepts a request when the browser's `Origin` host
+4. **Satisfy the same-origin gate.** setnet accepts a request when the browser's `Origin` host
    equals the `Host` the bridge receives. So either **forward the public `Host` unchanged**, or — if
    your proxy rewrites Host — list the exact public origin in `COLLIE_ALLOWED_ORIGINS`. Otherwise
    every API call 403s `cross-origin rejected` (the page loads but stays empty).
 
-Collie side (`.env`):
+setnet side (`.env`):
 
 ```bash
 COLLIE_HOST=127.0.0.1                       # keep loopback (default)
@@ -604,7 +609,7 @@ trust story changes — see [Variant D](#variant-d--off-host-identity-proxy-over
 
 A reverse proxy (Caddy, Nginx, …) is the **sole ingress** — no Tailscale in the path. Choose this
 when the host isn't on a tailnet, or when you already run a TLS-terminating proxy with its own access
-control (SSO, mTLS, a VPN gateway) and want Collie behind it like any other upstream.
+control (SSO, mTLS, a VPN gateway) and want setnet behind it like any other upstream.
 
 Set `COLLIE_SKIP_SERVE=1` so `collie-ctl.sh start` builds, starts and supervises the bridge but
 **never touches `tailscale serve`** — the proxy owns ingress. The bridge still binds loopback only;
@@ -650,10 +655,10 @@ indefinitely — clients keep running old code with no way to notice. If your pr
 honor origin headers (Caddy and stock Nginx `proxy_cache` do by default; CDNs often need it
 enabled explicitly).
 
-**Serve your sign-in page under `/auth/`.** Collie reserves that path for you and routes nothing
+**Serve your sign-in page under `/auth/`.** setnet reserves that path for you and routes nothing
 there. It matters because of how an installed PWA behaves: the service worker answers every
 navigation it owns from the precached app shell without touching the network, and there is no
-address bar to work around it. So a proxy page served anywhere Collie owns — including `/` — is
+address bar to work around it. So a proxy page served anywhere setnet owns — including `/` — is
 invisible to the installed app, and a reload just re-renders the refused UI. `/auth/` (and anything
 beneath it) is the one path the service worker always passes through, so it is the only address that
 reaches you. When the bridge answers there itself, nothing claimed the path — that placeholder is
@@ -672,7 +677,7 @@ collie.example.com {
 }
 ```
 
-Collie's refusal banner links to `/auth/` when the bridge or your proxy answers 401/403, so a
+setnet's refusal banner links to `/auth/` when the bridge or your proxy answers 401/403, so a
 signed-out phone has a tappable way back in. A `?rd=`/`?next=` return-to parameter on the redirect is
 fine — the passthrough matches the query string too. If your flow lives at a path you can't move,
 redirect `/auth/` to it; the redirect is followed on the network side, where the service worker isn't
@@ -695,7 +700,7 @@ outright — that prefix is reserved as well, so its flow works untouched.
 ### Variant D — off-host identity proxy over the tailnet
 
 Choose this when you already run a **central ingress node** for your tailnet — one forward-auth/SSO
-layer, one wildcard cert, a row of services behind it — and you want Collie to be another entry in
+layer, one wildcard cert, a row of services behind it — and you want setnet to be another entry in
 that table rather than a second auth stack configured on the agent host.
 
 The proxy is on a *different machine*, so it can't reach the bridge on loopback. The agent host
@@ -714,7 +719,7 @@ tailnet URL:
 ```
 
 Plain HTTP on the middle hop is fine *because it rides the tailnet* — TLS terminates at the proxy.
-That is not the same thing as serving Collie over plain HTTP publicly, which is what the
+That is not the same thing as serving setnet over plain HTTP publicly, which is what the
 `COLLIE_SERVE_MODE=http` warnings elsewhere are about.
 
 The **four proxy requirements from
@@ -822,13 +827,13 @@ A header-less request must be read-only. **If it says `"authorized":true`, your 
 
 ### Variant E — any other mesh or tunnel (NetBird, ZeroTier, Cloudflare Tunnel)
 
-Tailscale is the **default**, not a requirement. Collie's own Tailscale coupling is one header read
+Tailscale is the **default**, not a requirement. setnet's own Tailscale coupling is one header read
 and a convenience in `collie-ctl.sh`; the bridge itself is a loopback HTTP server that gates on
 `Host`, `Origin`, and two optional headers. Anything that can reach `127.0.0.1:$COLLIE_PORT` can
 front it.
 
-Collie deliberately **manages** only one front door — the one this project runs and tests. For every
-other tunnel you own the ingress and Collie stays out of the way:
+setnet deliberately **manages** only one front door — the one this project runs and tests. For every
+other tunnel you own the ingress and setnet stays out of the way:
 
 ```bash
 COLLIE_SKIP_SERVE=1                                 # never run tailscale serve
@@ -842,7 +847,7 @@ this way. `collie-ctl.sh start` will build, launch and supervise the bridge and 
 `unserve` and `uninstall` likewise leave your tunnel alone, exactly as under
 [Variant C](#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale).
 
-Three things to get right, none of them Collie-specific:
+Three things to get right, none of them setnet-specific:
 
 1. **The [Variant B](#variant-b--identity-aware-proxy--per-device-authorisation) proxy requirements
    apply verbatim.** Loopback upstream, the public `Host` forwarded unchanged (or listed in
@@ -853,7 +858,7 @@ Three things to get right, none of them Collie-specific:
    `Tailscale-User-Login`, so the check passes every request rather than blocking it, and the bridge
    warns about that at startup. If your tunnel authenticates and injects a device identity, use
    `COLLIE_DEVICE_HEADER` + `COLLIE_DEVICE_ALLOWLIST` instead; if it authenticates but injects
-   nothing, its own auth *is* the whole gate and anyone who passes it gets full Collie access.
+   nothing, its own auth *is* the whole gate and anyone who passes it gets full setnet access.
 3. **Pin a stable hostname before you install the PWA.** A service-worker cache is per-origin, and
    several tunnels hand out a fresh generated name per session. A name that changes gives you a new
    install each time and makes `COLLIE_PUBLIC_HOSTS` unpinnable.
@@ -869,7 +874,7 @@ Three things to get right, none of them Collie-specific:
 
 The **bridge** runs on Windows against Herdr's Windows beta; the **launcher** does not. Herdr there
 exposes its control socket as a *named pipe* named after the full socket path, not an AF_UNIX
-socket, so Collie dials it through `node:net` instead of `Bun.connect` — one shim,
+socket, so setnet dials it through `node:net` instead of `Bun.connect` — one shim,
 [`bridge/dial.ts`](./bridge/dial.ts), which explains the mapping at the top of the file.
 
 What that means in practice:
@@ -910,8 +915,8 @@ default `tailscale serve` (Tailscale manages the MagicDNS cert; nothing to obtai
 Plain-HTTP modes (`COLLIE_SERVE_MODE=http`) are **not** a secure context, so push silently won't fire
 there — Settings flags it `insecure`.
 
-Collie pushes when an agent goes **blocked** or **done**, with the agent's message in the body;
-**tapping it opens Collie at that agent**. Test it without waiting for an agent to block:
+setnet pushes when an agent goes **blocked** or **done**, with the agent's message in the body;
+**tapping it opens setnet at that agent**. Test it without waiting for an agent to block:
 
 ```bash
 bash scripts/collie-ctl.sh push-test                 # or: push-test "Title" "Body"
@@ -920,10 +925,10 @@ bash scripts/collie-ctl.sh push-test                 # or: push-test "Title" "Bo
 ## Troubleshooting
 
 **`herdr plugin …` fails with `Error: Os { code: 2, kind: NotFound, message: "No such file or
-directory" }`.** This is *not* a Collie problem — it means the **Herdr server isn't running**, so its
+directory" }`.** This is *not* a setnet problem — it means the **Herdr server isn't running**, so its
 CLI can't reach the control socket (`~/.config/herdr/herdr.sock`). The tell is the *raw* `Os {…}`
 error: a reachable server answers path/manifest problems with structured JSON (e.g.
-`plugin_manifest_not_found`), so a bare `Os { NotFound }` is a failed socket connect, before Collie
+`plugin_manifest_not_found`), so a bare `Os { NotFound }` is a failed socket connect, before setnet
 or your path is ever examined. It hits `link`, `install`, `action invoke` — every subcommand that
 talks to the server — while `herdr plugin --help` still works (it never opens the socket). Fix: start
 Herdr first (`herdr server &`, or just launch the Herdr TUI — it boots the server), confirm
@@ -945,7 +950,7 @@ Headscale / `.internal` tailnet domains — HTTPS certs aren't available, which 
 `COLLIE_SERVE_MODE=http` is for: set it in `.env`, then `scripts/collie-ctl.sh restart`. Verify with
 `tailscale serve status`.
 
-**Banner shows `⚠ Collie isn't answering on :8787 yet`.** The service was started but the HTTP
+**Banner shows `⚠ setnet isn't answering on :8787 yet`.** The service was started but the HTTP
 server isn't answering the probe. `scripts/collie-ctl.sh logs` (or `journalctl --user -u collie -f`
 to watch live) says why — most commonly the port is already taken (set `COLLIE_PORT` in `.env`, then
 `scripts/collie-ctl.sh restart`, which also re-runs `tailscale serve` against the new port) or the
@@ -967,12 +972,12 @@ your policy file on Headscale). The check is best-effort and deliberately unsure
 up only when this node's filter admits *nothing* — which can equally mean no other device has joined
 the tailnet yet — and stays quiet whenever it can't tell.
 
-**Page loads but stays empty; API calls fail `403 cross-origin rejected`.** You're reaching Collie
+**Page loads but stays empty; API calls fail `403 cross-origin rejected`.** You're reaching setnet
 through an origin the bridge doesn't expect — a custom domain, or a proxy that rewrites `Host`.
 Allow the exact public origin with `COLLIE_ALLOWED_ORIGINS` (see [Configure](#configure)), or make
 the proxy forward `Host` unchanged (Variant B, rule 4).
 
-**Collie is gone after a reboot.** A `systemd --user` unit only runs while you have a session — on a
+**setnet is gone after a reboot.** A `systemd --user` unit only runs while you have a session — on a
 headless host enable lingering once (`loginctl enable-linger $USER`) and the `collie` unit (already
 `enable`d) starts at boot with your user manager. The `tailscale serve` mapping persists on its own
 (`--bg`), so lingering is usually the whole fix. On macOS the launchd agent starts at **login**, so
@@ -980,9 +985,9 @@ check you're actually logged in (not sitting at the login window) and that the a
 `launchctl print gui/$(id -u)/herdr.collie`.
 
 **Phone shows a stale UI after a rebuild.** A PWA's service-worker cache is per-origin, so reaching
-Collie at two origins (a custom domain *and* the raw `host:8787`) gives you two installs, each
+setnet at two origins (a custom domain *and* the raw `host:8787`) gives you two installs, each
 caching its own bundle. The footer **build stamp** (`vX.Y.Z · sha · time`) shows the bundle you're
-running; the bridge reports what it serves via the `X-Collie-Build` header and `/api/config`. On a
+running; the bridge reports what it serves via the `X-setnet-Build` header and `/api/config`. On a
 mismatch, the footer offers **"new build — tap to update."** Otherwise reopen the PWA a couple times
 (the SW auto-updates) or clear that origin's site data. Best practice: **pick one HTTPS origin and
 stick to it.** (Over plain HTTP the SW can't register — always fresh, but no PWA features.)
@@ -998,7 +1003,7 @@ A small Bun process sits between your phone and Herdr — the browser never touc
   tailscale serve        terminates TLS, injects the identity header
      │  127.0.0.1:PORT    (the bridge binds loopback only)
      ▼
-  Collie bridge (Bun)    serves the UI + a small JSON API; polls Herdr
+  setnet bridge (Bun)    serves the UI + a small JSON API; polls Herdr
      │  one-shot JSON-RPC over a Unix socket
      ▼
   Herdr server           owns the panes, agents and terminal state

@@ -75,7 +75,7 @@ interface AgentChatProps {
   revision?: number;
   /** Per-device auth from the snapshot; an unauthorised device drops the composer to read-only. */
   device?: DeviceAuth;
-  // Global connection state — fed straight to the shared AppHeader, which drives the header Collie
+  // Global connection state — fed straight to the shared AppHeader, which drives the header setnet
   // mark (gallop/rest, identically to the dashboard), and lets us dim the stale StatusBadge while not
   // live. Defaults describe a healthy link so tests that don't care render "live".
   bridge?: BridgeStatus | undefined;
@@ -122,7 +122,7 @@ export function AgentChat({
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   // Poll-truth "is the data on screen not live". The header (AppHeader) reads the same inputs to drive
-  // the Collie mark + pill; here we use it to dim the StatusBadge, so the badge stops presenting the
+  // the setnet mark + pill; here we use it to dim the StatusBadge, so the badge stops presenting the
   // last snapshot's status as current while we're reconnecting/lost, and restores instantly on recovery.
   const connecting = isConnecting({ bridge, error, stalled });
   const { newTab } = useSpaceActions();
@@ -559,7 +559,7 @@ export function AgentChat({
 
   return (
     <div className="flex min-h-0 w-full min-w-0 max-w-[100dvw] flex-1 flex-col overflow-x-hidden">
-      {/* Header — the SAME AppHeader shell the dashboard and space mount, so the Collie mark is
+      {/* Header — the SAME AppHeader shell the dashboard and space mount, so the setnet mark is
           identical on every screen (no hand-rolled bar to drift). The pane's own bits ride in via
           slots: the `space › tab` breadcrumb as the center, the agent StatusBadge as the right-cluster
           lead, and the find bar as the full-row takeover while searching. */}
@@ -667,8 +667,8 @@ export function AgentChat({
                 <TerminalSquare className="size-3 text-muted-foreground" />
               </div>
             ) : (
-              // Deliberately smaller than the size-8 Collie mark beside it — the agent logo is the
-              // pane's subject, not a second brand competing with Collie's for the header.
+              // Deliberately smaller than the size-8 setnet mark beside it — the agent logo is the
+              // pane's subject, not a second brand competing with setnet's for the header.
               <AgentIcon agent={agent.agent} className="size-6" />
             )}
             <div className="min-w-0 flex-1">

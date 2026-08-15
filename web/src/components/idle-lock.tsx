@@ -11,7 +11,7 @@ import { DogGallop } from "@/components/dog-gallop";
 // trade is that an unattended screen no longer hides agent output; that's accepted, because the
 // device's own screen lock is the thing that was ever going to handle shoulder-surfing.
 //
-// It leads with the Collie mark for a plain reason: this is the one screen in the app with no header,
+// It leads with the setnet mark for a plain reason: this is the one screen in the app with no header,
 // no herd chrome and no nav, so without the badge a full-viewport panel is unattributable — it could
 // be any app that happened to be open. The mark is the STATIC app icon, never <DogGallop/>: that
 // sprite's rest frame is a full-stretch mid-stride pose that reads as "frozen mid-run", and this
@@ -31,7 +31,7 @@ export function IdleLock({ onUnlock, catchingUp = false }: IdleLockProps) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Collie paused"
+      aria-label="setnet paused"
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/40 px-6 backdrop-blur-[3px]"
     >
       {/* The panel carries its own, heavier blur so the copy stays readable over arbitrary pane text,
@@ -44,7 +44,7 @@ export function IdleLock({ onUnlock, catchingUp = false }: IdleLockProps) {
             {catchingUp ? (
               // Same box, gallop swapped in for the static mark — exactly how CollieHome renders the
               // header mark when the connection is working, so "the dog is running" means one thing
-              // everywhere: Collie is fetching.
+              // everywhere: setnet is fetching.
               <DogGallop running size="4rem" label="Catching up" />
             ) : (
               <img src="/favicon.svg" alt="" className="size-16" />

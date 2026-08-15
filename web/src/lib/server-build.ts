@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-// The build id the bridge is currently serving, observed passively from the `X-Collie-Build` header
+// The build id the bridge is currently serving, observed passively from the `X-setnet-Build` header
 // the bridge stamps on every snapshot/pane response (captured in lib/api.ts). Every poll refreshes it
 // for free — no extra request. Modelled on the lib/busy.ts store idiom: plain module state + a
 // subscribe + a useSyncExternalStore hook, so any call site participates without prop-drilling.
