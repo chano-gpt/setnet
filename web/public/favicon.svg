@@ -1,14 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="setnet">
-  <!-- The herd, counted: four agents in a 2×2, each painted with the app's own status colour
+  <!-- The herd, counted: four agents, each painted with the app's own status colour
        (working / done / idle / blocked). The blocked one carries a ring, because the whole point of
-       setnet is that you can see which one is waiting on you without reading four terminals.
-       Values track the status custom properties in web/src/index.css (dark set, legible on this
-       near-black tile). Keep double hyphens out of this comment: an SVG in an img tag is parsed as
-       XML, where they are illegal and silently render the mark as a broken image. -->
-  <rect width="96" height="96" rx="22" fill="#0a0a0a"/>
-  <circle cx="34" cy="34" r="10" fill="#e8a33d"/>
-  <circle cx="62" cy="34" r="10" fill="#3fbf7f"/>
-  <circle cx="34" cy="62" r="10" fill="#9a9ca3"/>
-  <circle cx="62" cy="62" r="10" fill="#f4715e"/>
-  <circle cx="62" cy="62" r="15.5" fill="none" stroke="#f4715e" stroke-width="3" opacity="0.45"/>
+       setnet is seeing which one waits on you without reading four terminals.
+       Circular on purpose: the app header frames this in a rounded-full badge, and a browser tab
+       renders it small, so a disc fills both without a square fighting the frame. The PWA install
+       icons are a separate, full-bleed file (icon-maskable.svg) so a launcher mask never clips a
+       corner into transparency. Colours track the status custom properties in web/src/index.css.
+       Keep double hyphens out of this comment: an SVG in an img tag is parsed as XML, where they
+       are illegal and silently render the mark as a broken image. -->
+  <circle cx="48" cy="48" r="48" fill="#0a0a0a"/>
+  <circle cx="34" cy="34" r="9.5" fill="#e8a33d"/>
+  <circle cx="62" cy="34" r="9.5" fill="#3fbf7f"/>
+  <circle cx="34" cy="62" r="9.5" fill="#9a9ca3"/>
+  <circle cx="62" cy="62" r="9.5" fill="#f4715e"/>
+  <circle cx="62" cy="62" r="14.5" fill="none" stroke="#f4715e" stroke-width="2.75" opacity="0.45"/>
 </svg>

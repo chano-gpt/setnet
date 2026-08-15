@@ -140,10 +140,12 @@ export default defineConfig({
         background_color: "#0a0a0a",
         theme_color: "#0a0a0a",
         icons: [
-          // The 192/512 are safe-zone-padded, so they serve as both the regular ("any") install
-          // icon and the Android adaptive ("maskable") icon. (favicon.svg is intentionally NOT a
-          // manifest icon: it's a low-res raster-in-svg for the browser tab only — declaring it
-          // sizes:"any" would let an installer pick it and render the install icon blurry.)
+          // The 192/512 are rendered from icon-maskable.svg: full-bleed, with the mark inside the
+          // 80%-diameter safe zone, so they serve as both the regular ("any") install icon and the
+          // Android adaptive ("maskable") one whatever shape the launcher crops to. (favicon.svg is
+          // intentionally NOT a manifest icon: it is the disc variant, sized for the browser tab and
+          // the header badge. Declaring it sizes:"any" would let an installer pick a disc and leave
+          // the mask's corners transparent.)
           { src: "/web-app-manifest-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
           { src: "/web-app-manifest-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],

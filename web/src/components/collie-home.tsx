@@ -41,9 +41,10 @@ export function CollieHome({ onHome, trouble, lost = false, wordmark = false, cl
         className,
       )}
     >
-      {/* A whitesmoke ring frames the mark so it reads as a deliberate badge against the dark header
-          (the collie art is transparent, so it otherwise floats). The ring wraps every state so the
-          frame doesn't pop in/out as the connection settles out of the gallop. */}
+      {/* A whitesmoke ring frames the mark so it reads as a deliberate badge against the dark header.
+          The ring wraps every state so the frame doesn't pop in/out as the connection settles out of
+          the gallop. The mark is an opaque disc drawn at the full badge size, so it meets the ring
+          with no tinted gap; the tint still backs the gallop sprite, whose art is transparent. */}
       <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-zinc-500/40 ring-1 ring-[whitesmoke]/60">
         {gallop ? (
           <DogGallop running size="2rem" />
@@ -52,11 +53,11 @@ export function CollieHome({ onHome, trouble, lost = false, wordmark = false, cl
           // muted (grayscale + dimmed) to read asleep/inactive, in the same box (no gallop). NOT a
           // paused sprite: a gallop rest-frame is a full-stretch mid-stride pose that looks frozen
           // mid-run — the "stuck mid-run" bug. Mirrors the boot splash's not-connected state.
-          <img src="/favicon.svg" alt="" className="size-8 opacity-40 grayscale" />
+          <img src="/favicon.svg" alt="" className="size-10 opacity-40 grayscale" />
         ) : (
-          // Live rest state = the original app icon (bigger, detailed collie) at full color, same box
-          // as the sprite so the mark doesn't resize when it settles. Larger than the agent logo.
-          <img src="/favicon.svg" alt="" className="size-8" />
+          // Live rest state = the app mark at full colour, filling the badge so it doesn't resize
+          // when it settles out of the gallop. Larger than the agent logo.
+          <img src="/favicon.svg" alt="" className="size-10" />
         )}
       </span>
       {wordmark && <span className="text-lg font-semibold tracking-tight">setnet</span>}

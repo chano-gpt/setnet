@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="setnet">
+  <!-- The install icon. Same mark as favicon.svg, but full-bleed square rather than a disc: a
+       launcher applies its own mask (Android crops to a circle, squircle or teardrop; iOS rounds
+       its own corners), so the artwork must paint every pixel or a mask corner shows through as
+       transparency.
+       The dots sit inside the maskable safe zone, the centred circle of 80 percent diameter that
+       every mask is guaranteed to keep: the furthest point is the blocked ring at ~34 of a 48
+       radius, comfortably inside the 38.4 limit. Do not move a dot outward without redoing that sum.
+       Keep double hyphens out of this comment: an SVG in an img tag is parsed as XML, where they
+       are illegal and silently render the mark as a broken image. -->
+  <rect width="96" height="96" fill="#0a0a0a"/>
+  <circle cx="34" cy="34" r="9.5" fill="#e8a33d"/>
+  <circle cx="62" cy="34" r="9.5" fill="#3fbf7f"/>
+  <circle cx="34" cy="62" r="9.5" fill="#9a9ca3"/>
+  <circle cx="62" cy="62" r="9.5" fill="#f4715e"/>
+  <circle cx="62" cy="62" r="14.5" fill="none" stroke="#f4715e" stroke-width="2.75" opacity="0.45"/>
+</svg>

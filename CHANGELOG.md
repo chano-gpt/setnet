@@ -6,6 +6,20 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.29.1] - 2026-08-15
+
+### Fixed
+
+- **The app icon is setnet's, and it fits a circle.** 0.29.0 renamed the wordmark but shipped the
+  inherited collie art in `favicon.ico` and left the mark a rounded square inside the header's
+  rounded-full badge, so a grey rim showed between the two
+- **The mark now comes in two shapes, because two things mask it differently.** `favicon.svg` is a
+  disc that fills the badge edge to edge; `icon-maskable.svg` is full-bleed for the install icons,
+  where a launcher crops to a circle, squircle or teardrop and a transparent corner would show
+  through. Content sits at ~74% of the half-width, inside the 80% maskable safe zone
+- **The PNG favicons render from the full-bleed source.** Rasterising the disc flattened its corners
+  to white, which framed the dark mark in a white square on a dark browser theme
+
 ## [0.29.0] - 2026-08-15
 
 The fork takes its own name. Nothing an operator runs changes: the plugin id stays `herdr.collie`,
