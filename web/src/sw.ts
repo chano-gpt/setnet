@@ -95,6 +95,10 @@ self.addEventListener("message", (event: ExtendableMessageEvent) => {
 // The branching (suppress vs show vs clear, tag/title/renotify) lives in lib/push-decision so it's
 // unit-tested; here we only parse the event, read client visibility, and run the side effect.
 const ICON = "/web-app-manifest-192x192.png";
+// Android draws the status-bar badge from the ALPHA CHANNEL ALONE, tinting every opaque pixel one
+// flat colour. The install icon is full-bleed by design, so reusing it here renders a solid white
+// block — badge.svg/badge-96.png is the transparent, monochrome cut of the mark that survives that.
+const BADGE = "/badge-96.png";
 
 self.addEventListener("push", (event: PushEvent) => {
   event.waitUntil(handlePush(event));
@@ -128,7 +132,7 @@ async function handlePush(event: PushEvent): Promise<void> {
     body: decision.body,
     data: { paneId: decision.paneId, session: decision.session, target: decision.target },
     icon: ICON,
-    badge: ICON,
+    badge: BADGE,
     tag: decision.tag,
     renotify: decision.renotify,
   };

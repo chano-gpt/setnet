@@ -6,6 +6,15 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.29.3] - 2026-08-15
+
+### Fixed
+
+- **A push notification showed a white block instead of the mark.** Android draws the status-bar
+  badge from the alpha channel alone, tinting every opaque pixel one flat colour, and the badge
+  reused the full-bleed install icon — so the phone rendered a solid square. `badge-96.png` is now a
+  transparent, monochrome cut of the mark; the large notification icon is unchanged
+
 ## [0.29.2] - 2026-08-15
 
 ### Fixed

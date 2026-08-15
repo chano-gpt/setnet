@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="setnet">
+  <!-- The status-bar badge, and the one icon here that must NOT be full-bleed.
+       Android draws a notification badge from the ALPHA CHANNEL ONLY, tinting every opaque pixel a
+       flat colour: hand it an opaque square and the phone shows a solid white block, which is
+       exactly what the install icons look like to it.
+       So: the mark carved out of transparency, one flat fill, no ring and no per-agent status
+       colours since none of them survive the tint. Content stops at ~65 percent of the half-width,
+       leaving the padding a 24dp status-bar slot expects.
+       Keep double hyphens out of this comment: an SVG in an img tag is parsed as XML, where they
+       are illegal and silently render the mark as a broken image. -->
+  <g fill="#ffffff">
+    <circle cx="31" cy="31" r="14"/>
+    <circle cx="65" cy="31" r="14"/>
+    <circle cx="31" cy="65" r="14"/>
+    <circle cx="65" cy="65" r="14"/>
+  </g>
+</svg>
