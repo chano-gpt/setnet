@@ -74,12 +74,13 @@ const currentVersion = (
 const updateStore = new UpdateStateStore(cfg);
 await updateStore.load();
 
-// The repo the release check + release links point at. Still upstream Collie's, NOT setnet's: the
-// check reads the repo's git tags, and chano-gpt/setnet has no tags pushed yet, so pointing it at
-// setnet would make latestReleaseTag() return null and silence the update banner entirely. Flip this
-// to "chano-gpt/setnet" in the same change that pushes setnet's first vX.Y.Z tag, not before.
+// The repo the release check + release links point at. setnet's own, now that it has tags to read:
+// the check compares the running version against the repo's git tags, so while this pointed at
+// upstream Collie a setnet release could never surface as an update, and an upstream release could
+// surface as one that `update` would not actually install. Whatever this names must keep publishing
+// vX.Y.Z tags, or latestReleaseTag() returns null and the banner goes quiet.
 // Overridable for a fork (or a synthetic test target) via COLLIE_UPDATE_REPO.
-const updateRepo = process.env.COLLIE_UPDATE_REPO?.trim() || "AltanS/collie";
+const updateRepo = process.env.COLLIE_UPDATE_REPO?.trim() || "chano-gpt/setnet";
 const updateMonitor = new UpdateMonitor({
   repo: updateRepo,
   current: currentVersion,

@@ -6,6 +6,15 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.29.2] - 2026-08-15
+
+### Fixed
+
+- **The update check follows setnet's releases, not upstream Collie's.** It compares the running
+  version against a repo's git tags, so while it pointed at `AltanS/collie` a setnet release could
+  never surface as an update, and an upstream release could surface as one that `update` would not
+  install. Override with `COLLIE_UPDATE_REPO` as before
+
 ## [0.29.1] - 2026-08-15
 
 ### Fixed

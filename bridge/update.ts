@@ -180,7 +180,7 @@ export interface UpdateStore {
 }
 
 export interface UpdateMonitorDeps {
-  /** The `owner/name` repo the release check + release links point at (default `AltanS/collie`). */
+  /** The `owner/name` repo the release check + release links point at (default `chano-gpt/setnet`). */
   repo: string;
   /** The running plugin version (captured at process start — never re-read from disk, or a post-pull
    *  package.json would mask the very update we're detecting). */
