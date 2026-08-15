@@ -13,7 +13,7 @@ import type { NotifyPrefs } from "@/lib/api";
 const ROWS: ReadonlyArray<{ key: keyof NotifyPrefs; label: string; hint: string }> = [
   { key: "blocked", label: "Needs input", hint: "an agent is waiting on you" },
   { key: "done", label: "Finished", hint: "an agent completes its task" },
-  { key: "updates", label: "App updates", hint: "a new Collie version is available" },
+  { key: "updates", label: "App updates", hint: "a new setnet version is available" },
 ];
 
 export function NotifyPrefsControl() {

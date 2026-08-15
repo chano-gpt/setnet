@@ -1,7 +1,7 @@
 # setnet
 
 <p align="center">
-  <img src="assets/collie-hero.webp" alt="羊の群れを追う牧羊犬" width="640">
+  <img src="assets/hero.svg" alt="헛 둘 셋 넷 —— 群れを数える掛け声。setnet はその後半" width="880">
 </p>
 
 <p align="center">
@@ -23,8 +23,19 @@ setnet は、[Herdr](https://herdr.dev) の上で動くエージェントの群�
 
 他のツールと決定的に分かれる点はひとつ。**setnet はエージェントを種類ごとに区別して扱う。** ターミナル画面をそのままミラーリングして投げ渡すのではなく、ハーネスごとに何ができて、何をさせてはいけないかを知っている —— Claude Code、Codex、pi、OpenCode、そして **AGY と OMO(Senpi)** まで。
 
+## 画面
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet のダッシュボード。状態順に並んだ群れ" width="250"><br><sub><b>群れ</b> — あなたを待っている順に</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO のプランカード。フェーズとタスク状態" width="250"><br><sub><b>プラン</b> — OMO が今どのフェーズか</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="ハーネスランチャー。6 種類のエージェント" width="250"><br><sub><b>ランチャー</b> — 安全な引数を固定して起動</sub></td>
+  </tr>
+</table>
+
 ## 目次
 
+- [画面](#画面)
 - [何が違うのか](#何が違うのか)
 - [対応ハーネス](#対応ハーネス)
 - [主な機能](#主な機能)

@@ -23,6 +23,14 @@ variable keeps its name. Only what you read changed.
   a mistranslated proxy or ACL rule is an incident, not a typo
 - **The checkout-recovery hint points at `chano-gpt/setnet`**, not upstream, so a broken setnet
   install no longer repairs itself into Collie
+- **The app itself says setnet** — the header wordmark, idle lock, connection banner, boot splash,
+  push fallback title and settings copy. The rename previously stopped at the manifest, so the
+  running app still introduced itself as Collie
+- **A mark of its own**: four dots for the herd, painted in the app's own status colours, with the
+  blocked one ringed. Replaces the inherited collie photograph in the header, favicon and every PWA
+  icon size
+- **README leads with the name it is built on** — 헛 둘 셋 넷, the cadence you count a herd off
+  with — and shows real screens: the herd, an OMO plan card mid-run, the harness launcher
 
 ## [0.28.0] - 2026-08-12
 

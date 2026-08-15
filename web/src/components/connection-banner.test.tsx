@@ -130,13 +130,13 @@ describe("ConnectionBanner — the single connection surface", () => {
     expect(screen.getByRole("alert").className).toMatch(/bg-status-blocked/); // offline is always red
   });
 
-  it("says 'Can't reach Collie' when the probe fails but the browser still reports online", async () => {
+  it("says 'Can't reach setnet' when the probe fails but the browser still reports online", async () => {
     h.lost = true;
     cfg.reachable = false;
     setOnline(true);
     renderBanner();
     await act(async () => {});
-    expect(screen.getByText("Can't reach Collie")).toBeInTheDocument();
+    expect(screen.getByText("Can't reach setnet")).toBeInTheDocument();
   });
 
   it("Retry re-probes the bridge", async () => {

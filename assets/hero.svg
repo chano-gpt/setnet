@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="setnet — 헛, 둘, 셋, 넷: counting the herd">
+  <title>setnet</title>
+  <desc>The counting cadence a herder calls out, with the third and fourth beats highlighted, over four agent panes in working, done, idle and blocked states.</desc>
+
+  <defs>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0a0a0a" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0a0a0a" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" fill="#0a0a0a"/>
+
+  <!-- The cadence. 헛 둘 셋 넷 is how you count a line off out loud in Korean; the product name is
+       its back half. The first two beats are dim, the last two carry the brand colours. -->
+  <g font-family="'Pretendard','Noto Sans KR','Apple SD Gothic Neo',sans-serif" font-weight="800">
+    <text x="90"  y="196" font-size="96" fill="#3a3a3d">헛</text>
+    <text x="222" y="196" font-size="96" fill="#4a4a4e">둘</text>
+    <text x="354" y="196" font-size="96" fill="#e8a33d">셋</text>
+    <text x="486" y="196" font-size="96" fill="#f4715e">넷</text>
+  </g>
+
+  <!-- The romanised name sits under the two beats it is made of. -->
+  <g font-family="ui-monospace,'JetBrains Mono','SF Mono',monospace">
+    <line x1="356" y1="228" x2="590" y2="228" stroke="#2a2a2d" stroke-width="2"/>
+    <text x="356" y="286" font-size="62" font-weight="700" fill="#fafafa" letter-spacing="-1">setnet</text>
+    <text x="358" y="330" font-size="18" fill="#7a7a80">every kind of agent, one phone</text>
+  </g>
+
+  <!-- Four panes, counted off: the herd as the dashboard sees it. Same status colours as the app. -->
+  <g transform="translate(792, 96)">
+    <g>
+      <rect width="150" height="104" rx="14" fill="#141416" stroke="#252528"/>
+      <circle cx="26" cy="26" r="7" fill="#e8a33d"/>
+      <text x="44" y="31" font-family="ui-monospace,monospace" font-size="15" fill="#8a8a90">claude</text>
+      <rect x="24" y="54" width="94" height="7" rx="3.5" fill="#2a2a2e"/>
+      <rect x="24" y="70" width="62" height="7" rx="3.5" fill="#232326"/>
+    </g>
+    <g transform="translate(166, 0)">
+      <rect width="150" height="104" rx="14" fill="#141416" stroke="#252528"/>
+      <circle cx="26" cy="26" r="7" fill="#3fbf7f"/>
+      <text x="44" y="31" font-family="ui-monospace,monospace" font-size="15" fill="#8a8a90">codex</text>
+      <rect x="24" y="54" width="80" height="7" rx="3.5" fill="#2a2a2e"/>
+      <rect x="24" y="70" width="48" height="7" rx="3.5" fill="#232326"/>
+    </g>
+    <g transform="translate(0, 124)">
+      <rect width="150" height="104" rx="14" fill="#141416" stroke="#252528"/>
+      <circle cx="26" cy="26" r="7" fill="#9a9ca3"/>
+      <text x="44" y="31" font-family="ui-monospace,monospace" font-size="15" fill="#8a8a90">agy</text>
+      <rect x="24" y="54" width="70" height="7" rx="3.5" fill="#232326"/>
+      <rect x="24" y="70" width="90" height="7" rx="3.5" fill="#1e1e21"/>
+    </g>
+    <!-- The one that needs you. Ringed, because that is the whole product in one glance. -->
+    <g transform="translate(166, 124)">
+      <rect width="150" height="104" rx="14" fill="#1a1214" stroke="#f4715e" stroke-opacity="0.5"/>
+      <circle cx="26" cy="26" r="7" fill="#f4715e"/>
+      <circle cx="26" cy="26" r="12" fill="none" stroke="#f4715e" stroke-opacity="0.4" stroke-width="2.5"/>
+      <text x="44" y="31" font-family="ui-monospace,monospace" font-size="15" fill="#f4715e">omo</text>
+      <text x="24" y="66" font-family="ui-monospace,monospace" font-size="14" fill="#c9a49d">needs you</text>
+      <rect x="24" y="78" width="58" height="7" rx="3.5" fill="#3a2426"/>
+    </g>
+  </g>
+
+  <rect x="1140" y="0" width="60" height="420" fill="url(#fade)"/>
+</svg>

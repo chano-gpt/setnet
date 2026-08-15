@@ -8,7 +8,7 @@ describe("CollieHome", () => {
   it("returns home when tapped", async () => {
     const onHome = vi.fn();
     render(<CollieHome onHome={onHome} trouble={false} />);
-    await userEvent.click(screen.getByRole("button", { name: "Collie home" }));
+    await userEvent.click(screen.getByRole("button", { name: "setnet home" }));
     expect(onHome).toHaveBeenCalledOnce();
   });
 
@@ -32,20 +32,20 @@ describe("CollieHome", () => {
     const icon = container.querySelector("img");
     expect(icon).toHaveAttribute("src", "/favicon.svg");
     expect(icon?.className).toMatch(/grayscale/);
-    expect(screen.getByRole("button", { name: "Collie home — not connected" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "setnet home — not connected" })).toBeInTheDocument();
   });
 
   it("gallops while troubled but NOT yet lost", () => {
     const { container } = render(<CollieHome trouble lost={false} />);
     expect(container.querySelector(".dog-gallop")).toHaveClass("dog-gallop--running");
-    expect(screen.getByRole("button", { name: "Collie home — reconnecting" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "setnet home — reconnecting" })).toBeInTheDocument();
   });
 
   it("shows the wordmark only when asked", () => {
     const { rerender } = render(<CollieHome trouble={false} />);
-    expect(screen.queryByText("Collie")).toBeNull();
+    expect(screen.queryByText("setnet")).toBeNull();
     rerender(<CollieHome trouble={false} wordmark />);
-    expect(screen.getByText("Collie")).toBeInTheDocument();
+    expect(screen.getByText("setnet")).toBeInTheDocument();
   });
 });
 

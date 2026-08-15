@@ -50,7 +50,7 @@ export function IdleLock({ onUnlock, catchingUp = false }: IdleLockProps) {
               <img src="/favicon.svg" alt="" className="size-16" />
             )}
           </span>
-          <span className="text-lg font-semibold tracking-tight">Collie</span>
+          <span className="text-lg font-semibold tracking-tight">setnet</span>
         </div>
         {catchingUp ? (
           <div className="space-y-1">

@@ -29,7 +29,7 @@ describe("BootSplash — escalates a stuck cold start", () => {
     act(() => vi.advanceTimersByTime(CONNECTION_LOST_MS));
     expect(screen.queryByText("Connecting to the herd…")).not.toBeInTheDocument();
     expect(screen.getByText("Not connected")).toBeInTheDocument();
-    expect(screen.getByText(/Can.t reach Collie/)).toBeInTheDocument();
+    expect(screen.getByText(/Can.t reach setnet/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     // The galloping mascot is gone — the loading sprite is unmounted and the rest state is the muted
     // static app icon (never a frozen gallop frame, which reads as stuck mid-run).

@@ -35,7 +35,7 @@ export function CollieHome({ onHome, trouble, lost = false, wordmark = false, cl
       onClick={onHome}
       // The gallop conveys connection state visually; fold it into the button's accessible name too,
       // so screen-reader and reduced-motion users get it (inside a pane there's no other cue).
-      aria-label={!trouble ? "Collie home" : lost ? "Collie home — not connected" : "Collie home — reconnecting"}
+      aria-label={!trouble ? "setnet home" : lost ? "setnet home — not connected" : "setnet home — reconnecting"}
       className={cn(
         "-mx-1 flex items-center gap-2 rounded px-1 transition-opacity active:opacity-70",
         className,
@@ -59,7 +59,7 @@ export function CollieHome({ onHome, trouble, lost = false, wordmark = false, cl
           <img src="/favicon.svg" alt="" className="size-8" />
         )}
       </span>
-      {wordmark && <span className="text-lg font-semibold tracking-tight">Collie</span>}
+      {wordmark && <span className="text-lg font-semibold tracking-tight">setnet</span>}
     </button>
   );
 }

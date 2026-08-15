@@ -76,7 +76,7 @@ export function BootSplash() {
       <img src="/favicon.svg" alt="" className="size-16 opacity-40 grayscale" />
       <p className="font-medium text-foreground">Not connected</p>
       <p className="max-w-xs text-sm text-muted-foreground">
-        Can&rsquo;t reach Collie — check your connection to the host, then try again.
+        Can&rsquo;t reach setnet — check your connection to the host, then try again.
       </p>
       <button
         type="button"

@@ -164,7 +164,7 @@ function reasonText(reason: PushAvailability | undefined): string {
 function availabilityNote(a: PushAvailability): string {
   switch (a) {
     case "insecure":
-      return "Unavailable over plain HTTP — serve Collie over HTTPS to enable push.";
+      return "Unavailable over plain HTTP — serve setnet over HTTPS to enable push.";
     case "server-off":
       return "The bridge has no VAPID keys configured, so push is disabled server-side.";
     case "denied":

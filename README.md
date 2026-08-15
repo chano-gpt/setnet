@@ -1,7 +1,7 @@
 # setnet
 
 <p align="center">
-  <img src="assets/collie-hero.webp" alt="양떼를 몰고 있는 개 한 마리" width="640">
+  <img src="assets/hero.svg" alt="헛 둘 셋 넷 — 무리를 세는 구령. setnet은 그 뒷자리다" width="880">
 </p>
 
 <p align="center">
@@ -23,8 +23,19 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 
 다른 도구와 갈리는 지점은 하나다. **setnet은 에이전트를 종류별로 구분해서 다룬다.** 터미널 화면을 그대로 미러링해 던져주는 대신, 하네스마다 무엇을 할 수 있고 무엇을 하면 안 되는지를 알고 있다 — Claude Code, Codex, pi, OpenCode, 그리고 **AGY와 OMO(Senpi)**까지.
 
+## 화면
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet 대시보드 — 무리, 상태별 정렬" width="250"><br><sub><b>무리</b> — 당신을 기다리는 순서로</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO 계획 카드 — 단계와 작업별 상태" width="250"><br><sub><b>계획</b> — OMO가 지금 어느 단계인지</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="하네스 런처 — 6종 에이전트 선택" width="250"><br><sub><b>런처</b> — 안전 인자까지 고정해서 실행</sub></td>
+  </tr>
+</table>
+
 ## 목차
 
+- [화면](#화면)
 - [무엇이 다른가](#무엇이-다른가)
 - [지원 하네스](#지원-하네스)
 - [핵심 기능](#핵심-기능)

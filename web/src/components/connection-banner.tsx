@@ -278,7 +278,7 @@ function resolveView(tone: Tone, online: boolean, probe: Probe) {
       ? { copy: "Herdr is down on the host", Icon: TriangleAlert }
       : probe === "unreachable" && !online
         ? { copy: "Offline — can't reach Collie", Icon: WifiOff }
-        : { copy: "Can't reach Collie", Icon: TriangleAlert };
+        : { copy: "Can't reach setnet", Icon: TriangleAlert };
   return { copy: cause.copy, Icon: cause.Icon, row: TINT.blocked.row, icon: TINT.blocked.icon } as const;
 }
 

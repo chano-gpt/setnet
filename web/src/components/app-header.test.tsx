@@ -38,14 +38,14 @@ describe("AppHeader — the one shared header shell", () => {
     expect(container.querySelector(".dog-gallop")).toBeNull(); // mark at rest (static icon)
     expect(screen.getByText("webapp › main")).toBeInTheDocument(); // the breadcrumb slot
     expect(screen.getByText("working")).toBeInTheDocument(); // the agent status badge
-    expect(screen.queryByText("Collie")).toBeNull(); // no wordmark in a pane
+    expect(screen.queryByText("setnet")).toBeNull(); // no wordmark in a pane
   });
 
   it("is calm in the DASHBOARD variant while live — wordmark + settings gear, resting mark", () => {
     const { container } = renderHeader(
       <AppHeader bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />,
     );
-    expect(screen.getByText("Collie")).toBeInTheDocument(); // wordmark
+    expect(screen.getByText("setnet")).toBeInTheDocument(); // wordmark
     expect(container.querySelector(".dog-gallop")).toBeNull(); // mark at rest while live
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
@@ -53,7 +53,7 @@ describe("AppHeader — the one shared header shell", () => {
   it("returns to the dashboard via onHome when the Collie mark is tapped", async () => {
     const onHome = vi.fn();
     renderHeader(<AppHeader bridge="connected" error={false} onHome={onHome} wordmark />);
-    await userEvent.click(screen.getByRole("button", { name: "Collie home" }));
+    await userEvent.click(screen.getByRole("button", { name: "setnet home" }));
     expect(onHome).toHaveBeenCalledOnce();
   });
 
@@ -88,7 +88,7 @@ describe("AppHeader — the one shared header shell", () => {
     // The override owns the row while searching — the normal content is replaced, not stacked.
     expect(screen.getByText("FINDBAR")).toBeInTheDocument();
     expect(screen.queryByText("webapp › main")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Collie home" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "setnet home" })).toBeNull();
   });
 });
 

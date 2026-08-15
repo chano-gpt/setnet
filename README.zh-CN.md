@@ -1,7 +1,7 @@
 # setnet
 
 <p align="center">
-  <img src="assets/collie-hero.webp" alt="一只牧羊犬在放牧一群羊" width="640">
+  <img src="assets/hero.svg" alt="헛 둘 셋 넷 —— 清点羊群的口令，setnet 取自它的后半" width="880">
 </p>
 
 <p align="center">
@@ -23,8 +23,19 @@ setnet 是一个手机 web UI，用来监督跑在 [Herdr](https://herdr.dev) �
 
 和其他工具真正拉开差距的只有一点：**setnet 会区分智能体的种类。** 它不是把终端画面原样镜像丢给你，而是知道每种 harness 能做什么、不该被要求做什么——Claude Code、Codex、pi、OpenCode，以及 **AGY 和 OMO（Senpi）**。
 
+## 界面
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet 仪表盘，按状态排序的智能体群" width="250"><br><sub><b>群</b> — 按谁在等你排序</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO 计划卡片，包含阶段与任务状态" width="250"><br><sub><b>计划</b> — OMO 当前在哪个阶段</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="harness 启动器，六种智能体" width="250"><br><sub><b>启动器</b> — 安全参数已固化</sub></td>
+  </tr>
+</table>
+
 ## 目录
 
+- [界面](#界面)
 - [有什么不同](#有什么不同)
 - [支持的 harness](#支持的-harness)
 - [核心功能](#核心功能)

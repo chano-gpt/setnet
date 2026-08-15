@@ -1,7 +1,7 @@
 # setnet
 
 <p align="center">
-  <img src="assets/collie-hero.webp" alt="A dog herding a flock of sheep" width="640">
+  <img src="assets/hero.svg" alt="heot dul set net — the cadence you count a herd off with; setnet is its back half" width="880">
 </p>
 
 <p align="center">
@@ -23,8 +23,19 @@ setnet is a phone web UI for supervising the agent herd running on [Herdr](https
 
 One thing separates it from everything else: **setnet treats agents as distinct kinds.** Rather than mirroring a terminal screen and handing it to you raw, it knows what each harness can do and what it must not be asked to do — Claude Code, Codex, pi, OpenCode, and **AGY and OMO (Senpi)** as well.
 
+## Screens
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet dashboard, the herd ordered by status" width="250"><br><sub><b>Herd</b> — ordered by who waits on you</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO plan card with phases and per-task status" width="250"><br><sub><b>Plan</b> — which phase OMO is actually on</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="Harness launcher with six agents" width="250"><br><sub><b>Launcher</b> — safe arguments baked in</sub></td>
+  </tr>
+</table>
+
 ## Contents
 
+- [Screens](#screens)
 - [What's different](#whats-different)
 - [Supported harnesses](#supported-harnesses)
 - [Features](#features)
