@@ -5,7 +5,26 @@ import * as api from "@/lib/api";
 import { setStatus } from "@/lib/status";
 import { panePath } from "@/lib/nav";
 import { ROOT_ROUTE_ID, type HomeData } from "@/lib/loaders";
+import type { AgentLaunchResult, LaunchAgentId } from "@/lib/launch-agents";
 import { isReadOnly, type AgentView, type CreateResponse } from "@/lib/types";
+
+function freshPaneFromCreate(
+  pane: Extract<CreateResponse, { ok: true }>["pane"],
+  agent: LaunchAgentId | "shell" = "shell",
+): AgentView {
+  return {
+    paneId: pane.paneId,
+    workspaceId: pane.workspaceId,
+    workspaceLabel: pane.workspaceLabel,
+    workspaceNumber: 0,
+    tabId: pane.tabId,
+    agent,
+    status: "unknown",
+    cwd: pane.cwd,
+    focused: false,
+    kind: agent === "shell" ? "shell" : "agent",
+  };
+}
 
 // Shared "create a tab/space, then jump into its fresh shell" flow, used by the home space view and
 // the detail Herdr palette. The new pane won't be in the snapshot until the next poll, so we pass
@@ -37,42 +56,14 @@ export function useSpaceActions() {
         setStatus(res.error, "error");
         return;
       }
-      const p = res.pane;
-      const fresh: AgentView = {
-        paneId: p.paneId,
-        workspaceId: p.workspaceId,
-        workspaceLabel: p.workspaceLabel,
-        workspaceNumber: 0,
-        tabId: p.tabId,
-        agent: "shell",
-        status: "unknown",
-        cwd: p.cwd,
-        focused: false,
-        kind: "shell",
-      };
+      const pane = res.pane;
       setStatus(`New ${what} ready — launch your agent`, "success");
       revalidatorRef.current.revalidate();
-      navigate(panePath(p.paneId, sessionRef.current), {
-        state: { freshPane: fresh, selectAgent: what === "tab" },
+      navigate(panePath(pane.paneId, sessionRef.current), {
+        state: { freshPane: freshPaneFromCreate(pane), selectAgent: what === "tab" },
       });
     },
     [navigate],
-  );
-
-  const freshPane = useCallback(
-    (p: Extract<CreateResponse, { ok: true }>["pane"], agent = "shell") => ({
-      paneId: p.paneId,
-      workspaceId: p.workspaceId,
-      workspaceLabel: p.workspaceLabel,
-      workspaceNumber: 0,
-      tabId: p.tabId,
-      agent,
-      status: "unknown" as const,
-      cwd: p.cwd,
-      focused: false,
-      kind: agent === "shell" ? "shell" : "agent",
-    }),
-    [],
   );
 
   const newTab = useCallback(
@@ -88,51 +79,101 @@ export function useSpaceActions() {
   );
 
   const newSpace = useCallback(
-    async (opts: { label?: string; cwd?: string } = {}) => {
-      if (readOnlyRef.current) return setStatus("Read-only — device not authorised", "error");
+    async (opts: { label?: string; cwd?: string } = {}): Promise<AgentLaunchResult> => {
+      if (readOnlyRef.current) {
+        const error = "Read-only — device not authorised";
+        setStatus(error, "error");
+        return { ok: false, error };
+      }
       try {
-        open(await api.createWorkspace(opts, sessionRef.current), "space");
+        const created = await api.createWorkspace(opts, sessionRef.current);
+        if (!created.ok) {
+          setStatus(created.error, "error");
+          return created;
+        }
+        open(created, "space");
+        return { ok: true };
       } catch (e) {
-        setStatus(e instanceof Error ? e.message : String(e), "error");
+        const error = e instanceof Error ? e.message : String(e);
+        setStatus(error, "error");
+        return { ok: false, error };
       }
     },
     [open],
   );
 
+  const launchCreatedAgent = useCallback(
+    async (
+      created: Extract<CreateResponse, { ok: true }>,
+      kind: LaunchAgentId,
+    ): Promise<AgentLaunchResult> => {
+      const started = await api.startAgent(created.pane.paneId, kind, sessionRef.current);
+      if (!started.ok) {
+        setStatus(`${started.error} — fresh shell kept`, "error");
+        revalidatorRef.current.revalidate();
+        navigate(panePath(created.pane.paneId, sessionRef.current), {
+          state: { freshPane: freshPaneFromCreate(created.pane), selectAgent: true },
+        });
+        return { ok: true };
+      }
+      setStatus(`Launching ${kind} in ${created.pane.workspaceLabel}`, "success");
+      revalidatorRef.current.revalidate();
+      navigate(panePath(created.pane.paneId, sessionRef.current), {
+        state: { freshPane: freshPaneFromCreate(created.pane, kind) },
+      });
+      return { ok: true };
+    },
+    [navigate],
+  );
+
   const newAgent = useCallback(
-    async (workspaceId: string, kind: string) => {
+    async (workspaceId: string, kind: LaunchAgentId): Promise<AgentLaunchResult> => {
       if (readOnlyRef.current) {
-        setStatus("Read-only — device not authorised", "error");
-        return false;
+        const error = "Read-only — device not authorised";
+        setStatus(error, "error");
+        return { ok: false, error };
       }
       try {
         const created = await api.createTab(workspaceId, {}, sessionRef.current);
         if (!created.ok) {
           setStatus(created.error, "error");
-          return false;
+          return created;
         }
-        const started = await api.startAgent(created.pane.paneId, kind, sessionRef.current);
-        if (!started.ok) {
-          setStatus(`${started.error} — fresh shell kept`, "error");
-          revalidatorRef.current.revalidate();
-          navigate(panePath(created.pane.paneId, sessionRef.current), {
-            state: { freshPane: freshPane(created.pane), selectAgent: true },
-          });
-          return true;
-        }
-        setStatus(`Launching ${kind} in ${created.pane.workspaceLabel}`, "success");
-        revalidatorRef.current.revalidate();
-        navigate(panePath(created.pane.paneId, sessionRef.current), {
-          state: { freshPane: freshPane(created.pane, kind) },
-        });
-        return true;
+        return await launchCreatedAgent(created, kind);
       } catch (e) {
-        setStatus(e instanceof Error ? e.message : String(e), "error");
-        return false;
+        const error = e instanceof Error ? e.message : String(e);
+        setStatus(error, "error");
+        return { ok: false, error };
       }
     },
-    [freshPane, navigate],
+    [launchCreatedAgent],
   );
 
-  return { newTab, newSpace, newAgent };
+  const newSpaceAgent = useCallback(
+    async (
+      opts: { label?: string; cwd?: string },
+      kind: LaunchAgentId,
+    ): Promise<AgentLaunchResult> => {
+      if (readOnlyRef.current) {
+        const error = "Read-only — device not authorised";
+        setStatus(error, "error");
+        return { ok: false, error };
+      }
+      try {
+        const created = await api.createWorkspace(opts, sessionRef.current);
+        if (!created.ok) {
+          setStatus(created.error, "error");
+          return created;
+        }
+        return await launchCreatedAgent(created, kind);
+      } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
+        setStatus(error, "error");
+        return { ok: false, error };
+      }
+    },
+    [launchCreatedAgent],
+  );
+
+  return { newTab, newSpace, newAgent, newSpaceAgent };
 }

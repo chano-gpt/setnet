@@ -6,6 +6,14 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.32.2] - 2026-08-25
+
+### Fixed
+
+- Snapshot polling no longer unlocks a managed launch, and creation failures stay visible inside their sheet.
+- An empty install carries the chosen agent through New space and starts it in the first pane.
+- English, Japanese and Chinese READMEs now match the auto-mode, logo and OMO fallback behavior.
+
 ## [0.32.1] - 2026-08-25
 
 ### Fixed

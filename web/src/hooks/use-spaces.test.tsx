@@ -8,6 +8,7 @@ import { useSpaceActions } from "./use-spaces";
 
 vi.mock("@/lib/api", () => ({
   createTab: vi.fn(),
+  createWorkspace: vi.fn(),
   startAgent: vi.fn(),
 }));
 
@@ -29,8 +30,13 @@ const home: HomeData = {
 };
 
 function LaunchHarness() {
-  const { newAgent } = useSpaceActions();
-  return <button onClick={() => void newAgent("w1", "codex")}>Launch</button>;
+  const { newAgent, newSpaceAgent } = useSpaceActions();
+  return (
+    <>
+      <button onClick={() => void newAgent("w1", "codex")}>Launch</button>
+      <button onClick={() => void newSpaceAgent({ label: "new" }, "claude")}>Launch in new</button>
+    </>
+  );
 }
 
 function Destination() {
@@ -61,6 +67,7 @@ function view() {
 describe("useSpaceActions — direct agent creation", () => {
   beforeEach(() => {
     vi.mocked(api.createTab).mockReset();
+    vi.mocked(api.createWorkspace).mockReset();
     vi.mocked(api.startAgent).mockReset();
     vi.mocked(api.createTab).mockResolvedValue({
       ok: true,
@@ -95,5 +102,26 @@ describe("useSpaceActions — direct agent creation", () => {
     expect(state).toHaveTextContent('"selectAgent":true');
     expect(state).toHaveTextContent('"agent":"shell"');
     expect(state).toHaveTextContent('"kind":"shell"');
+  });
+
+  it("starts an agent in a new workspace's initial pane without creating an extra tab", async () => {
+    vi.mocked(api.createWorkspace).mockResolvedValue({
+      ok: true,
+      pane: {
+        paneId: "w2:p1",
+        workspaceId: "w2",
+        workspaceLabel: "new",
+        tabId: "w2:t1",
+        cwd: "/home/you",
+      },
+    });
+    vi.mocked(api.startAgent).mockResolvedValue({ ok: true });
+    const router = view();
+    await userEvent.click(await screen.findByRole("button", { name: "Launch in new" }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/pane/w2%3Ap1"));
+    expect(api.createWorkspace).toHaveBeenCalledExactlyOnceWith({ label: "new" }, "remote");
+    expect(api.createTab).not.toHaveBeenCalled();
+    expect(api.startAgent).toHaveBeenCalledExactlyOnceWith("w2:p1", "claude", "remote");
   });
 });

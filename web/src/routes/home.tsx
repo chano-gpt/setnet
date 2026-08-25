@@ -21,6 +21,7 @@ import { ROOT_ROUTE_ID, type HomeData } from "@/lib/loaders";
 import { homeSectionFromSearch, homeSectionPath, panePath, settingsPath, spacePath } from "@/lib/nav";
 import { bucketOf } from "@/lib/triage";
 import { cn } from "@/lib/utils";
+import { launchAgentById, type LaunchAgentId } from "@/lib/launch-agents";
 
 // Dashboard home screen. The bottom tab bar separates the action queue (Herd) from navigation
 // (Spaces), so neither can bury the other on a phone. Herd keeps the urgency order from triage.ts;
@@ -34,9 +35,10 @@ export function HomeRoute() {
   const stalled = useLoadingStalled();
   const location = useLocation();
   const navigate = useNavigate();
-  const { newSpace, newAgent } = useSpaceActions();
+  const { newSpace, newAgent, newSpaceAgent } = useSpaceActions();
   const [newSpaceOpen, setNewSpaceOpen] = useState(false);
   const [newAgentOpen, setNewAgentOpen] = useState(false);
+  const [pendingNewSpaceAgent, setPendingNewSpaceAgent] = useState<LaunchAgentId | null>(null);
   const [messagePaneId, setMessagePaneId] = useState<string | null>(null);
   const { prefs, setSpacesOpen, setRecentOpen, setRecentDir } = useDashPrefs();
   // No stored choice yet? The space count decides — a two-space install shouldn't be handed a
@@ -130,13 +132,32 @@ export function HomeRoute() {
         <StatusArea />
       </div>
 
-      <NewSpaceSheet open={newSpaceOpen} onClose={() => setNewSpaceOpen(false)} onCreate={newSpace} />
+      <NewSpaceSheet
+        open={newSpaceOpen}
+        onClose={() => {
+          setNewSpaceOpen(false);
+          setPendingNewSpaceAgent(null);
+        }}
+        onCreate={
+          pendingNewSpaceAgent
+            ? (opts) => newSpaceAgent(opts, pendingNewSpaceAgent)
+            : newSpace
+        }
+        submitLabel={
+          pendingNewSpaceAgent
+            ? `Create space & start ${launchAgentById(pendingNewSpaceAgent).name}`
+            : undefined
+        }
+      />
       <NewAgentSheet
         open={newAgentOpen}
         workspaces={data.workspaces}
         onClose={() => setNewAgentOpen(false)}
         onCreate={newAgent}
-        onNewSpace={() => setNewSpaceOpen(true)}
+        onNewSpace={(kind) => {
+          setPendingNewSpaceAgent(kind);
+          setNewSpaceOpen(true);
+        }}
       />
       <DashboardComposer
         agent={data.agents.find((candidate) => candidate.paneId === messagePaneId) ?? null}

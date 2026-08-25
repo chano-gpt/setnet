@@ -29,7 +29,7 @@ setnet 是一个手机 web UI，用来监督跑在 [Herdr](https://herdr.dev) �
   <tr>
     <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet 仪表盘，按状态排序的智能体群" width="250"><br><sub><b>群</b> — 按谁在等你排序</sub></td>
     <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO 计划卡片，包含阶段与任务状态" width="250"><br><sub><b>计划</b> — OMO 当前在哪个阶段</sub></td>
-    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="harness 启动器，六种智能体" width="250"><br><sub><b>启动器</b> — 安全参数已固化</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="harness 启动器，六种智能体" width="250"><br><sub><b>启动器</b> — 按 harness 自动模式启动</sub></td>
   </tr>
 </table>
 
@@ -50,9 +50,9 @@ setnet 是一个手机 web UI，用来监督跑在 [Herdr](https://herdr.dev) �
 
 | | setnet | Collie |
 |---|---|---|
-| **AGY · OMO（Senpi）支持** | 专属命令目录 + 对话记录适配器 | 无 |
-| **启动智能体** | 在应用内启动 6 种智能体，并固化各 harness 的安全参数（Claude 用 `--permission-mode manual`，Codex 用 `--ask-for-approval on-request --sandbox workspace-write`） | 只能连上已经存在的面板 |
-| **提示词发送路径** | 在仪表盘上，所有智能体都通过 Herdr `agent.prompt` 直接发送——绕过终端打字 | 只有向 PTY 敲键的路径 |
+| **AGY · OMO（Senpi）支持** | 专属命令目录 + 对话记录适配器 + 官方标志 | 无 |
+| **启动智能体** | 可直接从群／空间创建 6 种智能体；除 OMO 外均按各 harness 的自动模式启动 | 只能连上已经存在的面板 |
+| **提示词发送路径** | 优先使用 Herdr `agent.prompt`；当 Herdr 只知道 OMO 的生命周期名称时，才窄化回退到仍存活的智能体面板输入 | 只有向 PTY 敲键的路径 |
 | **计划进度** | 解析 Senpi 的 todo-state，在对话中显示当前阶段和每项任务的状态（待办／进行中／已完成／已放弃） | 无 |
 | **直接从仪表盘下达指令** | 无需进入面板即可发送提示词，输入法安全的草稿，实时的工作耗时 | 必须进入面板 |
 | **移动端导航** | 专用标签栏（群／空间，带「需要你」的数量徽标） | 单一仪表盘 |
@@ -66,12 +66,12 @@ setnet 是一个手机 web UI，用来监督跑在 [Herdr](https://herdr.dev) �
 
 | Harness | 命令目录 | 对话历史 | 画面语法识别 | 应用内启动 |
 |---|---|---|---|---|
-| **AGY**（Antigravity） | ✅ 基于 AGY 1.1.12 | — | — | ✅ |
+| **AGY**（Antigravity） | ✅ 基于 AGY 1.1.12 | — | — | ✅（`--dangerously-skip-permissions`） |
 | **OMO**（Senpi） | ✅ 基于 Senpi 2026.8.12-4 | ✅ + 计划进度 | ✅ | ✅ |
-| Claude Code | ✅ | ✅ | ✅ 完整语法 | ✅（`--permission-mode manual`） |
-| Codex | ✅ | ✅ | — | ✅（请求审批 + workspace-write 沙箱） |
-| pi | ✅ | ✅ | — | ✅ |
-| OpenCode | ✅ | ✅ | — | ✅ |
+| Claude Code | ✅ | ✅ | ✅ 完整语法 | ✅（`--permission-mode auto`） |
+| Codex | ✅ | ✅ | — | ✅（`--approve-for-me`） |
+| pi | ✅ | ✅ | — | ✅（默认没有逐工具审批） |
+| OpenCode | ✅ | ✅ | — | ✅（`--auto`） |
 | omp | ✅ | — | ✅ 基础 | — |
 
 「画面语法识别」指的是能从终端画面读出选项、向导和输入框状态的适配器。只有 Claude Code 拥有完整语法（提示选择、向导、预览、多选、菜单），OMO 则共用 omp 的适配器。没有适配器的 harness 会退回通用镜像；没有对话记录适配器的 harness（AGY、omp）不会出现历史功能。
@@ -84,7 +84,7 @@ setnet 是一个手机 web UI，用来监督跑在 [Herdr](https://herdr.dev) �
 - 各 harness 专属的斜杠命令面板——在输入框敲 `/` 弹出内联菜单，点击插入
 - 对没有适配器的 harness 阻止输入，必须通过两步确认才放行
 - 在面板中回复时，会先读取画面确认输入框已就绪，验证文字确实进去了，之后才按下发送键——这正是为了防止回车去回答某个抢占了键盘的对话框
-- 像 OMO 这种没有可靠终端输入语法的 harness，改用 Herdr 的托管生命周期（`agent.prompt`）发送，完全不碰 PTY
+- 没有可靠终端输入语法的 harness 会先走 Herdr 托管生命周期（`agent.prompt`）。如果生命周期钩子只注册了 OMO 名称而 Herdr 无法接管发送，则仅在错误精确为 `is not an active named agent` 时回退到仍存活的面板输入；绝不回退到已经退出的面板
 
 **对话历史**
 - 从智能体自己的会话日志读取，能覆盖终端已经滚不回去的部分
@@ -94,6 +94,8 @@ setnet 是一个手机 web UI，用来监督跑在 [Herdr](https://herdr.dev) �
 **移动优先**
 - 可安装到主屏幕的 PWA
 - 群／空间标签栏，带上需要你处理的智能体数量徽标
+- 可从群／空间选择目标空间与 harness，直接启动新的智能体
+- 在页头、群列表和启动器中显示 Claude Code、Codex、pi、OpenCode、OMO、Antigravity 官方标志
 - 仪表盘按**谁在等你**排序，而不是按最后变动时间
 - 特殊按键面板（`Esc`、`Ctrl+C`、方向键）、从相册发送图片、在输出中搜索
 - 智能体一旦卡住就通过 Web Push 通知你
@@ -126,6 +128,8 @@ herdr plugin action invoke start --plugin herdr.collie
 ## 安全 — 务必先读
 
 **setnet 在设计上就是对你机器的远程 shell 访问。** 一次调用就能向真实的终端面板输入任意按键。任何能访问该 URL 的人，都能读取所有面板（源码、密钥、环境变量、智能体输出），并以你的身份运行任意命令。没有沙箱，也没有命令白名单——两者中的任何一个都会让这个工具失去意义。**请把这个 URL 当作 root 登录来对待。**
+
+从应用启动的智能体除 OMO 外都会进入**自动处理审批提示的模式**。Antigravity 使用 `--dangerously-skip-permissions`，Claude、Codex 与 OpenCode 使用各自 harness 的自动选项。在这些会话中，工具调用不会每次等待人工审批；只有 OMO 保留自身的权限流程。
 
 默认启用的防线：
 

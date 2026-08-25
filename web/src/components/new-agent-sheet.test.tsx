@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { NewAgentSheet } from "./new-agent-sheet";
@@ -28,7 +28,7 @@ const workspaces: WorkspaceView[] = [
 describe("NewAgentSheet", () => {
   it("starts the chosen agent directly in the selected space", async () => {
     const user = userEvent.setup();
-    const onCreate = vi.fn().mockResolvedValue(true);
+    const onCreate = vi.fn().mockResolvedValue({ ok: true });
     const onClose = vi.fn();
     render(
       <NewAgentSheet
@@ -47,7 +47,7 @@ describe("NewAgentSheet", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("keeps the sheet open after a failed launch", async () => {
+  it("keeps the sheet open and shows the reason after a failed launch", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(
@@ -55,15 +55,16 @@ describe("NewAgentSheet", () => {
         open
         workspaces={workspaces}
         onClose={onClose}
-        onCreate={vi.fn().mockResolvedValue(false)}
+        onCreate={vi.fn().mockResolvedValue({ ok: false, error: "Read-only device" })}
         onNewSpace={vi.fn()}
       />,
     );
     await user.click(screen.getByRole("button", { name: /start claude code in alpha/i }));
     expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent("Read-only device");
   });
 
-  it("routes an empty install to space creation", async () => {
+  it("carries the chosen agent into space creation on an empty install", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     const onNewSpace = vi.fn();
@@ -76,8 +77,42 @@ describe("NewAgentSheet", () => {
         onNewSpace={onNewSpace}
       />,
     );
-    await user.click(screen.getByRole("button", { name: /new space/i }));
+    await user.click(screen.getByRole("button", { name: /start codex in a new space/i }));
     expect(onClose).toHaveBeenCalledOnce();
-    expect(onNewSpace).toHaveBeenCalledOnce();
+    expect(onNewSpace).toHaveBeenCalledExactlyOnceWith("codex");
+  });
+
+  it("does not unlock a slow launch when polling replaces the workspace array", async () => {
+    const user = userEvent.setup();
+    let finish!: (result: { ok: true }) => void;
+    const onCreate = vi.fn(
+      () => new Promise<{ ok: true }>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const { rerender } = render(
+      <NewAgentSheet
+        open
+        workspaces={workspaces}
+        onClose={vi.fn()}
+        onCreate={onCreate}
+        onNewSpace={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /start codex in alpha/i }));
+    rerender(
+      <NewAgentSheet
+        open
+        workspaces={[...workspaces]}
+        onClose={vi.fn()}
+        onCreate={onCreate}
+        onNewSpace={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /start claude code in alpha/i })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /start claude code in alpha/i }));
+    expect(onCreate).toHaveBeenCalledOnce();
+    await act(async () => finish({ ok: true }));
   });
 });

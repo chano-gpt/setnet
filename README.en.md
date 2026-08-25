@@ -29,7 +29,7 @@ One thing separates it from everything else: **setnet treats agents as distinct 
   <tr>
     <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet dashboard, the herd ordered by status" width="250"><br><sub><b>Herd</b> — ordered by who waits on you</sub></td>
     <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO plan card with phases and per-task status" width="250"><br><sub><b>Plan</b> — which phase OMO is actually on</sub></td>
-    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="Harness launcher with six agents" width="250"><br><sub><b>Launcher</b> — safe arguments baked in</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="Harness launcher with six agents" width="250"><br><sub><b>Launcher</b> — starts each harness in auto mode</sub></td>
   </tr>
 </table>
 
@@ -50,9 +50,9 @@ The closest alternative is [Collie](https://github.com/AltanS/collie) — setnet
 
 | | setnet | Collie |
 |---|---|---|
-| **AGY · OMO (Senpi) support** | Dedicated command catalogs + transcript adapter | None |
-| **Launching agents** | Start six agents from the app with safe per-harness arguments baked in (Claude gets `--permission-mode manual`, Codex `--ask-for-approval on-request --sandbox workspace-write`) | Attaches only to panes that already exist |
-| **Prompt delivery path** | From the dashboard, every agent is prompted through Herdr `agent.prompt` — bypassing terminal typing | Only the path that types keys into the PTY |
+| **AGY · OMO (Senpi) support** | Dedicated command catalogs + transcript adapter + official logos | None |
+| **Launching agents** | Create any of six agents directly from Herd or Spaces, starting each harness in auto mode except OMO | Attaches only to panes that already exist |
+| **Prompt delivery path** | Herdr `agent.prompt` first; when Herdr knows only OMO's lifecycle label, a narrow fallback types only into a still-live agent pane | Only the path that types keys into the PTY |
 | **Plan progress** | Parses Senpi todo-state and shows the current phase plus per-task status (pending / in progress / completed / abandoned) in the conversation | None |
 | **Prompt straight from the dashboard** | Send a prompt without opening the pane, IME-safe drafts, live working-elapsed time | You have to open the pane |
 | **Mobile navigation** | A dedicated tab bar (Herd / Spaces, with a needs-attention count badge) | A single dashboard |
@@ -66,12 +66,12 @@ The closest alternative is [Collie](https://github.com/AltanS/collie) — setnet
 
 | Harness | Command catalog | Conversation history | Screen grammar | Launch from app |
 |---|---|---|---|---|
-| **AGY** (Antigravity) | ✅ as of AGY 1.1.12 | — | — | ✅ |
+| **AGY** (Antigravity) | ✅ as of AGY 1.1.12 | — | — | ✅ (`--dangerously-skip-permissions`) |
 | **OMO** (Senpi) | ✅ as of Senpi 2026.8.12-4 | ✅ + plan progress | ✅ | ✅ |
-| Claude Code | ✅ | ✅ | ✅ full grammar | ✅ (`--permission-mode manual`) |
-| Codex | ✅ | ✅ | — | ✅ (approval prompts + workspace-write sandbox) |
-| pi | ✅ | ✅ | — | ✅ |
-| OpenCode | ✅ | ✅ | — | ✅ |
+| Claude Code | ✅ | ✅ | ✅ full grammar | ✅ (`--permission-mode auto`) |
+| Codex | ✅ | ✅ | — | ✅ (`--approve-for-me`) |
+| pi | ✅ | ✅ | — | ✅ (no per-tool approval gate by default) |
+| OpenCode | ✅ | ✅ | — | ✅ (`--auto`) |
 | omp | ✅ | — | ✅ basic | — |
 
 "Screen grammar" means an adapter that reads choices, wizards and composer state off the terminal screen. Only Claude Code has the full grammar (prompt-select, wizard, preview, multi-select, menu); OMO shares the omp adapter. A harness with no adapter falls back to the universal mirror, and a harness with no transcript adapter (AGY, omp) never offers the history affordance.
@@ -84,7 +84,7 @@ The command catalogs are **deliberately incomplete.** Workspace skills, plugins 
 - Per-harness slash-command palette — type `/` in the composer for an inline menu, tap to insert
 - Typing into a harness with no adapter is blocked behind a two-step confirmation
 - When replying in a pane, setnet reads the screen to confirm the composer is ready, verifies the text actually landed, and only then presses the submit key — which is what stops an Enter from answering a dialog that grabbed the keyboard
-- A harness with no verified terminal grammar (like OMO) is prompted through Herdr's managed lifecycle (`agent.prompt`) instead, never touching the PTY
+- A harness with no verified terminal grammar goes through Herdr's managed lifecycle (`agent.prompt`) first. If a lifecycle hook registered OMO's name but Herdr cannot own delivery, setnet falls back only for the exact `is not an active named agent` error and only into a still-live pane; it never falls back into an exited pane
 
 **Conversation history**
 - Reads from the agent's own session log, reaching past what the terminal can scroll back to
@@ -94,6 +94,8 @@ The command catalogs are **deliberately incomplete.** Workspace skills, plugins 
 **Mobile-first**
 - A PWA that installs to your home screen
 - Herd / Spaces tab bar with a badge counting the agents that need you
+- Start a new agent directly from Herd or Spaces by choosing its space and harness
+- Official Claude Code, Codex, pi, OpenCode, OMO and Antigravity logos across the header, herd and launcher
 - The dashboard is ordered by **who is waiting on you**, not by what changed last
 - Special-keys pad (`Esc`, `Ctrl+C`, arrows), send an image from the camera roll, search within output
 - Web Push the moment an agent blocks
@@ -126,6 +128,8 @@ You need: [Bun](https://bun.sh), [Herdr](https://herdr.dev) 0.7.0 or newer, [Tai
 ## Security — read first
 
 **setnet is remote shell access to your machine, by design.** One call types arbitrary keystrokes into a live terminal pane. Anyone who can reach the URL can read every pane — source, secrets, environment, agent output — and run any command as your user. There is no sandbox and no command allow-list, because either one would defeat the purpose. **Treat the URL like a root login.**
+
+Agents started from the app enter a mode that automatically handles approval prompts, except OMO, which keeps its own permission flow. Antigravity uses `--dangerously-skip-permissions`; Claude, Codex and OpenCode use their harness-specific auto options. Tool calls in those sessions do not wait for approval every time.
 
 The defenses that ship on by default:
 
