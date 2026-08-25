@@ -33,20 +33,31 @@
 :root {
   color-scheme: light dark;
 
-  --radius: 0.65rem;
+  /* 2px, down from 0.65rem. setnet types into a live shell; soft consumer cards and pill buttons
+     say the opposite of that. The ladder below is written out rather than derived, because the old
+     `calc(var(--radius) - 4px)` goes NEGATIVE at this size. */
+  --radius: 2px;
   /* Light deviates from stock shadcn in two places, both measured rather than taste:
      --background is a step off white (stock has background == card == popover == pure white, so the
      entire dashboard hierarchy rests on one 1.26:1 hairline), and --muted-foreground is darkened
      for headroom (see below). oklch(0.97) rasterizes to rgb(245,245,245), which is exactly the
-     terminal mirror's inverted background — so the mirror stops showing a seam against the page. */
+     terminal mirror's inverted background — so the mirror stops showing a seam against the page.
+
+     --background is therefore the ONE token the graphite pass below left achromatic, in both halves.
+     Light must rasterize to rgb(245) to meet `invert(1)` applied to the mirror's #0a0a0a, and dark
+     must BE #0a0a0a, because in dark the filter is off and the mirror paints its literal straight
+     onto the page. Tint either half and a seam appears around every mirror. The housing/screen
+     separation this palette is after comes from the RAISED surfaces (card, muted, secondary,
+     accent) instead — which is where the app's chrome actually lives: header, composer, docks,
+     cards. The page ground behind the mirror is not chrome and does not want to be. */
   --background: light-dark(oklch(0.97 0 0), oklch(0.145 0 0));
-  --foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  --card-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  --popover-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --primary: light-dark(oklch(0.205 0 0), oklch(0.922 0 0));
-  --primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.205 0 0));
+  --foreground: light-dark(oklch(0.209 0.004 264), oklch(0.929 0.005 78));
+  --card: light-dark(oklch(1 0 0), oklch(0.226 0.007 258));
+  --card-foreground: light-dark(oklch(0.209 0.004 264), oklch(0.929 0.005 78));
+  --popover: light-dark(oklch(1 0 0), oklch(0.226 0.007 258));
+  --popover-foreground: light-dark(oklch(0.209 0.004 264), oklch(0.929 0.005 78));
+  --primary: light-dark(oklch(0.209 0.004 264), oklch(0.922 0.005 78));
+  --primary-foreground: light-dark(oklch(0.985 0.003 78), oklch(0.209 0.004 264));
   /* The "this control is ON" tint — a very light sky. Its own token pair rather than reusing
      --secondary because the two say different things: secondary is a quieter surface, this is a
      STATE, and the row needs the difference legible at a glance (an open dock, an armed mode). Kept
@@ -59,16 +70,16 @@
      7.3:1 light, 9.2:1 dark. */
   --control-on: light-dark(oklch(0.90 0.06 235), oklch(0.32 0.05 240));
   --control-on-foreground: light-dark(oklch(0.38 0.12 245), oklch(0.89 0.06 235));
-  --secondary: light-dark(oklch(0.94 0 0), oklch(0.269 0 0));
-  --secondary-foreground: light-dark(oklch(0.205 0 0), oklch(0.985 0 0));
+  --secondary: light-dark(oklch(0.938 0.005 78), oklch(0.263 0.007 248));
+  --secondary-foreground: light-dark(oklch(0.209 0.004 264), oklch(0.929 0.005 78));
   /* Light --muted is a step BELOW --background so the header/composer chrome band still reads as a
      distinct surface now that the page is no longer white. */
-  --muted: light-dark(oklch(0.94 0 0), oklch(0.269 0 0));
+  --muted: light-dark(oklch(0.938 0.005 78), oklch(0.263 0.007 248));
   /* Light was oklch(0.556) — 4.74:1 on white, i.e. zero headroom, so every /70, /80 and opacity-60
      derivative in the app fell under 3:1 while its dark counterpart passed. Darkened to buy that
      headroom back; the alpha modifiers on small text were dropped as well, since no token value
      rescues a /70. */
-  --muted-foreground: light-dark(oklch(0.48 0 0), oklch(0.708 0 0));
+  --muted-foreground: light-dark(oklch(0.443 0.007 85), oklch(0.680 0.008 89));
   /* Light --accent must be a real step off --background, not stock shadcn's 0.97. Stock is right
      only while background is pure white; 0.18.0 deliberately moved background to 0.97 (see above),
      which silently made accent === background — so every "this is the current one" highlight
@@ -76,18 +87,18 @@
      as nothing at all in light mode. It sits a step BELOW --muted (0.94), not between it and
      --background: the switcher needs three separable values — resting 0.97, hover (bg-muted/60)
      ~0.94, active 0.92 — and 0.94 would have collided the last two. */
-  --accent: light-dark(oklch(0.92 0 0), oklch(0.269 0 0));
-  --accent-foreground: light-dark(oklch(0.205 0 0), oklch(0.985 0 0));
+  --accent: light-dark(oklch(0.915 0.006 80), oklch(0.263 0.007 248));
+  --accent-foreground: light-dark(oklch(0.209 0.004 264), oklch(0.929 0.005 78));
   --destructive: light-dark(oklch(0.577 0.245 27.325), oklch(0.704 0.191 22.216));
   --destructive-foreground: light-dark(oklch(0.985 0 0), oklch(0.985 0 0));
-  --border: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 12%));
-  --input: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 15%));
+  --border: light-dark(oklch(0.904 0.005 78), oklch(1 0 0 / 12%));
+  --input: light-dark(oklch(0.904 0.005 78), oklch(1 0 0 / 15%));
   /* Light is darkened off stock shadcn (0.708 → 0.62): at 0.708 the focus ring measures 2.58:1 on
      white, under the 3:1 WCAG 1.4.11 floor for a non-text indicator — and components draw it at
      `ring-ring/50`, which halves that again. On an app whose buttons type into a live shell, a focus
      ring you can't locate is a real problem. Still worth an on-device look: even at 0.62 the /50
      variant is marginal. */
-  --ring: light-dark(oklch(0.62 0 0), oklch(0.556 0 0));
+  --ring: light-dark(oklch(0.62 0.006 80), oklch(0.556 0.007 258));
 
   /* Agent lifecycle status palette — the app's primary at-a-glance signal, so both halves are
      tuned against their own ground rather than one set being reused. The dark values glow on
@@ -146,10 +157,10 @@
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 6px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -179,12 +190,56 @@
   --color-status-idle: var(--status-idle);
   --color-status-unknown: var(--status-unknown);
 
+  /* Plex first, then the platform stack. Plex carries NO Hangul and that is deliberate (see the
+     @font-face below), so Korean falls straight through to the system Korean face — which is why
+     the fallbacks stay a real stack rather than a bare `sans-serif`. */
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+
   --font-mono: "Nerd Font Symbols", "JetBrains Mono", "Cascadia Mono", "Cascadia Code",
     "Roboto Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
     monospace;
 }
 
-/* Nerd Font symbols, bundled — the only webfont setnet ships.
+/* IBM Plex Sans — the UI face. One variable file, Latin only.
+ *
+ * WHY A FACE AT ALL. The chrome was stock shadcn on the platform stack, which renders as Roboto on
+ * the one device setnet is for. Plex was drawn for interfaces in exactly this register: engineered,
+ * neutral without being characterless, legible at the sizes a phone actually uses.
+ *
+ * WHY IT IS ONE FILE. Google serves Plex as a VARIABLE font — the same woff2 answers every weight
+ * request from 100 to 700 — so the whole UI weight range costs 45 KB once, not one file per weight.
+ * `font-weight: 100 700` on the @font-face is what tells the browser this face covers the range;
+ * without it a `font-weight: 600` lookup synthesises a fake bold from the 400 instance.
+ *
+ * WHY NO HANGUL, ON PURPOSE. Workspace labels, tab labels and replies are frequently Korean. Plex
+ * Sans has no Hangul, so it falls through to the system Korean face — already installed on Android,
+ * costing nothing. IBM Plex Sans KR exists and would multiply this payload several times over for
+ * glyphs the phone can already draw. `unicode-range` keeps the fetch conditional on Latin actually
+ * being painted, and --font-sans keeps a real fallback stack behind it so the fall-through is
+ * silent rather than tofu.
+ *
+ * WHY IT IS PRECACHED, UNLIKE THE NERD FONT BELOW. Opposite rule, opposite reason: the Nerd Font is
+ * lazy because most herds paint no symbol glyphs, and 1.1 MB should not be charged to an install
+ * that never needs it. This one is on the first paint of every screen — leaving it out of the
+ * precache would mean a cold, offline launch renders the whole UI in the fallback and reflows when
+ * the font lands. vite.config.ts adds `fonts/plex-sans-*.woff2` to globPatterns for that, and
+ * nothing else in fonts/ is matched.
+ *
+ * The file is the Latin subset Google Fonts serves for IBM Plex Sans v23 (OFL 1.1 —
+ * public/fonts/LICENSE-IBMPlexSans.txt). Version in the filename because public/ assets are unhashed
+ * and the SW caches them forever by URL. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/plex-sans-v23-latin.woff2") format("woff2");
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Nerd Font symbols, bundled — the second and last webfont setnet ships.
  *
  * WHY. Agent prompts and status lines are full of Nerd Font glyphs (Powerline separators, devicons,
  * Material icons: OMP's `symbolPreset: nerd`, herdr's own output). Desktop browsers can resolve them

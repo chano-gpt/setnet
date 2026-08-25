@@ -15,11 +15,17 @@
 //
 // The colours are LITERAL dark-space values rather than theme tokens. That is a CONVENTION, not a
 // constraint: `color-scheme: dark` on the element DOES flip an inherited light-dark() token
-// (resolution is element-scoped, per spec), and these literals are byte-exact matches for
-// --background / --foreground / --muted-foreground's dark halves, so either spelling renders the
-// same pixels. Literals win because they sit beside the truecolor an agent emits — which nothing can
-// re-theme — and say at the point of use that the value is deliberately theme-independent. What
-// matters is that a mirror surface never mixes the two (ADR 0002, rule 2).
+// (resolution is element-scoped, per spec). Literals win because they sit beside the truecolor an
+// agent emits — which nothing can re-theme — and say at the point of use that the value is
+// deliberately theme-independent. What matters is that a mirror surface never mixes the two
+// (ADR 0002, rule 2).
+//
+// #0a0a0a is NOT free to drift. It is --background's dark half byte for byte, and light
+// --background is tuned to rgb(245) so it meets this value under `invert(1)`. Both halves of that
+// token are pinned to this literal for that reason (index.css says so at the line). The graphite
+// pass that tinted the rest of the palette deliberately skipped --background; #fafafa and #a1a1a1
+// no longer match --foreground / --muted-foreground, which is fine — nothing renders them side by
+// side — but the ground does, and must.
 //
 // `color-scheme: dark` still earns its place for native UI inside these surfaces (the x-overflow
 // scrollbar, selection), which the filter then maps to light along with everything else.

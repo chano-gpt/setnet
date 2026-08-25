@@ -157,7 +157,12 @@ export default defineConfig({
         // The bundled Nerd Font faces are deliberately excluded: they total ~1.1 MB and
         // `unicode-range` already makes them lazy (index.css), so precaching them would charge
         // every install for glyphs most herds never paint. src/sw.ts caches them on first use.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}"],
+        //
+        // The UI face is the exception, and the pattern names it rather than widening to woff2 so
+        // the exclusion above cannot be undone by accident: IBM Plex Sans is on the first paint of
+        // every screen, so a cold offline launch without it renders the whole app in the fallback
+        // and reflows when it lands. 45 KB, once. (index.css carries the long form of both rules.)
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}", "fonts/plex-sans-*.woff2"],
       },
       // Over plain HTTP (insecure context) the SW can't register; in dev we don't want it anyway.
       devOptions: { enabled: false },
