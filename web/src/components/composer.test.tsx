@@ -42,6 +42,7 @@ function renderComposer(overrides: Partial<ComponentProps<typeof Composer>> = {}
     gone: false,
     readOnly: false,
     dialogPresent: false,
+    mirrorFollowing: true,
     text: "pane output",
     terminalDraft: null,
     rawTerminalDraft: null,
@@ -71,6 +72,7 @@ function renderComposerWithStatus(overrides: Partial<ComponentProps<typeof Compo
     gone: false,
     readOnly: false,
     dialogPresent: false,
+    mirrorFollowing: true,
     text: "pane output",
     terminalDraft: null,
     rawTerminalDraft: null,
@@ -193,6 +195,42 @@ describe("Composer — controls strip", () => {
       "[scrollbar-width:none]",
       "[&::-webkit-scrollbar]:hidden",
     );
+  });
+});
+
+describe("Composer — Send button affordance", () => {
+  // An empty box used to leave Send fully enabled, and `send()` returns false before it can say
+  // anything — so the tap was a silent no-op that reads as a dropped connection on a phone.
+  it("disables Send on an empty draft and enables it once there is text", async () => {
+    const user = userEvent.setup();
+    renderComposerWithStatus();
+    const send = screen.getByRole("button", { name: "Send" });
+    expect(send).toBeDisabled();
+
+    await user.type(screen.getByPlaceholderText(/type a reply/i), "hello");
+    expect(send).toBeEnabled();
+  });
+
+  // Whitespace is not a draft: `send()` trims before it decides, so the button must too.
+  it("keeps Send disabled for a whitespace-only draft", async () => {
+    const user = userEvent.setup();
+    renderComposerWithStatus();
+    await user.type(screen.getByPlaceholderText(/type a reply/i), "   ");
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  // The refusal existed; the warning did not. It only appeared after a tap, in the truncating
+  // status row — so the button looked as sendable as ever right up to the failure.
+  it("says a dialog is waiting before the tap, while the mirror is live", () => {
+    renderComposerWithStatus({ dialogPresent: true, mirrorFollowing: true });
+    expect(screen.getByText(/dialog is waiting/i)).toBeInTheDocument();
+  });
+
+  // Scrolled back or with find open the mirror is FROZEN, so `dialogPresent` describes a screen that
+  // may be long gone. The send still fails safe on it, but the app must not ASSERT a stale fact.
+  it("does not claim a dialog is waiting when the mirror is frozen", () => {
+    renderComposerWithStatus({ dialogPresent: true, mirrorFollowing: false });
+    expect(screen.queryByText(/dialog is waiting/i)).not.toBeInTheDocument();
   });
 });
 
@@ -563,6 +601,7 @@ describe("Composer — send", () => {
               gone={gone}
               readOnly={false}
               dialogPresent={false}
+              mirrorFollowing={true}
               text="pane output"
               terminalDraft={null}
               rawTerminalDraft="leftover"
@@ -654,6 +693,7 @@ describe("Composer — send", () => {
       gone: false,
       readOnly: false,
       dialogPresent: false,
+      mirrorFollowing: true,
       text: "pane output",
       terminalDraft: null,
       rawTerminalDraft: null,
@@ -749,6 +789,7 @@ describe("Composer — typing into the terminal", () => {
             gone={gone}
             readOnly={false}
             dialogPresent={false}
+            mirrorFollowing={true}
             text="pane output"
             terminalDraft={null}
             rawTerminalDraft={null}
@@ -953,6 +994,7 @@ describe("Composer — typing into the terminal", () => {
             gone={false}
             readOnly={false}
             dialogPresent={false}
+            mirrorFollowing={true}
             text="pane output"
             terminalDraft={null}
             rawTerminalDraft={null}
@@ -1096,6 +1138,7 @@ function renderDraftHarness(overrides: Partial<ComponentProps<typeof Composer>> 
       gone: false,
       readOnly: false,
       dialogPresent: false,
+      mirrorFollowing: true,
       text: "pane output",
       prefs: { wrap: true, fontSize: 11, rawTerminal: false },
       setWrap: vi.fn(),
@@ -1364,6 +1407,7 @@ describe("Composer — in-flight echo suppression (match-last-sent)", () => {
       gone: false,
       readOnly: false,
       dialogPresent: false,
+      mirrorFollowing: true,
       text: "pane output",
       terminalDraft: draft,
       rawTerminalDraft: draft,
@@ -1898,6 +1942,7 @@ describe("Composer — draft persistence", () => {
       gone: false,
       readOnly: false,
       dialogPresent: false,
+      mirrorFollowing: true,
       text: "pane output",
       terminalDraft: null,
       rawTerminalDraft: null,

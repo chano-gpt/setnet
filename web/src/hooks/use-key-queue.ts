@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { Modifier, ModMode } from "@/lib/key-queue";
 import { MODIFIER_ORDER, composeKey, nextModMode, normalizeBaseChar } from "@/lib/key-queue";
+import { setStatus } from "@/lib/status";
 
 // Re-exported so consumers can name the arm-state without reaching into lib/key-queue.
 export type { ModMode };
@@ -66,11 +67,21 @@ export function useKeyQueue() {
   );
 
   // The one-char key input: normalise the raw input to a base char, compose with the active mods,
-  // stage it, and settle. Ignores non-printable input (returns null from normalizeBaseChar).
+  // stage it, and settle. Non-printable input normalises to null and stages nothing.
+  //
+  // A refusal that says nothing is indistinguishable from a dead field, and the input this refuses
+  // most often is a whole committed Hangul syllable — a chord base is ASCII (Herdr's key grammar has
+  // no name for `ㄱ`), so an IME keyboard can only ever produce refusals here. Say so once, rather
+  // than letting the user conclude the Keys dock is broken.
   const pushBase = useCallback(
     (char: string) => {
       const base = normalizeBaseChar(char);
-      if (base === null) return;
+      if (base === null) {
+        if (char.length > 0) {
+          setStatus("A chord key is one ASCII character — switch the keyboard to English.", "warn");
+        }
+        return;
+      }
       setQueue((q) => [...q, composeKey(activeMods, base)]);
       setMods(settleMods);
     },

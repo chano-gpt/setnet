@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ChangeEvent, ClipboardEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { useRevalidator } from "react-router";
-import { Check, ImagePlus, Keyboard, Loader2, Send, Settings2, Slash, Terminal, X, Zap } from "lucide-react";
+import { AlertTriangle, Check, ImagePlus, Keyboard, Loader2, Send, Settings2, Slash, Terminal, X, Zap } from "lucide-react";
 
 import type { DisplayPrefs } from "@/hooks/use-display-prefs";
 import { usePendingConfirm } from "@/hooks/use-pending-confirm";
@@ -47,6 +47,9 @@ interface ComposerProps {
   /** A dialog (prompt/wizard/preview/multi-select) is on screen, so the TUI's keyboard belongs to it.
    * Free-text sending is refused while true — see send(). Answer it with its own buttons instead. */
   dialogPresent: boolean;
+  /** Whether the mirror is tracking the live pane. False while scrolled back or with find open, when
+   *  `dialogPresent` describes a FROZEN screen and so must not be stated to the user as present fact. */
+  mirrorFollowing: boolean;
   /** Latest pane text — clears the pending-send preview once the mirror echoes the send back. */
   text: string;
   /** A user draft stranded on the terminal's "❯" input line (extractInputDraft), STABILISED across
@@ -135,7 +138,7 @@ function ComposerDock({
 }
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { paneId, session, agent, isShell, gone, readOnly, dialogPresent, text, terminalDraft, rawTerminalDraft, prefs, setWrap, stepFontSize, setRawTerminal, onSent },
+  { paneId, session, agent, isShell, gone, readOnly, dialogPresent, mirrorFollowing, text, terminalDraft, rawTerminalDraft, prefs, setWrap, stepFontSize, setRawTerminal, onSent },
   ref,
 ) {
   const revalidator = useRevalidator();
@@ -726,6 +729,24 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   return (
     <>
       <div className="border-t border-border/60 bg-muted px-3 pb-[calc(env(safe-area-inset-bottom)_+_0.5rem)] pt-2.5">
+        {/* Why Send is about to refuse, said BEFORE the tap rather than after it. Until this strip,
+            `dialogPresent` was invisible until you tapped Send and read the refusal out of the
+            single-line status row — the button looked as sendable as ever, so the natural reading of
+            a refused tap was that the send had failed.
+
+            Gated on `mirrorFollowing`, and that gate is the point: scrolled back or with find open,
+            the mirror is FROZEN, and `dialogPresent` then describes whatever was on screen when it
+            froze. Refusing a send on a stale dialog is defensible (it fails safe, and the verify step
+            behind it is the real protection); telling the user a dialog IS waiting when the pane may
+            have moved on is not — a persistent banner asserting a stale fact is worse than no banner.
+            So the refusal keeps using `dialogPresent` raw and only the CLAIM is gated. */}
+        {dialogPresent && mirrorFollowing && !direct.active && !locked && (
+          <div className="mb-2 flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="size-3 shrink-0" />
+            <span>A dialog is waiting — answer it above before sending free text.</span>
+          </div>
+        )}
+
         {/* Pending-send preview: visible from send until the mirror echoes back (or 6s). Shows the
             user what landed so they don't double-tap while waiting for the terminal to update. */}
         {lastSent && (
@@ -998,7 +1019,12 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
               size="icon"
               className="size-11 shrink-0 rounded-full"
               onClick={direct.active ? () => direct.deactivate() : onSendClick}
-              disabled={locked || sending}
+              // An empty box made Send a SILENT no-op (`send()` returns false before it can say
+              // anything), which on a phone reads as a dropped connection and gets tapped again.
+              // Both confirm variants above already disable on an empty draft, so leaving the plain
+              // one enabled also made the button's affordance mean different things per state.
+              // In direct-typing mode this button is Stop, not Send — the draft is irrelevant to it.
+              disabled={direct.active ? locked || sending : locked || sending || !input.trim()}
               aria-label={direct.active ? "Stop typing into terminal" : "Send"}
               aria-pressed={direct.active}
             >

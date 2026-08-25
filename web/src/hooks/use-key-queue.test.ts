@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 
+import { clearStatus, useStatus } from "@/lib/status";
 import { useKeyQueue } from "./use-key-queue";
 
 describe("useKeyQueue", () => {
@@ -171,6 +172,28 @@ describe("useKeyQueue", () => {
     act(() => result.current.clear());
     expect(result.current.queue).toEqual([]);
     expect(result.current.composing).toBe(false);
+  });
+
+  // A chord base is ASCII by definition (Herdr's key grammar has no name for a Hangul syllable), so
+  // a Korean keyboard can only ever produce refusals here. Refusing in silence made the field read
+  // as dead — the one input in the app an IME meets with nothing to say.
+  it("explains a refused base character instead of dropping it silently", () => {
+    clearStatus();
+    const { result } = renderHook(() => ({ keys: useKeyQueue(), status: useStatus() }));
+    act(() => result.current.keys.arm("ctrl"));
+
+    act(() => result.current.keys.pushBase("ㄱ"));
+    expect(result.current.keys.queue).toEqual([]);
+    expect(result.current.status?.text).toMatch(/ASCII/i);
+
+    // An empty value is the IME clearing the field mid-composition, not a refusal — say nothing.
+    act(() => clearStatus());
+    act(() => result.current.keys.pushBase(""));
+    expect(result.current.status).toBeNull();
+
+    // And the ASCII path is untouched.
+    act(() => result.current.keys.pushBase("c"));
+    expect(result.current.keys.queue).toEqual(["ctrl+c"]);
   });
 
   it("composing is true when any modifier is armed OR the queue is non-empty", () => {

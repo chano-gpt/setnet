@@ -15,7 +15,8 @@ interface KeyQueueStripProps {
   onRemove: (i: number) => void;
   onClear: () => void;
   onSend: () => void;
-  /** Raw input value forwarded straight through — the model (normalizeBaseChar) takes the last char. */
+  /** Raw input value forwarded straight through — the model (normalizeBaseChar) takes the last char.
+   *  Never called mid-composition; see the input below. */
   onBaseChar: (char: string) => void;
   disabled?: boolean;
 }
@@ -66,7 +67,15 @@ export function KeyQueueStrip({
       )}
 
       {/* One-char key input — only while a modifier is armed. Controlled to "" so each keystroke
-          fires onChange and the field stays empty; the model takes the last char typed. */}
+          fires onChange and the field stays empty; the model takes the last char typed.
+          
+          That empty-on-every-change trick fights an IME: a Hangul (or any composing) keyboard needs
+          the buffer it is composing INTO to persist, and clearing it per keystroke means the
+          composition can never settle. So while `isComposing` is set we forward nothing and let the
+          IME own the field; the committed string arrives on `compositionend`, which is the only
+          point the value means anything. A chord base is ASCII by definition, so what comes out of a
+          Hangul composition is still refused — but refused by the model, WITH a reason (see
+          use-key-queue's pushBase), instead of vanishing keystroke by keystroke. */}
       {modsArmed && (
         <input
           type="text"
@@ -78,7 +87,11 @@ export function KeyQueueStrip({
           placeholder="key"
           value=""
           disabled={disabled}
-          onChange={(e) => onBaseChar(e.target.value)}
+          onChange={(e) => {
+            if (e.nativeEvent instanceof InputEvent && e.nativeEvent.isComposing) return;
+            onBaseChar(e.target.value);
+          }}
+          onCompositionEnd={(e) => onBaseChar(e.currentTarget.value || e.data)}
           aria-label="Type a key to combine"
           className="h-8 w-14 rounded-md border border-input bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-50"
         />

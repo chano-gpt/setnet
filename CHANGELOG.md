@@ -6,11 +6,22 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
-## [0.29.5] - 2026-08-25
+## [0.30.0] - 2026-08-25
+
+### Added
+
+- The dashboard message sheet now takes a second tap for a destructive message, and for any agent that is `blocked`. (2549864)
+- The pane composer says a dialog is waiting *before* you tap Send, and only while the mirror is live. (2549864)
+
+### Changed
+
+- A failed dashboard message keeps the sheet open and the draft intact, with the reason shown in the sheet. (2549864)
 
 ### Fixed
 
-- Sending to an agent Herdr has no built-in adapter for (omo on an upstream Herdr build) no longer fails with `agent_not_ready` — the bridge types the prompt into the pane instead.
+- Sending to an agent Herdr has no built-in adapter for (omo on an upstream Herdr build) no longer fails with `agent_not_ready` — the bridge types the prompt into the pane instead. (2549864)
+- Send is disabled on an empty draft instead of being a silent no-op. (2549864)
+- The Keys dock's chord input no longer fights an IME, and says why a non-ASCII base character is refused. (2549864)
 
 ## [0.29.4] - 2026-08-15
 
