@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Bot, Check, Inbox, MessageCircle, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Inbox, MessageCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "@/components/section-header";
@@ -11,7 +11,6 @@ interface AgentListProps {
   bridge?: BridgeStatus | undefined;
   onOpen: (paneId: string) => void;
   onMessage?: (paneId: string) => void;
-  onNewAgent?: () => void;
   /** Which way Recent runs, and how to flip it. Omit to render Recent newest-first with no toggle. */
   recentDir?: RecentDir;
   onRecentDirChange?: (dir: RecentDir) => void;
@@ -43,7 +42,6 @@ export function AgentList({
   bridge,
   onOpen,
   onMessage,
-  onNewAgent,
   recentDir = "newest",
   onRecentDirChange,
   recentOpen = true,
@@ -58,7 +56,6 @@ export function AgentList({
         <span className="text-sm">
           {bridge === "connected" ? "No agents running." : "Waiting for Herdr…"}
         </span>
-        {onNewAgent && <NewAgentButton onClick={onNewAgent} />}
       </div>
     );
   }
@@ -72,11 +69,6 @@ export function AgentList({
 
   return (
     <div className="flex flex-col gap-5 px-3 py-4">
-      {onNewAgent && (
-        <div className="flex justify-end">
-          <NewAgentButton onClick={onNewAgent} />
-        </div>
-      )}
       {/* The product of the twenty-times-a-day glance. Rendered with presence, not as a caption:
           you should be able to resolve it one-handed at arm's length without focusing. */}
       {allClear && (
@@ -147,22 +139,6 @@ export function AgentList({
         );
       })}
     </div>
-  );
-}
-
-function NewAgentButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex min-h-10 items-center gap-2 rounded-md border bg-card px-3 text-sm font-semibold transition-colors hover:bg-muted active:scale-95"
-    >
-      <span className="relative">
-        <Bot className="size-4" aria-hidden />
-        <Plus className="absolute -right-1.5 -top-1.5 size-2.5 rounded-full bg-card" aria-hidden />
-      </span>
-      New agent
-    </button>
   );
 }
 

@@ -13,12 +13,14 @@ import { BuildStamp } from "@/components/build-stamp";
 import { UpdateBanner } from "@/components/update-banner";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { DashboardComposer } from "@/components/dashboard-composer";
+import { HerdNewAgentButton } from "@/components/herd-new-agent-button";
 import { useDashPrefs, openForCount } from "@/hooks/use-dash-prefs";
 import { useLoadingStalled } from "@/hooks/use-loading-stalled";
 import { useSpaceActions } from "@/hooks/use-spaces";
 import { ROOT_ROUTE_ID, type HomeData } from "@/lib/loaders";
 import { homeSectionFromSearch, homeSectionPath, panePath, settingsPath, spacePath } from "@/lib/nav";
 import { bucketOf } from "@/lib/triage";
+import { cn } from "@/lib/utils";
 
 // Dashboard home screen. The bottom tab bar separates the action queue (Herd) from navigation
 // (Spaces), so neither can bury the other on a phone. Herd keeps the urgency order from triage.ts;
@@ -62,7 +64,12 @@ export function HomeRoute() {
       />
 
       {/* Content region below the header: a viewport-clipped internal scroller. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-y-auto",
+          activeSection === "herd" && "pb-16",
+        )}
+      >
         <ReadOnlyBanner device={data.device} />
 
         <main className="flex-1">
@@ -74,7 +81,6 @@ export function HomeRoute() {
               bridge={data.bridge}
               onOpen={open}
               onMessage={setMessagePaneId}
-              onNewAgent={() => setNewAgentOpen(true)}
               recentDir={prefs.recentDir}
               onRecentDirChange={setRecentDir}
               recentOpen={prefs.recentOpen}
@@ -107,9 +113,20 @@ export function HomeRoute() {
         onSettings={() => navigate(settingsPath(data.session))}
       />
 
+      {activeSection === "herd" && (
+        <HerdNewAgentButton onClick={() => setNewAgentOpen(true)} />
+      )}
+
       {/* Status overlay, anchored to the bottom of the viewport (no input here) — same slim line,
           floating so it never shifts the list. Stays outside the scroller so it never scrolls away. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)_+_4.5rem)] z-30 mx-auto w-full max-w-screen-sm px-3">
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-x-0 z-30 mx-auto w-full max-w-screen-sm px-3",
+          activeSection === "herd"
+            ? "bottom-[calc(env(safe-area-inset-bottom)_+_8rem)]"
+            : "bottom-[calc(env(safe-area-inset-bottom)_+_4.5rem)]",
+        )}
+      >
         <StatusArea />
       </div>
 

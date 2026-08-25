@@ -1,6 +1,6 @@
 {
   "name": "setnet",
-  "version": "0.32.0",
+  "version": "0.32.1",
   "private": true,
   "license": "MIT",
   "description": "setnet — a mobile web UI to herd multi-harness coding agents on Herdr, over Tailscale",

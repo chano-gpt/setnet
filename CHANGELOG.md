@@ -6,6 +6,12 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.32.1] - 2026-08-25
+
+### Fixed
+
+- Herd keeps New agent thumb-reachable at the bottom center without covering status notices.
+
 ## [0.32.0] - 2026-08-25
 
 ### Added
