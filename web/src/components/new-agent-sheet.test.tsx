@@ -82,7 +82,7 @@ describe("NewAgentSheet", () => {
     expect(onNewSpace).toHaveBeenCalledExactlyOnceWith("codex");
   });
 
-  it("does not unlock a slow launch when polling replaces the workspace array", async () => {
+  it("does not unlock a slow launch when polling replaces or empties the workspace array", async () => {
     const user = userEvent.setup();
     let finish!: (result: { ok: true }) => void;
     const onCreate = vi.fn(
@@ -101,18 +101,21 @@ describe("NewAgentSheet", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /start codex in alpha/i }));
+    const onNewSpace = vi.fn();
     rerender(
       <NewAgentSheet
         open
-        workspaces={[...workspaces]}
+        workspaces={[]}
         onClose={vi.fn()}
         onCreate={onCreate}
-        onNewSpace={vi.fn()}
+        onNewSpace={onNewSpace}
       />,
     );
-    expect(screen.getByRole("button", { name: /start claude code in alpha/i })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: /start claude code in alpha/i }));
+    const otherAgent = screen.getByRole("button", { name: /start claude code in a new space/i });
+    expect(otherAgent).toBeDisabled();
+    await user.click(otherAgent);
     expect(onCreate).toHaveBeenCalledOnce();
+    expect(onNewSpace).not.toHaveBeenCalled();
     await act(async () => finish({ ok: true }));
   });
 });

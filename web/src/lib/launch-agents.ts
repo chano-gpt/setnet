@@ -16,8 +16,6 @@ export const LAUNCH_AGENTS = [
 export type LaunchAgent = (typeof LAUNCH_AGENTS)[number];
 export type LaunchAgentId = LaunchAgent["id"];
 
-export type AgentLaunchResult = { ok: true } | { ok: false; error: string };
-
 export function launchAgentById(id: LaunchAgentId): LaunchAgent {
   return LAUNCH_AGENTS.find((agent) => agent.id === id)!;
 }

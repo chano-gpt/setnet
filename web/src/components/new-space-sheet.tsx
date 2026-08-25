@@ -4,12 +4,12 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/ui/sheet";
 import { useHoldReload } from "@/lib/reload-guard";
-import type { AgentLaunchResult } from "@/lib/launch-agents";
+import type { OperationResult } from "@/lib/types";
 
 interface NewSpaceSheetProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (opts: { label?: string; cwd?: string }) => Promise<AgentLaunchResult>;
+  onCreate: (opts: { label?: string; cwd?: string }) => Promise<OperationResult>;
   submitLabel?: string;
 }
 

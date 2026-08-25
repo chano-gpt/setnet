@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import { server } from "@/test/setup";
 import { fixtureSnapshot } from "@/test/handlers";
 import { __resetConnectionHealth, lastHealthyAt } from "./connection-health";
+import type { LaunchAgentId } from "./launch-agents";
 import {
   checkForUpdates,
   createTab,
@@ -10,6 +11,7 @@ import {
   fetchSnapshot,
   sendKeys,
   sendReply,
+  startAgent,
   uploadImage,
   withTimeout,
   XHR_HEADER,
@@ -19,6 +21,10 @@ import {
 // The default happy-path handlers live in test/handlers.ts; here we focus on the write paths and the
 // ApiError-on-non-2xx contract that every mutation depends on (and uploadImage's separate code path).
 describe("api client", () => {
+  it("accepts only catalogued agent ids at the frontend boundary", () => {
+    expectTypeOf(startAgent).parameter(1).toEqualTypeOf<LaunchAgentId>();
+  });
+
   it("sendReply returns the bridge's ok result on success", async () => {
     await expect(sendReply("w1:p1", "hi")).resolves.toEqual({ ok: true });
   });

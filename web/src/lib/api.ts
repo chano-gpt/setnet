@@ -3,6 +3,7 @@
 
 import { trackBusy } from "./busy";
 import { markLive } from "./connection-health";
+import type { LaunchAgentId } from "./launch-agents";
 import { observeServerBuild, SERVER_BUILD_HEADER } from "./server-build";
 import type {
   ActionResponse,
@@ -332,7 +333,7 @@ export function promptAgent(
 
 export function startAgent(
   paneId: string,
-  kind: string,
+  kind: LaunchAgentId,
   session?: string,
 ): Promise<ActionResponse> {
   return req<ActionResponse>(

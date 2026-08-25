@@ -6,6 +6,17 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.32.3] - 2026-08-25
+
+### Fixed
+
+- Managed-launch failures stay visible without leaking duplicate panes after ambiguous network errors.
+- Agent IDs stay catalog-typed through the frontend API, and polling cannot unlock an in-flight empty-space launch.
+
+### Changed
+
+- The auto-approval policy is recorded as an architecture decision with its security tradeoffs.
+
 ## [0.32.2] - 2026-08-25
 
 ### Fixed

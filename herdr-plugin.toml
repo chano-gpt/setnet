@@ -1,6 +1,6 @@
 id = "herdr.collie"
 name = "setnet"
-version = "0.32.2"
+version = "0.32.3"
 min_herdr_version = "0.7.0"
 description = "Mobile web UI to herd multi-harness coding agents, served over Tailscale"
 platforms = ["linux", "macos"]

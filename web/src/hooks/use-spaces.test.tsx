@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, Outlet, RouterProvider, useLocation } from "react-router";
@@ -31,10 +32,18 @@ const home: HomeData = {
 
 function LaunchHarness() {
   const { newAgent, newSpaceAgent } = useSpaceActions();
+  const [result, setResult] = useState("");
   return (
     <>
-      <button onClick={() => void newAgent("w1", "codex")}>Launch</button>
+      <button
+        onClick={() =>
+          void newAgent("w1", "codex").then((value) => setResult(JSON.stringify(value)))
+        }
+      >
+        Launch
+      </button>
       <button onClick={() => void newSpaceAgent({ label: "new" }, "claude")}>Launch in new</button>
+      <output>{result}</output>
     </>
   );
 }
@@ -93,12 +102,23 @@ describe("useSpaceActions — direct agent creation", () => {
     expect(screen.getByTestId("state")).toHaveTextContent('"kind":"agent"');
   });
 
-  it("keeps the created shell and reopens the picker when managed start fails", async () => {
+  it("returns a visible error instead of reporting a managed-start failure as success", async () => {
     vi.mocked(api.startAgent).mockResolvedValue({ ok: false, error: "missing binary" });
-    view();
+    const router = view();
     await userEvent.click(await screen.findByRole("button", { name: "Launch" }));
 
-    const state = await screen.findByTestId("state");
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("missing binary"));
+    expect(screen.getByRole("status")).toHaveTextContent('"ok":false');
+    expect(router.state.location.pathname).toBe("/");
+  });
+
+  it("opens the retained shell when managed start becomes network-ambiguous", async () => {
+    vi.mocked(api.startAgent).mockRejectedValue(new Error("connection reset"));
+    const router = view();
+    await userEvent.click(await screen.findByRole("button", { name: "Launch" }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/pane/w1%3Ap2"));
+    const state = screen.getByTestId("state");
     expect(state).toHaveTextContent('"selectAgent":true');
     expect(state).toHaveTextContent('"agent":"shell"');
     expect(state).toHaveTextContent('"kind":"shell"');

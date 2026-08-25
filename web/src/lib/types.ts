@@ -98,6 +98,9 @@ export interface TabView {
 
 export type BridgeStatus = "connected" | "disconnected";
 
+/** Shared outcome for UI actions that stay open and surface a recoverable failure inline. */
+export type OperationResult = { ok: true } | { ok: false; error: string };
+
 /**
  * Per-device authorisation for this client (mirrors DeviceAuth in bridge/types.ts). Present in the
  * snapshot only when the feature is enabled on the bridge; absent = not enforced.

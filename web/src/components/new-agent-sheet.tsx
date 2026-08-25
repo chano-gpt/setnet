@@ -5,17 +5,16 @@ import { AgentIcon } from "@/components/agent-icon";
 import { BottomSheet } from "@/components/ui/sheet";
 import {
   LAUNCH_AGENTS,
-  type AgentLaunchResult,
   type LaunchAgentId,
 } from "@/lib/launch-agents";
 import { useHoldReload } from "@/lib/reload-guard";
-import type { WorkspaceView } from "@/lib/types";
+import type { OperationResult, WorkspaceView } from "@/lib/types";
 
 interface NewAgentSheetProps {
   open: boolean;
   workspaces: WorkspaceView[];
   onClose: () => void;
-  onCreate: (workspaceId: string, kind: LaunchAgentId) => Promise<AgentLaunchResult>;
+  onCreate: (workspaceId: string, kind: LaunchAgentId) => Promise<OperationResult>;
   onNewSpace: (kind: LaunchAgentId) => void;
 }
 
@@ -78,9 +77,10 @@ export function NewAgentSheet({
           </p>
           <ModeNotice />
           <AgentChoices
-            launching={null}
+            launching={launching}
             target="a new space"
             onChoose={(kind) => {
+              if (launching !== null) return;
               onClose();
               onNewSpace(kind);
             }}
