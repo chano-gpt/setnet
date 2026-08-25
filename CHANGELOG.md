@@ -10,11 +10,11 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Added
 
-- Herd and Spaces can create an agent directly in a selected space.
+- Herd and Spaces can create an agent directly in a selected space. (a6971d4)
 
 ### Changed
 
-- Managed launches enter each harness's auto-approval mode; OMO keeps its own permission flow.
+- Managed launches enter each harness's auto-approval mode; OMO keeps its own permission flow. (a6971d4)
 
 ## [0.31.0] - 2026-08-25
 
