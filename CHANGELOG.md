@@ -10,7 +10,7 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Fixed
 
-- Herd keeps New agent thumb-reachable at the bottom center without covering status notices.
+- Herd keeps New agent thumb-reachable at the bottom center without covering status notices. (b18e3aa)
 
 ## [0.32.0] - 2026-08-25
 
