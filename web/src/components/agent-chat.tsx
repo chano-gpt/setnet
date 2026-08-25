@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import {
   ArrowUpToLine,
@@ -91,6 +91,37 @@ interface AgentChatProps {
 // At most one drawer/sheet is open at a time; null = none. (The composer's own Keys/Quick/Agent
 // sheets are separate and live inside <Composer>.)
 type Drawer = "switcher" | null;
+
+// Collapse app chrome out of the pane's layout while the user reads frozen terminal output. A grid
+// row gives the mirror the reclaimed height during the transition; opacity/translate keep that
+// layout change from reading as a hard cut. `inert` matters as much as the visual state: controls in
+// a zero-height row must not remain reachable by keyboard or assistive-tech navigation.
+function RetractableChrome({
+  retracted,
+  slot,
+  children,
+}: {
+  retracted: boolean;
+  slot: "header" | "tabs";
+  children: ReactNode;
+}) {
+  return (
+    <div
+      data-pane-chrome={slot}
+      data-state={retracted ? "retracted" : "expanded"}
+      aria-hidden={retracted || undefined}
+      inert={retracted}
+      className={cn(
+        "grid shrink-0 transition-[grid-template-rows,opacity,transform] duration-200 ease-out motion-reduce:transition-none",
+        retracted
+          ? "pointer-events-none grid-rows-[0fr] -translate-y-1 opacity-0"
+          : "grid-rows-[1fr] translate-y-0 opacity-100",
+      )}
+    >
+      <div className="min-h-0 overflow-hidden">{children}</div>
+    </div>
+  );
+}
 
 // The detail view mirrors a terminal pane, NOT a chat thread. The pane's output comes from the
 // route loader (`text`); polling revalidates it. Replies/keys are confirmed via the header status
@@ -267,6 +298,11 @@ export function AgentChat({
     setFindOpen(false);
     setFindQuery("");
   }
+  // Leaving the live tail means the user is reading a frozen mirror: hand the header + navigation
+  // rows back to the output until they return to latest. Find deliberately keeps the header itself
+  // expanded because its bar replaces that row, but the tab/pane strips still retract underneath it.
+  const headerRetracted = !following && !findOpen;
+  const tabsRetracted = !following;
 
   // What the top of the buffer can offer — see the JSX for why these are mutually exclusive.
   // `historyAvailable`: the pane reported an agent session, so a transcript exists to open.
@@ -580,6 +616,7 @@ export function AgentChat({
           identical on every screen (no hand-rolled bar to drift). The pane's own bits ride in via
           slots: the `space › tab` breadcrumb as the center, the agent StatusBadge as the right-cluster
           lead, and the find bar as the full-row takeover while searching. */}
+      <RetractableChrome retracted={headerRetracted} slot="header">
       <AppHeader
         bridge={bridge}
         error={error}
@@ -708,6 +745,7 @@ export function AgentChat({
           </div>
         )}
       </AppHeader>
+      </RetractableChrome>
 
       {/* Content region below the header — the mirror inside is the scroller. */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -720,42 +758,44 @@ export function AgentChat({
         {/* Read-only notice when this device isn't allowlisted (the composer below is disabled too). */}
         <ReadOnlyBanner device={device} />
 
-        {/* In-pane tab bar: the current space's tabs above the mirror — switch tab without leaving the
-            pane, or create one with +. No "All" here (you're always in a specific tab). */}
-        {agent && (
-          <TabStrip
-            workspaceId={agent.workspaceId}
-            tabs={tabs}
-            agents={agents}
-            selected={agent.tabId}
-            onSelect={(id) => id && goToTab(id)}
-            onNewTab={newTab}
-            allowAll={false}
-            session={session}
-            readOnly={readOnly}
-            onRenamed={() => revalidator.revalidate()}
-            // Closing the tab this pane lives in kills the pane too — leave for Home the same way a
-            // pane-close does (onBack); closing any other tab just revalidates so it drops out.
-            onClosed={(tabId) => (agent?.tabId === tabId ? onBack() : revalidator.revalidate())}
-          />
-        )}
+        <RetractableChrome retracted={tabsRetracted} slot="tabs">
+          {/* In-pane tab bar: the current space's tabs above the mirror — switch tab without leaving
+              the pane, or create one with +. No "All" here (you're always in a specific tab). */}
+          {agent && (
+            <TabStrip
+              workspaceId={agent.workspaceId}
+              tabs={tabs}
+              agents={agents}
+              selected={agent.tabId}
+              onSelect={(id) => id && goToTab(id)}
+              onNewTab={newTab}
+              allowAll={false}
+              session={session}
+              readOnly={readOnly}
+              onRenamed={() => revalidator.revalidate()}
+              // Closing the tab this pane lives in kills the pane too — leave for Home the same way
+              // a pane-close does (onBack); closing any other tab just revalidates so it drops out.
+              onClosed={(tabId) => (agent?.tabId === tabId ? onBack() : revalidator.revalidate())}
+            />
+          )}
 
-        {/* Pane switcher: the panes that share this tab (space › tab › pane). Mobile shows them as a
-            tabbed row rather than tiling the panes; only appears when the tab holds more than one. */}
-        {agent && (
-          <PaneStrip
-            panes={[...agents, ...shellPanes]
-              .filter((p) => p.workspaceId === agent.workspaceId && p.tabId === agent.tabId)
-              .sort((a, b) => a.paneId.localeCompare(b.paneId))}
-            currentPaneId={paneId}
-            onSelect={switchTo}
-            session={session}
-            readOnly={readOnly}
-            onRenamed={() => revalidator.revalidate()}
-            // Mirror closePane's success branch: closing the open pane returns Home, else revalidate.
-            onClosed={(id) => (id === paneId ? onBack() : revalidator.revalidate())}
-          />
-        )}
+          {/* Pane switcher: the panes that share this tab (space › tab › pane). Mobile shows them as
+              a tabbed row rather than tiling the panes; only appears when the tab holds >1 pane. */}
+          {agent && (
+            <PaneStrip
+              panes={[...agents, ...shellPanes]
+                .filter((p) => p.workspaceId === agent.workspaceId && p.tabId === agent.tabId)
+                .sort((a, b) => a.paneId.localeCompare(b.paneId))}
+              currentPaneId={paneId}
+              onSelect={switchTo}
+              session={session}
+              readOnly={readOnly}
+              onRenamed={() => revalidator.revalidate()}
+              // Mirror closePane's success branch: closing the open pane returns Home, else refresh.
+              onClosed={(id) => (id === paneId ? onBack() : revalidator.revalidate())}
+            />
+          )}
+        </RetractableChrome>
 
         {/* Terminal mirror — tapping it focuses the composer so you can start typing right away
             (unless you're selecting text to copy, which the tap must not collapse). */}
@@ -786,6 +826,7 @@ export function AgentChat({
             dep={display}
             onAtBottomChange={setFollowing}
             hasNew={hasNew}
+            data-pane-mirror-scroll
             className="px-2 py-3"
           >
             {display ? (

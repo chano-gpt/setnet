@@ -20,7 +20,7 @@ import { server } from "@/test/setup";
 import { clearStatus } from "@/lib/status";
 import { submitPromptOption } from "@/lib/prompt-action";
 import { submitWizardKeys } from "@/lib/wizard-action";
-import { fixtureAgents } from "@/test/handlers";
+import { fixtureAgents, fixtureTabs } from "@/test/handlers";
 import { AgentChat } from "./agent-chat";
 import { LiveConversation } from "./live-conversation";
 
@@ -96,6 +96,54 @@ describe("AgentChat — pane surface", () => {
     await user.click(openTerminal);
     expect(screen.getByRole("button", { name: "Open conversation view" })).toBeInTheDocument();
     expect(screen.getByText("recent pane output")).toBeInTheDocument();
+  });
+});
+
+describe("AgentChat — retractable mirror chrome", () => {
+  function chrome(slot: "header" | "tabs") {
+    const el = document.querySelector(`[data-pane-chrome="${slot}"]`);
+    if (!(el instanceof HTMLElement)) throw new Error(`missing ${slot} chrome`);
+    return el;
+  }
+
+  function mirrorScroller() {
+    const el = document.querySelector("[data-pane-mirror-scroll]");
+    if (!(el instanceof HTMLElement)) throw new Error("missing mirror scroller");
+    Object.defineProperties(el, {
+      scrollHeight: { configurable: true, value: 1_000 },
+      clientHeight: { configurable: true, value: 300 },
+    });
+    return el;
+  }
+
+  it("hands the header and tab rows to the mirror while reading frozen output", () => {
+    renderChat({ tabs: fixtureTabs });
+    const scroller = mirrorScroller();
+
+    expect(chrome("header")).toHaveAttribute("data-state", "expanded");
+    expect(chrome("tabs")).toHaveAttribute("data-state", "expanded");
+
+    scroller.scrollTop = 100;
+    fireEvent.scroll(scroller);
+    expect(chrome("header")).toHaveAttribute("data-state", "retracted");
+    expect(chrome("header")).toHaveAttribute("inert");
+    expect(chrome("tabs")).toHaveAttribute("data-state", "retracted");
+    expect(chrome("tabs")).toHaveAttribute("inert");
+
+    scroller.scrollTop = 700;
+    fireEvent.scroll(scroller);
+    expect(chrome("header")).toHaveAttribute("data-state", "expanded");
+    expect(chrome("tabs")).toHaveAttribute("data-state", "expanded");
+  });
+
+  it("keeps the find bar visible while its frozen mirror retracts the tab rows", async () => {
+    renderChat({ tabs: fixtureTabs });
+
+    await userEvent.click(screen.getByRole("button", { name: "Find in output" }));
+
+    expect(screen.getByRole("textbox", { name: "Find in output" })).toBeInTheDocument();
+    expect(chrome("header")).toHaveAttribute("data-state", "expanded");
+    expect(chrome("tabs")).toHaveAttribute("data-state", "retracted");
   });
 });
 
