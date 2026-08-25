@@ -128,7 +128,8 @@ export function AgentChat({
   const connecting = isConnecting({ bridge, error, stalled });
   const { newTab } = useSpaceActions();
   // Single display-prefs instance: the View controls (in <Composer>) write it, the mirror reads it.
-  const { prefs, setWrap, setFontSize, stepFontSize, setRawTerminal } = useDisplayPrefs();
+  const { prefs, setWrap, setFontSize, stepFontSize, setRawTerminal, setStatusExpanded } =
+    useDisplayPrefs();
   // Pinch the mirror to resize it. The A+/A− pair stays where it is — this is the gesture you
   // reach for without being taught, not a replacement for the control that can be discovered.
   const pinch = usePinchZoom({
@@ -877,6 +878,13 @@ export function AgentChat({
               would otherwise vanish with the stripped input box). Sits directly above the composer,
               as it did in the TUI. Verbatim text — React text nodes, so no XSS surface.
 
+              COLLAPSED to the first row by default, with a tap to show the rest. The stacking below
+              is right; paying for it continuously is not. A configured statusline is 2–3 rows, those
+              rows come out of the mirror — the surface this screen exists to show — and most of what
+              they carry (model, permission mode, cwd) does not change between polls. The choice
+              lives in display prefs, not state, because this component remounts on every pane switch
+              and a per-mount default would make "show all of it" a tap you repeat all day.
+
               STACKED, one row per line, each truncated — deliberately, over the two alternatives:
               joining the rows with a separator would put ~150 chars on a strip that fits ~55 at this
               size on a phone, truncating away exactly the fields (branch, permission mode) this
@@ -886,9 +894,30 @@ export function AgentChat({
               Height is bounded upstream (MAX_STATUS_LINES caps the run stripChrome will claim), so
               there is no second cap here; the mirror is a flex child that shrinks, never pushed off. */}
           {statusLines.length > 0 && (
+            /* The toggle wraps the strip rather than sitting inside it. Anything inside the
+               MIRROR_SPACE div inherits the light-mode invert, which is right for the agent's own
+               terminal colour and wrong for app chrome — the same rule that keeps the interactive
+               blocks siblings of the mirror rather than children (ADR 0002). The button itself sets
+               no colour, so it has nothing to invert.
+
+               The count therefore renders on --background, and that is invisible against the strip
+               beside it in BOTH themes for a reason worth knowing: --background is pinned to the
+               mirror's ground (#0a0a0a, and rgb(245) under `invert(1)`), so the inverted strip and
+               the page are the same value. Untie that pinning and this grows a visible gutter. */
+            <button
+              type="button"
+              onClick={() => setStatusExpanded(!prefs.statusExpanded)}
+              aria-expanded={prefs.statusExpanded}
+              aria-label={
+                prefs.statusExpanded
+                  ? "Collapse the agent statusline"
+                  : `Expand the agent statusline (${statusLines.length} rows)`
+              }
+              className="flex w-full items-center gap-1.5 border-t border-border/40 pr-2 text-left"
+            >
             <div
               className={cn(
-                "border-t border-border/40 px-3 py-1 font-mono text-[11px] leading-tight",
+                "min-w-0 flex-1 px-3 py-1 font-mono text-[11px] leading-tight",
                 // The strip carries the agent's OWN terminal colour, so it renders in the mirror's
                 // dark space and inverts in light with it (ADR 0002) — a bright statusline colour is
                 // chosen against a near-black background and is illegible re-themed onto app chrome.
@@ -898,7 +927,7 @@ export function AgentChat({
                 MIRROR_INVERT,
               )}
             >
-              {statusLines.map((row, i) => (
+              {(prefs.statusExpanded ? statusLines : statusLines.slice(0, 1)).map((row, i) => (
                 // Index key: these rows are a positional snapshot of the pane tail, re-derived on
                 // every poll — there is no identity to preserve across renders.
                 <div key={i} className="truncate">
@@ -912,6 +941,15 @@ export function AgentChat({
                 </div>
               ))}
             </div>
+              {statusLines.length > 1 && (
+                <span
+                  aria-hidden
+                  className="shrink-0 font-mono text-[10px] leading-none text-muted-foreground"
+                >
+                  {prefs.statusExpanded ? "−" : `+${statusLines.length - 1}`}
+                </span>
+              )}
+            </button>
           )}
 
           <Composer

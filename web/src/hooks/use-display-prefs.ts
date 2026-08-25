@@ -18,12 +18,35 @@ export interface DisplayPrefs {
    * The universal fallback, made user-controllable.
    */
   rawTerminal: boolean;
+  /**
+   * Whether the agent's own statusline strip shows every row it has, or just the first
+   * (default: false — just the first).
+   *
+   * The strip is stacked one row per line for good reasons (see agent-chat), but a configured
+   * statusline is routinely 2–3 rows, and on a phone those rows come out of the mirror — the surface
+   * the pane view exists to show. Most of what they carry is static between polls (model, mode,
+   * cwd), so paying two rows for it continuously is the wrong default. Collapsed shows the first row
+   * and a count; expanded is the old behaviour, unchanged.
+   *
+   * It lives in prefs rather than component state so the choice survives a pane switch: this
+   * component remounts on every navigation, and a per-mount default would make "show me all of it"
+   * something you re-tap all day.
+   */
+  statusExpanded: boolean;
 }
 
+// NOT bumped for statusExpanded: loadPrefs defaults every field it doesn't find, so an added
+// optional key reads fine out of a v4 payload. Bumping would have thrown away everyone's wrap,
+// font size and escape-hatch setting to introduce a field whose default is false anyway.
 const STORAGE_KEY = "collie:display-prefs:v4";
 export const FONT_MIN = 9;
 export const FONT_MAX = 16;
-const DEFAULTS: DisplayPrefs = { wrap: true, fontSize: 12, rawTerminal: false };
+const DEFAULTS: DisplayPrefs = {
+  wrap: true,
+  fontSize: 12,
+  rawTerminal: false,
+  statusExpanded: false,
+};
 
 function clampFont(n: number): number {
   return Math.max(FONT_MIN, Math.min(FONT_MAX, Math.round(n)));
@@ -40,6 +63,8 @@ function loadPrefs(): DisplayPrefs {
       wrap: typeof p.wrap === "boolean" ? p.wrap : DEFAULTS.wrap,
       fontSize: typeof p.fontSize === "number" ? clampFont(p.fontSize) : DEFAULTS.fontSize,
       rawTerminal: typeof p.rawTerminal === "boolean" ? p.rawTerminal : DEFAULTS.rawTerminal,
+      statusExpanded:
+        typeof p.statusExpanded === "boolean" ? p.statusExpanded : DEFAULTS.statusExpanded,
     };
   } catch {
     return DEFAULTS;
@@ -66,6 +91,8 @@ export interface UseDisplayPrefsReturn {
   stepFontSize: (delta: number) => void;
   /** Toggle or explicitly set the raw-terminal escape hatch. */
   setRawTerminal: (raw: boolean) => void;
+  /** Toggle or explicitly set whether the statusline strip shows all its rows. */
+  setStatusExpanded: (expanded: boolean) => void;
 }
 
 export function useDisplayPrefs(): UseDisplayPrefsReturn {
@@ -103,5 +130,13 @@ export function useDisplayPrefs(): UseDisplayPrefsReturn {
     });
   }, []);
 
-  return { prefs, setWrap, setFontSize, stepFontSize, setRawTerminal };
+  const setStatusExpanded = useCallback((statusExpanded: boolean) => {
+    setPrefs((p) => {
+      const next: DisplayPrefs = { ...p, statusExpanded };
+      savePrefs(next);
+      return next;
+    });
+  }, []);
+
+  return { prefs, setWrap, setFontSize, stepFontSize, setRawTerminal, setStatusExpanded };
 }

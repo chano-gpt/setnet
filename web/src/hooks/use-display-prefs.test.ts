@@ -9,7 +9,7 @@ describe("useDisplayPrefs", () => {
 
   it("returns defaults when localStorage is empty", () => {
     const { result } = renderHook(() => useDisplayPrefs());
-    expect(result.current.prefs).toEqual({ wrap: true, fontSize: 12, rawTerminal: false });
+    expect(result.current.prefs).toEqual({ wrap: true, fontSize: 12, rawTerminal: false, statusExpanded: false });
   });
 
   it("persists wrap=true and reloads it on mount", () => {
@@ -29,7 +29,23 @@ describe("useDisplayPrefs", () => {
   it("loads persisted prefs from localStorage on mount", () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ wrap: false, fontSize: 14, rawTerminal: true }));
     const { result } = renderHook(() => useDisplayPrefs());
-    expect(result.current.prefs).toEqual({ wrap: false, fontSize: 14, rawTerminal: true });
+    // A v4 payload, written before statusExpanded existed: every stored field survives and the new
+    // one takes its default. This is why the storage key was NOT bumped for it.
+    expect(result.current.prefs).toEqual({
+      wrap: false,
+      fontSize: 14,
+      rawTerminal: true,
+      statusExpanded: false,
+    });
+  });
+
+  it("persists statusExpanded and reloads it on mount", () => {
+    const { result } = renderHook(() => useDisplayPrefs());
+    expect(result.current.prefs.statusExpanded).toBe(false);
+    act(() => result.current.setStatusExpanded(true));
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).statusExpanded).toBe(true);
+    const { result: reloaded } = renderHook(() => useDisplayPrefs());
+    expect(reloaded.current.prefs.statusExpanded).toBe(true);
   });
 
   it("persists rawTerminal and reloads it on mount (the escape hatch survives a reload)", () => {
@@ -75,12 +91,12 @@ describe("useDisplayPrefs", () => {
   it("falls back to defaults on malformed JSON", () => {
     localStorage.setItem(STORAGE_KEY, "not-json{{{");
     const { result } = renderHook(() => useDisplayPrefs());
-    expect(result.current.prefs).toEqual({ wrap: true, fontSize: 12, rawTerminal: false });
+    expect(result.current.prefs).toEqual({ wrap: true, fontSize: 12, rawTerminal: false, statusExpanded: false });
   });
 
   it("falls back to defaults when stored value is not an object", () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(42));
     const { result } = renderHook(() => useDisplayPrefs());
-    expect(result.current.prefs).toEqual({ wrap: true, fontSize: 12, rawTerminal: false });
+    expect(result.current.prefs).toEqual({ wrap: true, fontSize: 12, rawTerminal: false, statusExpanded: false });
   });
 });

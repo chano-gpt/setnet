@@ -16,6 +16,8 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Changed
 
+- The agent statusline strip collapses to its first row, with a tap for the rest — two rows of the pane view handed back to the mirror. (b8706a5)
+- Text chips, badges and pill buttons moved onto the 2px radius; dots, the switch and the floating buttons stayed round. (b8706a5)
 - New chrome palette: cool graphite surfaces, warm ink, and a 2px radius ladder. `--background` stays achromatic in both halves — it is pinned to the mirror's ground. (c26e499)
 - The UI face is IBM Plex Sans, one 45 KB variable Latin subset, precached. (c26e499)
 - Korean sets in IBM Plex Sans KR — two Hangul subsets, lazy and out of the precache like the Nerd Font. (3742d72)

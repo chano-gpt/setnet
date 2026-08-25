@@ -46,7 +46,7 @@ function renderComposer(overrides: Partial<ComponentProps<typeof Composer>> = {}
     text: "pane output",
     terminalDraft: null,
     rawTerminalDraft: null,
-    prefs: { wrap: true, fontSize: 11, rawTerminal: false },
+    prefs: { wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false },
     setWrap: vi.fn(),
     stepFontSize: vi.fn(),
     setRawTerminal: vi.fn(),
@@ -76,7 +76,7 @@ function renderComposerWithStatus(overrides: Partial<ComponentProps<typeof Compo
     text: "pane output",
     terminalDraft: null,
     rawTerminalDraft: null,
-    prefs: { wrap: true, fontSize: 11, rawTerminal: false },
+    prefs: { wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false },
     setWrap: vi.fn(),
     stepFontSize: vi.fn(),
     setRawTerminal: vi.fn(),
@@ -605,7 +605,7 @@ describe("Composer — send", () => {
               text="pane output"
               terminalDraft={null}
               rawTerminalDraft="leftover"
-              prefs={{ wrap: true, fontSize: 11, rawTerminal: false }}
+              prefs={{ wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false }}
               setWrap={vi.fn()}
               stepFontSize={vi.fn()}
               setRawTerminal={vi.fn()}
@@ -697,7 +697,7 @@ describe("Composer — send", () => {
       text: "pane output",
       terminalDraft: null,
       rawTerminalDraft: null,
-      prefs: { wrap: true, fontSize: 11, rawTerminal: false },
+      prefs: { wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false },
       setWrap: vi.fn(),
       stepFontSize: vi.fn(),
       setRawTerminal: vi.fn(),
@@ -793,7 +793,7 @@ describe("Composer — typing into the terminal", () => {
             text="pane output"
             terminalDraft={null}
             rawTerminalDraft={null}
-            prefs={{ wrap: true, fontSize: 11, rawTerminal: false }}
+            prefs={{ wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false }}
             setWrap={vi.fn()}
             stepFontSize={vi.fn()}
             setRawTerminal={vi.fn()}
@@ -998,7 +998,7 @@ describe("Composer — typing into the terminal", () => {
             text="pane output"
             terminalDraft={null}
             rawTerminalDraft={null}
-            prefs={{ wrap: true, fontSize: 11, rawTerminal: false }}
+            prefs={{ wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false }}
             setWrap={vi.fn()}
             stepFontSize={vi.fn()}
             setRawTerminal={vi.fn()}
@@ -1140,7 +1140,7 @@ function renderDraftHarness(overrides: Partial<ComponentProps<typeof Composer>> 
       dialogPresent: false,
       mirrorFollowing: true,
       text: "pane output",
-      prefs: { wrap: true, fontSize: 11, rawTerminal: false },
+      prefs: { wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false },
       setWrap: vi.fn(),
       stepFontSize: vi.fn(),
       setRawTerminal: vi.fn(),
@@ -1411,7 +1411,7 @@ describe("Composer — in-flight echo suppression (match-last-sent)", () => {
       text: "pane output",
       terminalDraft: draft,
       rawTerminalDraft: draft,
-      prefs: { wrap: true, fontSize: 11, rawTerminal: false },
+      prefs: { wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false },
       setWrap: vi.fn(),
       stepFontSize: vi.fn(),
       setRawTerminal: vi.fn(),
@@ -1946,7 +1946,7 @@ describe("Composer — draft persistence", () => {
       text: "pane output",
       terminalDraft: null,
       rawTerminalDraft: null,
-      prefs: { wrap: true, fontSize: 11, rawTerminal: false },
+      prefs: { wrap: true, fontSize: 11, rawTerminal: false, statusExpanded: false },
       setWrap: vi.fn(),
       stepFontSize: vi.fn(),
       setRawTerminal: vi.fn(),

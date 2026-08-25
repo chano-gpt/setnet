@@ -412,10 +412,19 @@ describe("AgentChat — block-grammar scoping (an agent with no adapter)", () =>
     expect(screen.getByText(/1\. Yes/)).toBeInTheDocument();
   });
 
-  it("re-surfaces EVERY row of the Claude input-box statusline as an app strip above the composer", () => {
+  // The strip COLLAPSES to its first row by default — those rows come out of the mirror, and most of
+  // what they carry is static between polls. What must not happen is a row being lost, which is the
+  // bug the strip was built for: expanding brings every row back, stacked as before.
+  it("shows the first statusline row as an app strip, with the rest one tap away", async () => {
+    const user = userEvent.setup();
     renderChat({ text: STATUS_TEXT }); // default claude agent
     const strip = screen.getByText("[Opus 4.8] ~/webapp · main");
     expect(strip.closest("pre")).toBeNull(); // the strip is app chrome, not <pre> mirror text
+    expect(screen.queryByText("← for agents")).not.toBeInTheDocument();
+    expect(screen.queryByText(/❯/)).toBeNull(); // the input box was stripped off the mirror
+
+    await user.click(screen.getByRole("button", { name: /expand the agent statusline/i }));
+
     // Row 2 of the run: it used to be stripped off the mirror and rendered nowhere at all.
     const second = screen.getByText("← for agents");
     expect(second.closest("pre")).toBeNull();
@@ -424,7 +433,16 @@ describe("AgentChat — block-grammar scoping (an agent with no adapter)", () =>
     const row = (el: HTMLElement) => el.closest("div.truncate");
     expect(row(second)).not.toBe(row(strip));
     expect(row(second)?.parentElement).toBe(row(strip)?.parentElement);
-    expect(screen.queryByText(/❯/)).toBeNull(); // the input box was stripped off the mirror
+  });
+
+  // The toggle is a sibling of the mirror-space div, never a child: anything inside it inherits the
+  // light-mode invert, which is right for the agent's terminal colour and wrong for app chrome.
+  it("keeps the statusline toggle outside the inverted mirror space", () => {
+    renderChat({ text: STATUS_TEXT });
+    const toggle = screen.getByRole("button", { name: /expand the agent statusline/i });
+    const inverted = toggle.querySelector("[class*='invert']");
+    expect(inverted).not.toBeNull(); // the strip itself does invert…
+    expect(toggle.className).not.toMatch(/invert/); // …but the button around it does not
   });
 
   it("leaves a codex input-box buffer fully raw — no status strip, box kept in the mirror", () => {
