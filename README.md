@@ -50,9 +50,9 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 
 | | setnet | Collie |
 |---|---|---|
-| **AGY · OMO(Senpi) 지원** | 전용 명령 카탈로그 + 트랜스크립트 어댑터 | 없음 |
+| **Antigravity(AGY) · OMO(Senpi) 지원** | 전용 명령 카탈로그 + 트랜스크립트 어댑터 + 공식 로고 | 없음 |
 | **에이전트 실행** | 앱에서 6종 실행, 하네스별 안전 인자 고정 (Claude는 `--permission-mode manual`, Codex는 `--ask-for-approval on-request --sandbox workspace-write`) | 이미 떠 있는 패널에만 붙음 |
-| **프롬프트 전송 경로** | 대시보드에서는 모든 에이전트가 Herdr `agent.prompt`로 직접 전송 — 터미널 타이핑을 우회 | PTY에 키를 찍어 넣는 경로만 존재 |
+| **프롬프트 전송 경로** | Herdr `agent.prompt` 우선. Herdr가 lifecycle label만 알고 전송 어댑터는 모를 때(기본 Herdr의 OMO)는 살아 있는 에이전트 pane에만 제한적으로 타이핑 fallback | PTY에 키를 찍어 넣는 경로만 존재 |
 | **계획 진행 상황** | Senpi todo-state를 파싱해 현재 단계와 작업별 상태(대기/진행/완료/중단)를 대화에 표시 | 없음 |
 | **대시보드에서 바로 지시** | 패널에 들어가지 않고 대시보드에서 프롬프트 전송, IME 안전 초안, 실시간 작업 경과 시간 | 패널로 들어가야 함 |
 | **모바일 내비게이션** | 전용 탭 바 (무리 / 스페이스, 주의 필요 개수 배지) | 단일 대시보드 |
@@ -66,7 +66,7 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 
 | 하네스 | 명령 카탈로그 | 대화 기록 | 화면 문법 인식 | 앱에서 실행 |
 |---|---|---|---|---|
-| **AGY** (Antigravity) | ✅ AGY 1.1.12 기준 | — | — | ✅ |
+| **Antigravity (AGY)** | ✅ AGY 1.1.12 기준 | — | — | ✅ |
 | **OMO** (Senpi) | ✅ Senpi 2026.8.12-4 기준 | ✅ + 계획 진행 상황 | ✅ | ✅ |
 | Claude Code | ✅ | ✅ | ✅ 전체 문법 | ✅ (`--permission-mode manual`) |
 | Codex | ✅ | ✅ | — | ✅ (승인 요청 + workspace-write 샌드박스) |
@@ -84,7 +84,7 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 - 하네스별 슬래시 명령 팔레트 — 입력창에서 `/`를 치면 인라인 메뉴, 탭해서 삽입
 - 어댑터가 없는 하네스에는 입력을 막고, 두 단계 확인을 거쳐야 통과
 - 패널에서 답할 때는 화면을 읽어 입력창 준비 상태를 확인하고, 보낸 글자가 실제로 들어갔는지 확인한 뒤에야 전송 키를 누른다 — 대화상자가 키보드를 잡고 있을 때 엔터가 그 대화상자를 answer해버리는 사고를 막는다
-- OMO처럼 검증된 터미널 입력 문법이 없는 하네스는 Herdr의 관리형 수명주기(`agent.prompt`)로 보낸다 — PTY를 건드리지 않는다
+- 검증된 터미널 입력 문법이 없는 하네스는 Herdr의 관리형 수명주기(`agent.prompt`)로 먼저 보낸다. lifecycle hook이 이름만 등록해 Herdr가 전송을 소유할 수 없는 OMO 같은 경우에는, 오류가 정확히 `is not an active named agent`일 때만 살아 있는 pane에 타이핑한다. 종료된 pane에는 절대 fallback하지 않는다
 
 **대화 기록**
 - 터미널이 스크롤백으로 되돌아갈 수 없는 구간까지, 에이전트 자신의 세션 로그에서 읽는다
@@ -94,6 +94,7 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 **모바일 우선**
 - 홈 화면에 설치되는 PWA
 - 무리 / 스페이스 탭 바, 주의가 필요한 에이전트 개수 배지
+- 헤더·무리·런처에서 Claude Code, Codex, pi, OpenCode, OMO, Antigravity를 공식 로고로 구분
 - 대시보드는 "마지막에 바뀐 순서"가 아니라 **"당신을 기다리는 순서"**로 정렬
 - 특수키 패드(`Esc`, `Ctrl+C`, 화살표), 카메라 롤 이미지 전송, 출력 내 검색
 - 에이전트가 막히면 웹 푸시로 알림

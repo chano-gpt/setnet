@@ -11,6 +11,8 @@ function brandKey(agent: string): string | undefined {
   if (k.startsWith("codex")) return "codex";
   if (k.startsWith("opencode")) return "opencode";
   if (k === "pi" || k.startsWith("pi-") || k.startsWith("pi.")) return "pi";
+  if (k === "omo" || k.startsWith("omo-") || k.startsWith("omo.")) return "omo";
+  if (k === "agy" || k === "antigravity" || k.startsWith("antigravity-")) return "agy";
   return undefined;
 }
 
@@ -40,6 +42,28 @@ export function AgentIcon({
         aria-label={agent ? `${agent} icon` : "agent icon"}
       >
         {initials(agent ?? "")}
+      </span>
+    );
+  }
+
+  if (brand.kind === "image") {
+    return (
+      <span
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[22%]",
+          className,
+        )}
+        style={{ backgroundColor: brand.bg }}
+        role="img"
+        aria-label={`${agent} logo`}
+      >
+        <img
+          src={brand.src}
+          alt=""
+          draggable={false}
+          style={{ width: `${brand.imageScale ?? 100}%` }}
+          className="pointer-events-none h-auto select-none object-contain"
+        />
       </span>
     );
   }

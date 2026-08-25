@@ -27,6 +27,19 @@ describe("AgentIcon", () => {
     expect(container.querySelector("svg path")).not.toBeNull();
   });
 
+  it.each([
+    ["omo", "/agent-icons/omo.svg"],
+    ["omo-ai", "/agent-icons/omo.svg"],
+    ["agy", "/agent-icons/antigravity.png"],
+    ["antigravity", "/agent-icons/antigravity.png"],
+    ["antigravity-cli", "/agent-icons/antigravity.png"],
+  ])("renders the official local image for '%s'", (agent, src) => {
+    render(<AgentIcon agent={agent} />);
+    const logo = screen.getByRole("img", { name: `${agent} logo` });
+    expect(logo.querySelector("img")).toHaveAttribute("src", src);
+    expect(src).toMatch(/^\/agent-icons\//); // bundled/offline, never a remote brand URL
+  });
+
   it("falls back to an initials tile for unknown agents", () => {
     render(<AgentIcon agent="gemini" />);
     const el = screen.getByRole("img", { name: "gemini icon" });

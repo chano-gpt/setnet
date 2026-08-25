@@ -6,6 +6,16 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.31.0] - 2026-08-25
+
+### Added
+
+- OMO and Google Antigravity use their official logos across the herd, pane header, command palette and launcher. (da13310)
+
+### Changed
+
+- README names both harnesses and documents the narrow live-pane fallback when Herdr cannot own an OMO send. (da13310)
+
 ## [0.30.0] - 2026-08-25
 
 ### Added
