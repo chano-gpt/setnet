@@ -10,12 +10,12 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Fixed
 
-- Managed-launch failures stay visible without leaking duplicate panes after ambiguous network errors.
-- Agent IDs stay catalog-typed through the frontend API, and polling cannot unlock an in-flight empty-space launch.
+- Managed-launch failures stay visible without leaking duplicate panes after ambiguous network errors. (315a177)
+- Agent IDs stay catalog-typed through the frontend API, and polling cannot unlock an in-flight empty-space launch. (315a177)
 
 ### Changed
 
-- The auto-approval policy is recorded as an architecture decision with its security tradeoffs.
+- The auto-approval policy is recorded as an architecture decision with its security tradeoffs. (315a177)
 
 ## [0.32.2] - 2026-08-25
 
