@@ -10,6 +10,7 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Added
 
+- Pinch the terminal mirror to resize it, anywhere in the 9–16px range the A+/A− control already used. (e68ea20)
 - The dashboard message sheet now takes a second tap for a destructive message, and for any agent that is `blocked`. (2549864)
 - The pane composer says a dialog is waiting *before* you tap Send, and only while the mirror is live. (2549864)
 

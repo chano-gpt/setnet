@@ -12,7 +12,8 @@ import {
 import { useSwipeUp } from "@/hooks/use-swipe";
 import { useSpaceActions } from "@/hooks/use-spaces";
 import { useDashPrefs, openForCount } from "@/hooks/use-dash-prefs";
-import { useDisplayPrefs } from "@/hooks/use-display-prefs";
+import { FONT_MAX, FONT_MIN, useDisplayPrefs } from "@/hooks/use-display-prefs";
+import { usePinchZoom } from "@/hooks/use-pinch-zoom";
 import { useStableTerminalDraft } from "@/hooks/use-terminal-draft";
 import { isConnecting } from "@/lib/connection";
 import { setStatus } from "@/lib/status";
@@ -127,7 +128,15 @@ export function AgentChat({
   const connecting = isConnecting({ bridge, error, stalled });
   const { newTab } = useSpaceActions();
   // Single display-prefs instance: the View controls (in <Composer>) write it, the mirror reads it.
-  const { prefs, setWrap, stepFontSize, setRawTerminal } = useDisplayPrefs();
+  const { prefs, setWrap, setFontSize, stepFontSize, setRawTerminal } = useDisplayPrefs();
+  // Pinch the mirror to resize it. The A+/A− pair stays where it is — this is the gesture you
+  // reach for without being taught, not a replacement for the control that can be discovered.
+  const pinch = usePinchZoom({
+    fontSize: prefs.fontSize,
+    min: FONT_MIN,
+    max: FONT_MAX,
+    onChange: setFontSize,
+  });
   // Raw-terminal escape hatch: when on, every Claude grammar is bypassed and the plain mirror shows,
   // so a mis-detected/mis-rendered dialog can always be driven by hand with the keys pad.
   const grammarsOn = !prefs.rawTerminal;
@@ -548,6 +557,13 @@ export function AgentChat({
   //  - the user is selecting text (a long-press selection), so copy works instead of the tap
   //    collapsing the selection and popping the keyboard.
   function focusFromMirror(e: ReactMouseEvent<HTMLDivElement>) {
+    // A pinch ends in a synthetic click on the element it happened over. Resizing the text must not
+    // summon the keyboard on top of what you just made readable, so the pinch consumes its own
+    // trailing click and clears the flag for the next, ordinary tap.
+    if (pinch.pinching.current) {
+      pinch.pinching.current = false;
+      return;
+    }
     const target = e.target as Element | null;
     // The `a` is what keeps a tap on an autolinked URL (components/ansi-output) from popping the
     // keyboard on top of the page it just opened. Don't trim it out of this selector.
@@ -763,7 +779,7 @@ export function AgentChat({
               onTerminal={() => setSurface("terminal")}
             />
           ) : (
-          <div className="h-full" onClick={focusFromMirror}>
+          <div className="h-full" onClick={focusFromMirror} {...pinch.handlers}>
           <ChatMessageList
             ref={listRef}
             dep={display}
