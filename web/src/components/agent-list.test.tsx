@@ -110,6 +110,18 @@ describe("AgentList — sections", () => {
     expect(screen.queryByText(/no agents running/i)).not.toBeInTheDocument();
   });
 
+  it("offers direct agent creation in both populated and empty herds", async () => {
+    const user = userEvent.setup();
+    const onNewAgent = vi.fn();
+    const { rerender } = render(
+      <AgentList agents={[agent("w", "working")]} onOpen={vi.fn()} onNewAgent={onNewAgent} />,
+    );
+    await user.click(screen.getByRole("button", { name: /new agent/i }));
+    rerender(<AgentList agents={[]} bridge="connected" onOpen={vi.fn()} onNewAgent={onNewAgent} />);
+    await user.click(screen.getByRole("button", { name: /new agent/i }));
+    expect(onNewAgent).toHaveBeenCalledTimes(2);
+  });
+
   it("says it's waiting when the bridge is down, rather than 'no agents'", () => {
     render(<AgentList agents={[]} bridge="disconnected" onOpen={vi.fn()} />);
     expect(screen.getByText(/waiting for herdr/i)).toBeInTheDocument();

@@ -6,6 +6,16 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.32.0] - 2026-08-25
+
+### Added
+
+- Herd and Spaces can create an agent directly in a selected space.
+
+### Changed
+
+- Managed launches enter each harness's auto-approval mode; OMO keeps its own permission flow.
+
 ## [0.31.0] - 2026-08-25
 
 ### Added

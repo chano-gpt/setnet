@@ -29,7 +29,7 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
   <tr>
     <td align="center" width="33%"><img src="assets/shot-dashboard.png" alt="setnet 대시보드 — 무리, 상태별 정렬" width="250"><br><sub><b>무리</b> — 당신을 기다리는 순서로</sub></td>
     <td align="center" width="33%"><img src="assets/shot-plan.png" alt="OMO 계획 카드 — 단계와 작업별 상태" width="250"><br><sub><b>계획</b> — OMO가 지금 어느 단계인지</sub></td>
-    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="하네스 런처 — 6종 에이전트 선택" width="250"><br><sub><b>런처</b> — 안전 인자까지 고정해서 실행</sub></td>
+    <td align="center" width="33%"><img src="assets/shot-launcher.png" alt="하네스 런처 — 6종 에이전트 선택" width="250"><br><sub><b>런처</b> — 하네스별 자동 모드로 실행</sub></td>
   </tr>
 </table>
 
@@ -51,7 +51,7 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 | | setnet | Collie |
 |---|---|---|
 | **Antigravity(AGY) · OMO(Senpi) 지원** | 전용 명령 카탈로그 + 트랜스크립트 어댑터 + 공식 로고 | 없음 |
-| **에이전트 실행** | 앱에서 6종 실행, 하네스별 안전 인자 고정 (Claude는 `--permission-mode manual`, Codex는 `--ask-for-approval on-request --sandbox workspace-write`) | 이미 떠 있는 패널에만 붙음 |
+| **에이전트 실행** | Herd/Spaces에서 6종을 바로 생성하고 하네스별 자동 모드로 실행 (OMO 제외) | 이미 떠 있는 패널에만 붙음 |
 | **프롬프트 전송 경로** | Herdr `agent.prompt` 우선. Herdr가 lifecycle label만 알고 전송 어댑터는 모를 때(기본 Herdr의 OMO)는 살아 있는 에이전트 pane에만 제한적으로 타이핑 fallback | PTY에 키를 찍어 넣는 경로만 존재 |
 | **계획 진행 상황** | Senpi todo-state를 파싱해 현재 단계와 작업별 상태(대기/진행/완료/중단)를 대화에 표시 | 없음 |
 | **대시보드에서 바로 지시** | 패널에 들어가지 않고 대시보드에서 프롬프트 전송, IME 안전 초안, 실시간 작업 경과 시간 | 패널로 들어가야 함 |
@@ -66,12 +66,12 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 
 | 하네스 | 명령 카탈로그 | 대화 기록 | 화면 문법 인식 | 앱에서 실행 |
 |---|---|---|---|---|
-| **Antigravity (AGY)** | ✅ AGY 1.1.12 기준 | — | — | ✅ |
+| **Antigravity (AGY)** | ✅ AGY 1.1.12 기준 | — | — | ✅ (`--dangerously-skip-permissions`) |
 | **OMO** (Senpi) | ✅ Senpi 2026.8.12-4 기준 | ✅ + 계획 진행 상황 | ✅ | ✅ |
-| Claude Code | ✅ | ✅ | ✅ 전체 문법 | ✅ (`--permission-mode manual`) |
-| Codex | ✅ | ✅ | — | ✅ (승인 요청 + workspace-write 샌드박스) |
-| pi | ✅ | ✅ | — | ✅ |
-| OpenCode | ✅ | ✅ | — | ✅ |
+| Claude Code | ✅ | ✅ | ✅ 전체 문법 | ✅ (`--permission-mode auto`) |
+| Codex | ✅ | ✅ | — | ✅ (`--approve-for-me`) |
+| pi | ✅ | ✅ | — | ✅ (기본 무승인 실행) |
+| OpenCode | ✅ | ✅ | — | ✅ (`--auto`) |
 | omp | ✅ | — | ✅ 기본 | — |
 
 "화면 문법 인식"은 터미널 화면에서 선택지·마법사·입력창 상태를 읽어내는 어댑터를 말한다. Claude Code만 전체 문법(프롬프트 선택, 마법사, 미리보기, 다중 선택, 메뉴)을 갖고, OMO는 omp 어댑터를 공유한다. 어댑터가 없는 하네스는 범용 미러로 떨어지고, 대화 기록 어댑터가 없는 하네스(AGY, omp)는 히스토리 기능이 뜨지 않는다.
@@ -94,6 +94,7 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 **모바일 우선**
 - 홈 화면에 설치되는 PWA
 - 무리 / 스페이스 탭 바, 주의가 필요한 에이전트 개수 배지
+- Herd/Spaces 화면에서 스페이스와 하네스를 골라 새 탭의 에이전트를 바로 시작
 - 헤더·무리·런처에서 Claude Code, Codex, pi, OpenCode, OMO, Antigravity를 공식 로고로 구분
 - 대시보드는 "마지막에 바뀐 순서"가 아니라 **"당신을 기다리는 순서"**로 정렬
 - 특수키 패드(`Esc`, `Ctrl+C`, 화살표), 카메라 롤 이미지 전송, 출력 내 검색
@@ -127,6 +128,8 @@ herdr plugin action invoke start --plugin herdr.collie
 ## 보안 — 반드시 먼저 읽기
 
 **setnet은 설계상 당신 기계에 대한 원격 셸 접근이다.** 한 번의 호출이 실제 터미널 패널에 임의의 키를 입력한다. URL에 닿는 사람은 모든 패널(소스, 시크릿, 환경변수, 에이전트 출력)을 읽고 당신 계정으로 아무 명령이나 실행할 수 있다. 샌드박스도 명령 허용목록도 없다 — 있으면 도구의 목적 자체가 사라진다. **URL을 루트 로그인처럼 다뤄라.**
+
+앱에서 시작한 에이전트는 OMO를 제외하고 **승인 프롬프트를 자동 처리하는 모드**로 진입한다. Antigravity는 `--dangerously-skip-permissions`를 사용하며, Claude·Codex·OpenCode도 각자의 auto 옵션을 쓴다. 이는 해당 스페이스 안에서 도구 호출이 사람의 매번 승인을 기다리지 않는다는 뜻이다. OMO만 자체 권한 흐름을 유지한다.
 
 기본 방어선:
 

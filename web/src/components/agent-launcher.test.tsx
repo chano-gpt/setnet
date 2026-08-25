@@ -36,10 +36,10 @@ describe("AgentLauncher", () => {
     expect(mockedStartAgent).toHaveBeenCalledExactlyOnceWith("w1:p1", kind, "remote");
   });
 
-  it("describes approval-preserving managed startup", () => {
+  it("describes autonomous managed startup and the Omo exception", () => {
     render(<AgentLauncher paneId="w1:p1" />);
 
-    expect(screen.getByText(/approval prompts stay enabled/i)).toBeInTheDocument();
-    expect(screen.queryByText(/approval prompts disabled/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/starts in auto mode/i)).toBeInTheDocument();
+    expect(screen.getByText(/omo keeps its own permission flow/i)).toBeInTheDocument();
   });
 });

@@ -4,15 +4,12 @@ export interface ManagedLaunchProfile {
 }
 
 const MANAGED_LAUNCHES = {
-  agy: { kind: "agy", args: [] },
+  agy: { kind: "agy", args: ["--dangerously-skip-permissions"] },
   omo: { kind: "omo", args: [] },
-  claude: { kind: "claude", args: ["--permission-mode", "manual"] },
-  codex: {
-    kind: "codex",
-    args: ["--ask-for-approval", "on-request", "--sandbox", "workspace-write"],
-  },
+  claude: { kind: "claude", args: ["--permission-mode", "auto"] },
+  codex: { kind: "codex", args: ["--approve-for-me"] },
   pi: { kind: "pi", args: [] },
-  opencode: { kind: "opencode", args: [] },
+  opencode: { kind: "opencode", args: ["--auto"] },
 } as const satisfies Record<string, ManagedLaunchProfile>;
 
 export function managedLaunchFor(kind: string): ManagedLaunchProfile | null {

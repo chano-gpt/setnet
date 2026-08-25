@@ -1,48 +1,10 @@
 import { useState } from "react";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Zap } from "lucide-react";
 
 import { AgentIcon } from "@/components/agent-icon";
 import { startAgent } from "@/lib/api";
+import { LAUNCH_AGENTS, type LaunchAgent } from "@/lib/launch-agents";
 import { setStatus } from "@/lib/status";
-
-interface LaunchAgent {
-  id: string;
-  name: string;
-  description: string;
-}
-
-const AGENTS: readonly LaunchAgent[] = [
-  {
-    id: "agy",
-    name: "Antigravity",
-    description: "Google coding agent",
-  },
-  {
-    id: "omo",
-    name: "Omo",
-    description: "Omo coding agent",
-  },
-  {
-    id: "claude",
-    name: "Claude Code",
-    description: "Anthropic coding agent",
-  },
-  {
-    id: "codex",
-    name: "Codex",
-    description: "OpenAI coding agent",
-  },
-  {
-    id: "pi",
-    name: "Pi",
-    description: "Minimal coding agent",
-  },
-  {
-    id: "opencode",
-    name: "OpenCode",
-    description: "Open-source coding agent",
-  },
-];
 
 export function AgentLauncher({ paneId, session }: { paneId: string; session?: string }) {
   const [launching, setLaunching] = useState<string | null>(null);
@@ -81,11 +43,11 @@ export function AgentLauncher({ paneId, session }: { paneId: string; session?: s
         <div className="mb-5">
           <h2 className="text-xl font-semibold">Choose an agent</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Starts through Herdr when ready; approval prompts stay enabled.
+            Starts in auto mode through Herdr. Omo keeps its own permission flow.
           </p>
         </div>
         <div className="grid gap-2">
-          {AGENTS.map((agent) => (
+          {LAUNCH_AGENTS.map((agent) => (
             <button
               key={agent.id}
               type="button"
@@ -102,7 +64,11 @@ export function AgentLauncher({ paneId, session }: { paneId: string; session?: s
               {launching === agent.id ? (
                 <Loader2 className="size-4 animate-spin text-muted-foreground" />
               ) : (
-                <ShieldCheck className="size-4 text-muted-foreground" />
+                agent.autoMode ? (
+                  <Zap className="size-4 text-amber-500" aria-label="Auto mode" />
+                ) : (
+                  <ShieldCheck className="size-4 text-muted-foreground" aria-label="Own permissions" />
+                )
               )}
             </button>
           ))}

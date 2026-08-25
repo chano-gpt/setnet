@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderPlus, LayoutGrid, Search } from "lucide-react";
+import { Bot, FolderPlus, LayoutGrid, Plus, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "@/components/section-header";
@@ -17,6 +17,7 @@ interface SpaceOverviewProps {
   shellPanes?: AgentView[];
   onOpen: (workspaceId: string) => void;
   onNewSpace: () => void;
+  onNewAgent?: () => void;
   /** Fold state, owned by the dashboard so it can be persisted. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,6 +32,7 @@ export function SpaceOverview({
   shellPanes = [],
   onOpen,
   onNewSpace,
+  onNewAgent,
   open,
   onOpenChange,
 }: SpaceOverviewProps) {
@@ -68,6 +70,17 @@ export function SpaceOverview({
                 <span className="size-2 rounded-full bg-status-blocked" aria-hidden />
                 {blockedSpaces}
               </span>
+            )}
+            {onNewAgent && (
+              <button
+                type="button"
+                onClick={onNewAgent}
+                aria-label="New agent"
+                className="relative flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95"
+              >
+                <Bot className="size-4" />
+                <Plus className="absolute right-1.5 top-1.5 size-2.5" />
+              </button>
             )}
             <button
               type="button"

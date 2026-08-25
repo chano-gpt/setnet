@@ -59,6 +59,22 @@ export function useSpaceActions() {
     [navigate],
   );
 
+  const freshPane = useCallback(
+    (p: Extract<CreateResponse, { ok: true }>["pane"], agent = "shell") => ({
+      paneId: p.paneId,
+      workspaceId: p.workspaceId,
+      workspaceLabel: p.workspaceLabel,
+      workspaceNumber: 0,
+      tabId: p.tabId,
+      agent,
+      status: "unknown" as const,
+      cwd: p.cwd,
+      focused: false,
+      kind: agent === "shell" ? "shell" : "agent",
+    }),
+    [],
+  );
+
   const newTab = useCallback(
     async (workspaceId: string) => {
       if (readOnlyRef.current) return setStatus("Read-only — device not authorised", "error");
@@ -83,5 +99,40 @@ export function useSpaceActions() {
     [open],
   );
 
-  return { newTab, newSpace };
+  const newAgent = useCallback(
+    async (workspaceId: string, kind: string) => {
+      if (readOnlyRef.current) {
+        setStatus("Read-only — device not authorised", "error");
+        return false;
+      }
+      try {
+        const created = await api.createTab(workspaceId, {}, sessionRef.current);
+        if (!created.ok) {
+          setStatus(created.error, "error");
+          return false;
+        }
+        const started = await api.startAgent(created.pane.paneId, kind, sessionRef.current);
+        if (!started.ok) {
+          setStatus(`${started.error} — fresh shell kept`, "error");
+          revalidatorRef.current.revalidate();
+          navigate(panePath(created.pane.paneId, sessionRef.current), {
+            state: { freshPane: freshPane(created.pane), selectAgent: true },
+          });
+          return true;
+        }
+        setStatus(`Launching ${kind} in ${created.pane.workspaceLabel}`, "success");
+        revalidatorRef.current.revalidate();
+        navigate(panePath(created.pane.paneId, sessionRef.current), {
+          state: { freshPane: freshPane(created.pane, kind) },
+        });
+        return true;
+      } catch (e) {
+        setStatus(e instanceof Error ? e.message : String(e), "error");
+        return false;
+      }
+    },
+    [freshPane, navigate],
+  );
+
+  return { newTab, newSpace, newAgent };
 }

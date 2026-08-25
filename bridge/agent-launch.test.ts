@@ -4,23 +4,18 @@ import { managedAgentName, managedLaunchFor } from "./agent-launch.ts";
 
 describe("managed agent launch profiles", () => {
   test.each([
-    ["agy", []],
+    ["agy", ["--dangerously-skip-permissions"]],
     ["omo", []],
-    ["claude", ["--permission-mode", "manual"]],
-    ["codex", ["--ask-for-approval", "on-request", "--sandbox", "workspace-write"]],
+    ["claude", ["--permission-mode", "auto"]],
+    ["codex", ["--approve-for-me"]],
     ["pi", []],
-    ["opencode", []],
-  ] as const)("uses an allowlisted safe argv profile for %s", (kind, expectedArgs) => {
+    ["opencode", ["--auto"]],
+  ] as const)("uses an allowlisted autonomous argv profile for %s", (kind, expectedArgs) => {
     expect(managedLaunchFor(kind)).toEqual({ kind, args: expectedArgs });
   });
 
-  test("never includes blanket permission or sandbox bypasses", () => {
-    for (const kind of ["agy", "omo", "claude", "codex", "pi", "opencode"]) {
-      const profile = managedLaunchFor(kind);
-      expect(profile).not.toBeNull();
-      expect(profile?.args.join(" ")).not.toContain("dangerously");
-      expect(profile?.args.join(" ")).not.toContain("--approve");
-    }
+  test("keeps OMO on its own permission flow", () => {
+    expect(managedLaunchFor("omo")?.args).toEqual([]);
   });
 
   test("rejects unknown browser-supplied kinds", () => {

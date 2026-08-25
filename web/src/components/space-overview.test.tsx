@@ -72,6 +72,14 @@ describe("SpaceOverview", () => {
     await user.click(screen.getByRole("button", { name: /new space/i }));
     expect(onNewSpace).toHaveBeenCalledOnce();
   });
+
+  it("opens direct agent creation from the header", async () => {
+    const user = userEvent.setup();
+    const onNewAgent = vi.fn();
+    render(view({ onNewAgent }));
+    await user.click(screen.getByRole("button", { name: /new agent/i }));
+    expect(onNewAgent).toHaveBeenCalledOnce();
+  });
 });
 
 describe("SpaceOverview — folding", () => {

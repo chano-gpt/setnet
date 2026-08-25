@@ -487,7 +487,7 @@ describe("parseReplyBody — terminal write boundary", () => {
 });
 
 describe("startAgentPane — managed launch boundary", () => {
-  test("passes only the server-owned safe profile to Herdr", async () => {
+  test("passes only the server-owned autonomous profile to Herdr", async () => {
     const calls: unknown[][] = [];
     const herdr = {
       startAgent: (...args: unknown[]) => {
@@ -514,7 +514,7 @@ describe("startAgentPane — managed launch boundary", () => {
         "collie-codex-wd-pg",
         "codex",
         "wD:pG",
-        ["--ask-for-approval", "on-request", "--sandbox", "workspace-write"],
+        ["--approve-for-me"],
       ],
     ]);
   });

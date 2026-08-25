@@ -7,6 +7,7 @@ import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { AgentList } from "@/components/agent-list";
 import { SpaceOverview } from "@/components/space-overview";
 import { NewSpaceSheet } from "@/components/new-space-sheet";
+import { NewAgentSheet } from "@/components/new-agent-sheet";
 import { StatusArea } from "@/components/status-area";
 import { BuildStamp } from "@/components/build-stamp";
 import { UpdateBanner } from "@/components/update-banner";
@@ -31,8 +32,9 @@ export function HomeRoute() {
   const stalled = useLoadingStalled();
   const location = useLocation();
   const navigate = useNavigate();
-  const { newSpace } = useSpaceActions();
+  const { newSpace, newAgent } = useSpaceActions();
   const [newSpaceOpen, setNewSpaceOpen] = useState(false);
+  const [newAgentOpen, setNewAgentOpen] = useState(false);
   const [messagePaneId, setMessagePaneId] = useState<string | null>(null);
   const { prefs, setSpacesOpen, setRecentOpen, setRecentDir } = useDashPrefs();
   // No stored choice yet? The space count decides — a two-space install shouldn't be handed a
@@ -72,6 +74,7 @@ export function HomeRoute() {
               bridge={data.bridge}
               onOpen={open}
               onMessage={setMessagePaneId}
+              onNewAgent={() => setNewAgentOpen(true)}
               recentDir={prefs.recentDir}
               onRecentDirChange={setRecentDir}
               recentOpen={prefs.recentOpen}
@@ -84,6 +87,7 @@ export function HomeRoute() {
               shellPanes={data.shellPanes}
               onOpen={drillInto}
               onNewSpace={() => setNewSpaceOpen(true)}
+              onNewAgent={() => setNewAgentOpen(true)}
               open={spacesOpen}
               onOpenChange={setSpacesOpen}
             />
@@ -110,6 +114,13 @@ export function HomeRoute() {
       </div>
 
       <NewSpaceSheet open={newSpaceOpen} onClose={() => setNewSpaceOpen(false)} onCreate={newSpace} />
+      <NewAgentSheet
+        open={newAgentOpen}
+        workspaces={data.workspaces}
+        onClose={() => setNewAgentOpen(false)}
+        onCreate={newAgent}
+        onNewSpace={() => setNewSpaceOpen(true)}
+      />
       <DashboardComposer
         agent={data.agents.find((candidate) => candidate.paneId === messagePaneId) ?? null}
         session={data.session}
