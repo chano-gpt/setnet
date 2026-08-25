@@ -16,6 +16,7 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Changed
 
+- Header, tab and pane rows retract while the terminal mirror is frozen, then return at the live tail; Find keeps its header. (5c7aabc)
 - The agent statusline strip collapses to its first row, with a tap for the rest — two rows of the pane view handed back to the mirror. (b8706a5)
 - Text chips, badges and pill buttons moved onto the 2px radius; dots, the switch and the floating buttons stayed round. (b8706a5)
 - New chrome palette: cool graphite surfaces, warm ink, and a 2px radius ladder. `--background` stays achromatic in both halves — it is pinned to the mirror's ground. (c26e499)
