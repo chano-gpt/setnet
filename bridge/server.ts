@@ -22,6 +22,7 @@ import { adapterFor, buildJournalRegistry } from "./journal/registry.ts";
 import { TranscriptStore } from "./journal/store.ts";
 import type { AgentSessionRef, JournalAdapter } from "./journal/types.ts";
 import { toPaneWire } from "./types.ts";
+import { HerdrRpcError } from "./wire.ts";
 import type {
   ActionResponse,
   AgentView,
@@ -283,7 +284,7 @@ export function startServer(opts: {
         if (action === "reply" && req.method === "POST")
           return replyPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "prompt" && req.method === "POST")
-          return promptPane(herdr, paneId, req, audit, device, session);
+          return promptPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "keys" && req.method === "POST") return keysPane(herdr, cfg, paneId, req, audit, device, session);
         if (action === "start" && req.method === "POST") return startAgentPane(herdr, paneId, req, audit, device, session);
         if (action === "upload" && req.method === "POST") return uploadPane(cfg, paneId, req, audit, device, session);
@@ -711,8 +712,28 @@ export async function replyPane(
   );
 }
 
+/**
+ * Herdr refusing `agent.prompt` because the pane's agent isn't one it knows. The label a pane shows
+ * can come from the agent's own lifecycle hook, and Herdr will happily display a label it has no
+ * built-in adapter for (`omo` on an upstream build is the case that surfaced this) — but
+ * `agent.prompt` insists on a KNOWN agent and refuses with `agent_not_ready`. The pane is perfectly
+ * writable; only the managed lifecycle path is closed, so typing into it is the right answer.
+ *
+ * Deliberately narrow: `agent_blocked` (a dialog owns the keyboard) and the sibling `agent_not_ready`
+ * whose message is "no longer the pane foreground process" (the agent EXITED — text would land in a
+ * shell and run as a command) must both keep failing loudly.
+ */
+function isUnknownAgentRefusal(err: unknown): boolean {
+  return (
+    err instanceof HerdrRpcError &&
+    err.code === "agent_not_ready" &&
+    err.detail.includes("is not an active named agent")
+  );
+}
+
 export async function promptPane(
   herdr: HerdrClient,
+  cfg: Config,
   paneId: string,
   req: Request,
   audit: AuditLog,
@@ -749,6 +770,35 @@ export async function promptPane(
     });
     return json({ ok: true } satisfies ActionResponse, ae);
   } catch (err) {
+    // Herdr doesn't know this agent — type the prompt in instead of failing the send. Nothing was
+    // written to the pane before the refusal (Herdr checks before it sends any bytes), so this is a
+    // first attempt, not a retry, and it can't duplicate text.
+    if (isUnknownAgentRefusal(err)) {
+      const outcome = await sendReplySteps(herdr, paneId, prompt, true, cfg.submitKeys);
+      audit.record({
+        action: "prompt",
+        paneId,
+        session,
+        device,
+        detail: {
+          text: prompt,
+          submitted: outcome.ok,
+          textDelivered: outcome.textDelivered,
+          fallback: "send_text",
+          ...(outcome.ok ? {} : { error: outcome.error }),
+        },
+      });
+      if (outcome.ok) return json({ ok: true } satisfies ActionResponse, ae);
+      return json(
+        {
+          ok: false,
+          error: outcome.error,
+          textDelivered: outcome.textDelivered,
+        } satisfies ActionResponse,
+        ae,
+        502,
+      );
+    }
     audit.record({
       action: "prompt",
       paneId,

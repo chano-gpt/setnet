@@ -6,6 +6,12 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.29.5] - 2026-08-25
+
+### Fixed
+
+- Sending to an agent Herdr has no built-in adapter for (omo on an upstream Herdr build) no longer fails with `agent_not_ready` — the bridge types the prompt into the pane instead.
+
 ## [0.29.4] - 2026-08-15
 
 ### Changed

@@ -26,6 +26,7 @@ import {
   type ReplySender,
 } from "./server.ts";
 import { AuditLog } from "./audit.ts";
+import { HerdrRpcError } from "./wire.ts";
 import type { Config } from "./config.ts";
 import type { HerdrClient, PaneRead } from "./herdr-client.ts";
 import type { JournalAdapter } from "./journal/types.ts";
@@ -46,6 +47,7 @@ test("promptPane sends one managed agent prompt", async () => {
 
   const response = await promptPane(
     herdr,
+    cfg(),
     "w1:p1",
     request,
     { record: () => undefined } as unknown as AuditLog,
@@ -71,6 +73,7 @@ test("promptPane reports managed prompt failures as non-success HTTP", async () 
 
   const response = await promptPane(
     herdr,
+    cfg(),
     "w1:p1",
     request,
     { record: () => undefined } as unknown as AuditLog,
@@ -80,6 +83,88 @@ test("promptPane reports managed prompt failures as non-success HTTP", async () 
 
   expect(response.status).toBe(502);
   expect(await response.json()).toEqual({ ok: false, error: "agent is not interactive" });
+});
+
+// Herdr refuses agent.prompt for any agent it has no built-in adapter for — a pane whose label came
+// from the agent's own lifecycle hook (upstream Herdr + `omo`) reads as an agent everywhere else but
+// is refused here. The pane is writable, so the prompt is typed in instead of failing the send.
+test("promptPane types the prompt when herdr does not know the pane's agent", async () => {
+  const typed: Array<[string, string]> = [];
+  const keys: Array<[string, string[]]> = [];
+  const herdr = {
+    promptAgent: async () => {
+      throw new HerdrRpcError(
+        "agent_not_ready",
+        "agent w1:p1 is not an active named agent",
+        "agent.prompt",
+      );
+    },
+    sendPaneText: async (paneId: string, text: string) => {
+      typed.push([paneId, text]);
+    },
+    sendPaneKeys: async (paneId: string, k: string[]) => {
+      keys.push([paneId, k]);
+    },
+  } as unknown as HerdrClient;
+  const request = new Request("http://collie/api/pane/w1%3Ap1/prompt", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text: "상태 알려줘" }),
+  });
+
+  const response = await promptPane(
+    herdr,
+    cfg(),
+    "w1:p1",
+    request,
+    { record: () => undefined } as unknown as AuditLog,
+    "phone",
+    "default",
+  );
+
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ ok: true });
+  expect(typed).toEqual([["w1:p1", "상태 알려줘"]]);
+  expect(keys).toEqual([["w1:p1", ["Enter"]]]);
+});
+
+// The sibling refusal with the SAME code means the agent exited and the pane is back at a shell.
+// Typing there would run the message as a command, so this one must keep failing loudly.
+test("promptPane does not fall back when the agent left the foreground", async () => {
+  let typedAnything = false;
+  const herdr = {
+    promptAgent: async () => {
+      throw new HerdrRpcError(
+        "agent_not_ready",
+        "agent w1:p1 is no longer the pane foreground process",
+        "agent.prompt",
+      );
+    },
+    sendPaneText: async () => {
+      typedAnything = true;
+    },
+    sendPaneKeys: async () => {
+      typedAnything = true;
+    },
+  } as unknown as HerdrClient;
+  const request = new Request("http://collie/api/pane/w1%3Ap1/prompt", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text: "상태 알려줘" }),
+  });
+
+  const response = await promptPane(
+    herdr,
+    cfg(),
+    "w1:p1",
+    request,
+    { record: () => undefined } as unknown as AuditLog,
+    "phone",
+    "default",
+  );
+
+  expect(response.status).toBe(502);
+  expect(typedAnything).toBe(false);
 });
 
 // checkAccess is the API security gate (same-origin/CSRF + optional Tailscale identity). A

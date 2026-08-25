@@ -146,6 +146,12 @@ the unit name; the Herdr action runs from anywhere.
   a **string**. Only `events.subscribe` streams.
 - `pane.send_keys` grammar is **`+`-joined, not tmux**: `ctrl+c` (NOT `C-c`), `shift+tab`, `Up`,
   `Tab`, `Escape`, `Enter`, `Backspace`. `PageUp`/`Home`/`End`/`Delete` are unsupported.
+- **`agent.prompt` only works for an agent Herdr has a built-in adapter for.** A pane's label can
+  come from the agent's own lifecycle hook, so Herdr displays (and `pane.list` reports) an agent it
+  cannot prompt — it refuses with `agent_not_ready` / "is not an active named agent". The bridge
+  falls back to typing the prompt in (`promptPane`, `bridge/server.ts`). Keep the fallback narrow:
+  the same code with "no longer the pane foreground process" means the agent EXITED, and typing there
+  runs the message as a shell command.
 - **A long send to Claude is verified via its paste placeholder** — anything past Claude's paste
   threshold collapses in the input box to `[Pasted text #N +M lines]`; the guard accepts that token as
   send evidence only when it is consistent with the message just typed. Don't try to dodge the

@@ -3,10 +3,29 @@
 // touching Bun.connect. Protocol facts are documented in HERDR_API.md.
 
 /**
+ * A refusal Herdr *sent* — `{"error": {code, message}}` — as opposed to a transport failure (dial,
+ * timeout, early close), which stays a plain Error. Carrying `code` is what lets a caller act on a
+ * specific refusal (e.g. fall back when Herdr doesn't recognise the pane's agent) without matching
+ * on prose. The message text is unchanged from what it always was, so anything reading `.message`
+ * keeps working.
+ */
+export class HerdrRpcError extends Error {
+  constructor(
+    readonly code: string,
+    readonly detail: string,
+    method: string,
+  ) {
+    super(`herdr ${method}: ${code}: ${detail}`);
+    this.name = "HerdrRpcError";
+  }
+}
+
+/**
  * Decode one reply line into its `result` payload, or throw a descriptive Error. Herdr replies are
  * `{"id", "result": {...}}` on success or `{"id", "error": {code, message}}` on failure; anything
  * else (bad JSON, or valid JSON of neither shape) is a protocol violation and throws. `method` only
- * decorates the message.
+ * decorates the message. A server-sent error throws {@link HerdrRpcError} (which carries the code);
+ * a malformed line throws a plain Error.
  */
 export function decodeReplyLine<T>(line: string, method: string): T {
   let msg: unknown;
@@ -18,7 +37,7 @@ export function decodeReplyLine<T>(line: string, method: string): T {
   if (msg !== null && typeof msg === "object") {
     if ("error" in msg) {
       const err = (msg as { error: { code: string; message: string } }).error;
-      throw new Error(`herdr ${method}: ${err.code}: ${err.message}`);
+      throw new HerdrRpcError(err.code, err.message, method);
     }
     if ("result" in msg) return (msg as { result: T }).result;
   }
