@@ -33,7 +33,7 @@ function TabButton({
       aria-current={active ? "page" : undefined}
       onClick={onClick}
       className={cn(
-        "relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2",
+        "relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2",
         "text-[0.6875rem] font-medium transition-colors active:scale-[0.98]",
         active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}

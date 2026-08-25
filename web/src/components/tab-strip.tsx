@@ -81,7 +81,7 @@ export function TabStrip({
           type="button"
           onClick={() => onNewTab(workspaceId)}
           aria-label="New tab"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition-colors hover:bg-accent active:scale-95"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:bg-accent active:scale-95"
         >
           <Plus className="size-4" />
         </button>

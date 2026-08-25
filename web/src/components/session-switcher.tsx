@@ -47,7 +47,7 @@ export function SessionSwitcher({ sessions, current }: SessionSwitcherProps) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Session: ${currentName}. Switch session`}
-        className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70 active:scale-95"
+        className="flex shrink-0 items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70 active:scale-95"
       >
         <Layers className="size-3.5" />
         <span className="max-w-[7rem] truncate">{currentName}</span>
@@ -81,7 +81,7 @@ export function SessionSwitcher({ sessions, current }: SessionSwitcherProps) {
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="truncate text-sm font-medium">{s.name}</span>
                         {s.isPrimary && (
-                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                             primary
                           </span>
                         )}
@@ -92,12 +92,12 @@ export function SessionSwitcher({ sessions, current }: SessionSwitcherProps) {
                       {s.reachable && (s.blocked > 0 || s.working > 0) && (
                         <div className="mt-1 flex items-center gap-1.5">
                           {s.blocked > 0 && (
-                            <span className="rounded-full border border-status-blocked/30 bg-status-blocked/15 px-1.5 py-0.5 text-[10px] font-medium text-status-blocked">
+                            <span className="rounded-md border border-status-blocked/30 bg-status-blocked/15 px-1.5 py-0.5 text-[10px] font-medium text-status-blocked">
                               {s.blocked} needs you
                             </span>
                           )}
                           {s.working > 0 && (
-                            <span className="rounded-full border border-status-working/30 bg-status-working/15 px-1.5 py-0.5 text-[10px] font-medium text-status-working">
+                            <span className="rounded-md border border-status-working/30 bg-status-working/15 px-1.5 py-0.5 text-[10px] font-medium text-status-working">
                               {s.working} working
                             </span>
                           )}

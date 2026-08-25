@@ -997,7 +997,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             // submit key is still conditional on the verify step behind it.
             <Button
               variant="destructive"
-              className="h-11 shrink-0 rounded-full px-4 text-sm font-semibold"
+              className="h-11 shrink-0 rounded-md px-4 text-sm font-semibold"
               onClick={onSendClick}
               disabled={locked || !input.trim() || sending}
               aria-label="Type anyway?"
@@ -1007,7 +1007,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           ) : !direct.active && confirmingSend ? (
             <Button
               variant="destructive"
-              className="h-11 shrink-0 rounded-full px-4 text-sm font-semibold"
+              className="h-11 shrink-0 rounded-md px-4 text-sm font-semibold"
               onClick={onSendClick}
               disabled={locked || !input.trim() || sending}
               aria-label="Really send?"

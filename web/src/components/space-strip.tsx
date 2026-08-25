@@ -38,7 +38,7 @@ export function SpaceStrip({
         <button
           type="button"
           onClick={onBack}
-          className="flex shrink-0 items-center gap-0.5 rounded-full border border-border bg-background py-1 pl-1.5 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-95"
+          className="flex shrink-0 items-center gap-0.5 rounded-md border border-border bg-background py-1 pl-1.5 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-95"
         >
           <ChevronLeft className="size-4" />
           Back
@@ -64,7 +64,7 @@ export function SpaceStrip({
         type="button"
         onClick={onNewSpace}
         aria-label="New space"
-        className="flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition-colors hover:bg-accent active:scale-95"
+        className="flex size-8 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:bg-accent active:scale-95"
       >
         <Plus className="size-4" />
       </button>
