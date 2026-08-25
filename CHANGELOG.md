@@ -10,11 +10,11 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Added
 
-- OMO and Google Antigravity use their official logos across the herd, pane header, command palette and launcher. (da13310)
+- OMO and Google Antigravity use their official logos across the herd, pane header, command palette and launcher. (9f7cd04)
 
 ### Changed
 
-- README names both harnesses and documents the narrow live-pane fallback when Herdr cannot own an OMO send. (da13310)
+- README names both harnesses and documents the narrow live-pane fallback when Herdr cannot own an OMO send. (9f7cd04)
 
 ## [0.30.0] - 2026-08-25
 
