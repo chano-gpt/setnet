@@ -190,11 +190,13 @@
   --color-status-idle: var(--status-idle);
   --color-status-unknown: var(--status-unknown);
 
-  /* Plex first, then the platform stack. Plex carries NO Hangul and that is deliberate (see the
-     @font-face below), so Korean falls straight through to the system Korean face — which is why
-     the fallbacks stay a real stack rather than a bare `sans-serif`. */
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  /* Latin Plex first, then Hangul Plex, then the platform stack. Order is what makes the pair work:
+     the Latin face covers no Hangul and the Hangul face covers no Latin, so the browser takes each
+     script from the face that has it and a mixed label ("dev › 3 › 영어 문제 생성") sets in one
+     typeface. The platform stack stays behind them for everything neither covers — CJK that isn't
+     Korean, emoji, a syllable outside the subset. */
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans KR", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 
   --font-mono: "Nerd Font Symbols", "JetBrains Mono", "Cascadia Mono", "Cascadia Code",
     "Roboto Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
@@ -212,12 +214,10 @@
  * `font-weight: 100 700` on the @font-face is what tells the browser this face covers the range;
  * without it a `font-weight: 600` lookup synthesises a fake bold from the 400 instance.
  *
- * WHY NO HANGUL, ON PURPOSE. Workspace labels, tab labels and replies are frequently Korean. Plex
- * Sans has no Hangul, so it falls through to the system Korean face — already installed on Android,
- * costing nothing. IBM Plex Sans KR exists and would multiply this payload several times over for
- * glyphs the phone can already draw. `unicode-range` keeps the fetch conditional on Latin actually
- * being painted, and --font-sans keeps a real fallback stack behind it so the fall-through is
- * silent rather than tofu.
+ * WHY NO HANGUL IN THIS FILE. Hangul lives in its own faces below, under the opposite caching rule.
+ * `unicode-range` keeps this fetch conditional on Latin actually being painted, and --font-sans
+ * keeps a real fallback stack behind both so anything neither face covers falls through silently
+ * rather than as tofu.
  *
  * WHY IT IS PRECACHED, UNLIKE THE NERD FONT BELOW. Opposite rule, opposite reason: the Nerd Font is
  * lazy because most herds paint no symbol glyphs, and 1.1 MB should not be charged to an install
@@ -239,7 +239,48 @@
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Nerd Font symbols, bundled — the second and last webfont setnet ships.
+/* IBM Plex Sans KR — the Hangul half of the UI face. Lazy, like the Nerd Font below.
+ *
+ * WHY IT EXISTS. Workspace labels, tab labels, pane titles and composer drafts are frequently
+ * Korean. Without this they set in the system Korean face while everything around them sets in
+ * Plex — two typefaces inside one label, which is exactly the seam the Latin face was added to
+ * close.
+ *
+ * WHY IT IS TWO FILES AND NOT ONE. Plex Sans KR has no variable version upstream (google/fonts
+ * ships seven statics), and Hangul is ~11k syllables, so each weight is its own ~375 KB subset.
+ * Two weights, because Korean in this app is body text and semibold labels and nothing else.
+ * Synthesised bold was the alternative and CJK synthetic bold smears at phone sizes.
+ *
+ * WHY IT IS NOT PRECACHED, UNLIKE THE LATIN FACE. Same rule as the Nerd Font, same reason: 752 KB
+ * charged to every install, including herds that never paint a Hangul glyph. `unicode-range` makes
+ * the fetch conditional on Hangul actually appearing, `src/sw.ts` caches it on first use, and
+ * `lib/sw-routes.ts` names it so the activate sweep doesn't evict it. The Latin face is the
+ * exception to that rule (45 KB, on every first paint); these are not.
+ *
+ * WHAT IT COSTS THE FIRST TIME. `font-display: swap` means the first Korean text on a cold install
+ * paints in the system face and swaps when the subset lands. Once, then cached forever by URL.
+ *
+ * Subsets of IBM Plex Sans KR v1.001 (OFL 1.1 — public/fonts/LICENSE-IBMPlexSans.txt), built by
+ * scripts/build-plex-kr.sh. Version in the filename: public/ assets are unhashed and the SW caches
+ * them forever by URL. */
+@font-face {
+  font-family: "IBM Plex Sans KR";
+  src: url("/fonts/plex-kr-1.001-400-hangul.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+}
+@font-face {
+  font-family: "IBM Plex Sans KR";
+  src: url("/fonts/plex-kr-1.001-600-hangul.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+}
+
+/* Nerd Font symbols, bundled — the third and last webfont setnet ships.
  *
  * WHY. Agent prompts and status lines are full of Nerd Font glyphs (Powerline separators, devicons,
  * Material icons: OMP's `symbolPreset: nerd`, herdr's own output). Desktop browsers can resolve them

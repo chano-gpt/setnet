@@ -22,14 +22,45 @@ const root = resolve(import.meta.dirname, "..");
 const read = (p: string) => readFileSync(resolve(root, p), "utf8");
 const css = read("src/index.css");
 const cssUrls = [...css.matchAll(/url\("([^"]+\.woff2)"\)/g)].map((m) => m[1]!);
-const lazyUrls = cssUrls.filter((u) => u.includes("nerd-symbols"));
-const uiUrls = cssUrls.filter((u) => !u.includes("nerd-symbols"));
+const nerdUrls = cssUrls.filter((u) => u.includes("nerd-symbols"));
+const krUrls = cssUrls.filter((u) => u.includes("plex-kr"));
+const uiUrls = cssUrls.filter((u) => u.includes("plex-sans"));
+const lazyUrls = [...krUrls, ...nerdUrls];
 
 describe("bundled fonts", () => {
   it("declares one lazy face per private-use plane", () => {
     expect(css).toContain("unicode-range: U+E000-F8FF");
     expect(css).toContain("unicode-range: U+F0000-F1AFF");
-    expect(lazyUrls).toHaveLength(2);
+    expect(nerdUrls).toHaveLength(2);
+  });
+
+  // Plex Sans KR has no variable version upstream, so each weight is its own ~375 KB file. Two, and
+  // the count is asserted because a third is another 375 KB for a register the UI does not use.
+  it("ships the Hangul face at exactly the two weights the UI uses", () => {
+    expect(krUrls).toHaveLength(2);
+    expect(krUrls.some((u) => u.includes("-400-"))).toBe(true);
+    expect(krUrls.some((u) => u.includes("-600-"))).toBe(true);
+  });
+
+  // The Latin face is listed first and covers Latin. If the Hangul subsets carried it too the
+  // browser would still take Latin from the first available face — the bytes would just be wasted.
+  it("keeps Latin out of the Hangul subsets", () => {
+    const krRanges = [...css.matchAll(/plex-kr[\s\S]{0,220}?unicode-range:\s*([^;]+);/g)].map(
+      (m) => m[1]!,
+    );
+    expect(krRanges).toHaveLength(2);
+    for (const range of krRanges) {
+      expect(range).toContain("U+AC00-D7A3");
+      expect(range).not.toMatch(/U\+0000|U\+0020|U\+0100/);
+    }
+  });
+
+  // Order in --font-sans is what makes the pair set as one typeface: Latin face, then Hangul face,
+  // then the platform stack. Reversed, a mixed label takes Latin from whichever face answers first.
+  it("orders the Latin face ahead of the Hangul face in the stack", () => {
+    const stack = /--font-sans:([\s\S]*?);/.exec(css)?.[1] ?? "";
+    expect(stack.indexOf('"IBM Plex Sans"')).toBeGreaterThanOrEqual(0);
+    expect(stack.indexOf('"IBM Plex Sans"')).toBeLessThan(stack.indexOf('"IBM Plex Sans KR"'));
   });
 
   // One variable file covers 100–700, so a second UI face here means someone added a static weight
@@ -42,14 +73,10 @@ describe("bundled fonts", () => {
 
   // Plex has no Hangul on purpose: Korean falls through to the system face, which Android already
   // has. That only works if the range stays Latin and the fallback stack behind it is real.
-  it("keeps the UI face Latin-only, with a fallback stack behind it", () => {
+  it("keeps the Latin UI face Latin-only, with a fallback stack behind it", () => {
     expect(css).toContain("--font-sans:");
     expect(css).toMatch(/--font-sans:\s*"IBM Plex Sans",[\s\S]*?sans-serif;/);
-    // Scoped to the declarations, not the file: index.css EXPLAINS in prose why the KR face is not
-    // shipped, and a whole-file match would read that sentence as the thing it forbids.
-    const families = [...css.matchAll(/font-family:\s*"([^"]+)"/g)].map((m) => m[1]!);
-    expect(families).not.toContain("IBM Plex Sans KR");
-    expect(uiUrls[0]).not.toMatch(/kr/i);
+    expect(uiUrls[0]).not.toMatch(/-kr-/);
   });
 
   // Drift here is the whole failure mode: the SW sweeps every font-cache entry it can't name, so a

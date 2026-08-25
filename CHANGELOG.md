@@ -17,7 +17,8 @@ All notable changes to setnet are recorded here. The format follows
 ### Changed
 
 - New chrome palette: cool graphite surfaces, warm ink, and a 2px radius ladder. `--background` stays achromatic in both halves — it is pinned to the mirror's ground. (c26e499)
-- The UI face is IBM Plex Sans, one 45 KB variable Latin subset, precached. Korean falls through to the system face. (c26e499)
+- The UI face is IBM Plex Sans, one 45 KB variable Latin subset, precached. (c26e499)
+- Korean sets in IBM Plex Sans KR — two Hangul subsets, lazy and out of the precache like the Nerd Font. (3742d72)
 - A failed dashboard message keeps the sheet open and the draft intact, with the reason shown in the sheet. (2549864)
 
 ### Fixed

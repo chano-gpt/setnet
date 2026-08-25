@@ -53,6 +53,11 @@ const FONT_CACHE = "collie-fonts";
 const storable = (r: Response) =>
   r.status === 200 && !r.redirected && (r.headers.get("content-type") ?? "").includes("font");
 
+// Everything under /fonts/ EXCEPT what workbox already precached. That exception is positional, not
+// coded: precacheAndRoute above registers first and workbox matches in registration order, so the
+// Latin UI face is answered from the precache and never reaches this handler. Move this route above
+// it and the precached face starts being runtime-fetched and then evicted by the sweep below, which
+// only keeps FONT_URLS.
 registerRoute(
   ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/fonts/"),
   async ({ request }) => {
