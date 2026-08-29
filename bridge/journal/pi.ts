@@ -273,6 +273,46 @@ export class PiTranscriptSource implements TranscriptSource {
     return null;
   }
 
+  /**
+   * The session file most recently written in this cwd.
+   *
+   * OMO can resume an old session in a new long-lived process. In that case the current JSONL keeps
+   * its old timestamped filename, so lexical "newest" selects an unrelated later-created session.
+   * Modification time is the only filesystem signal that follows the resumed conversation.
+   */
+  async activeForCwd(
+    cwd: string,
+    excludedPaths: readonly string[] = [],
+  ): Promise<AgentSessionRef | null> {
+    const dir = `--${cwd.replace(/^[/\\]+/, "").replace(/[/\\:]+/g, "-")}--`;
+    const excluded = new Set(excludedPaths);
+    let active: { path: string; mtimeMs: number } | null = null;
+    for (const root of this.roots) {
+      let names: string[];
+      try {
+        names = await readdir(join(root, dir));
+      } catch {
+        continue;
+      }
+      for (const name of names) {
+        if (!name.endsWith(".jsonl")) continue;
+        const path = await containedRealpath(join(root, dir, name), root);
+        if (path === null) continue;
+        if (excluded.has(path)) continue;
+        const meta = await statFile(path);
+        if (meta === null) continue;
+        if (
+          active === null ||
+          meta.mtimeMs > active.mtimeMs ||
+          (meta.mtimeMs === active.mtimeMs && path.localeCompare(active.path) > 0)
+        ) {
+          active = { path, mtimeMs: meta.mtimeMs };
+        }
+      }
+    }
+    return active === null ? null : { kind: "path", value: active.path };
+  }
+
   /** The log whose name ends in `suffix` under one sessions root, contained by that root. */
   private async findUnder(root: string, suffix: string): Promise<string | null> {
     let dirs: string[];

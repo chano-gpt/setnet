@@ -6,6 +6,18 @@ import { BottomSheet, SideSheet } from "./sheet";
 // move focus inside on open, restore it on close, and expose exactly ONE accessible "Close" (the
 // header ✕) — the full-screen backdrop stays tappable but is hidden from assistive tech.
 describe("sheet — focus & labelling", () => {
+  it("portals a modal to document.body so transformed navigation cannot cover its touch targets", () => {
+    render(
+      <div style={{ transform: "translateY(0)" }}>
+        <BottomSheet open onClose={vi.fn()} title="Tab actions">
+          <button type="button">Close tab</button>
+        </BottomSheet>
+      </div>,
+    );
+
+    expect(screen.getByRole("dialog", { name: "Tab actions" }).parentElement).toBe(document.body);
+  });
+
   it("labels the dialog with its title (aria-labelledby)", () => {
     render(
       <BottomSheet open onClose={vi.fn()} title="Keys">
@@ -17,7 +29,7 @@ describe("sheet — focus & labelling", () => {
 
   it("exposes a single accessible Close (✕); the backdrop is aria-hidden but still dismisses on a real tap (down+up on it)", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <SideSheet open onClose={onClose} title="Navigate">
         body
       </SideSheet>,
@@ -25,7 +37,7 @@ describe("sheet — focus & labelling", () => {
     // Only the header ✕ is in the a11y tree now — no giant duplicate "Close" from the backdrop.
     expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(1);
     // ...but the backdrop still closes on a genuine press-and-release on it.
-    const backdrop = container.querySelector('button[aria-hidden="true"]');
+    const backdrop = document.body.querySelector('button[aria-hidden="true"]');
     expect(backdrop).not.toBeNull();
     fireEvent.pointerDown(backdrop!);
     fireEvent.click(backdrop!);
@@ -66,7 +78,7 @@ describe("sheet — focus & labelling", () => {
 describe("BottomSheet — backdrop dismiss requires press AND release on the backdrop", () => {
   it("stays open when pointerdown happened elsewhere (not the backdrop) and only the click lands on it", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <BottomSheet open onClose={onClose} title="Actions">
         body
       </BottomSheet>,
@@ -74,7 +86,7 @@ describe("BottomSheet — backdrop dismiss requires press AND release on the bac
     // Simulate the pointerdown landing on something other than the backdrop (e.g. the pane pill that
     // triggered the long-press), then the release click landing on the backdrop.
     fireEvent.pointerDown(document.body);
-    const backdrop = container.querySelector('button[aria-hidden="true"]')!;
+    const backdrop = document.body.querySelector('button[aria-hidden="true"]')!;
     fireEvent.click(backdrop);
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -82,12 +94,12 @@ describe("BottomSheet — backdrop dismiss requires press AND release on the bac
 
   it("closes when both pointerdown and click land on the backdrop (a genuine backdrop tap)", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <BottomSheet open onClose={onClose} title="Actions">
         body
       </BottomSheet>,
     );
-    const backdrop = container.querySelector('button[aria-hidden="true"]')!;
+    const backdrop = document.body.querySelector('button[aria-hidden="true"]')!;
     fireEvent.pointerDown(backdrop);
     fireEvent.click(backdrop);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -117,12 +129,12 @@ describe("BottomSheet — backdrop dismiss requires press AND release on the bac
 
   it("re-arms per open: a stale arm from a previous open doesn't leak into the next one", () => {
     const onClose = vi.fn();
-    const { container, rerender } = render(
+    const { rerender } = render(
       <BottomSheet open onClose={onClose} title="Actions">
         body
       </BottomSheet>,
     );
-    const backdrop = () => container.querySelector('button[aria-hidden="true"]')!;
+    const backdrop = () => document.body.querySelector('button[aria-hidden="true"]')!;
     fireEvent.pointerDown(backdrop());
     // Close via Escape instead of the (now-armed) backdrop click, leaving the arm flag set to true.
     fireEvent.keyDown(window, { key: "Escape" });

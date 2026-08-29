@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdir, realpath, rm, symlink } from "node:fs/promises";
+import { mkdir, realpath, rm, symlink, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
 import { isPiSessionId, parsePiTranscript, PiTranscriptSource } from "./pi.ts";
@@ -212,6 +212,30 @@ describe("PiTranscriptSource — path refs are confined to the root", () => {
     const { base, root } = await fixture();
     const src = new PiTranscriptSource(root);
     expect(await src.resolve({ kind: "id", value: "ffffffff-ffff-ffff-ffff-ffffffffffff" })).toBeNull();
+    await rm(base, { recursive: true, force: true });
+  });
+
+  test("activeForCwd follows a resumed session's mtime instead of its older filename", async () => {
+    const { base, root, log } = await fixture();
+    const project = `${root}/--var-home-you-repo--`;
+    const newerNamed = `${project}/2026-08-29T10-00-00-000Z_${OUTSIDE_SID}.jsonl`;
+    await Bun.write(newerNamed, speech("b", "user", "different session"));
+    await utimes(newerNamed, new Date(1_000), new Date(1_000));
+    await utimes(log, new Date(2_000), new Date(2_000));
+
+    const source = new PiTranscriptSource(root);
+    expect(await source.latestForCwd("/var/home/you/repo")).toEqual({
+      kind: "path",
+      value: newerNamed,
+    });
+    expect(await source.activeForCwd("/var/home/you/repo")).toEqual({
+      kind: "path",
+      value: log,
+    });
+    expect(await source.activeForCwd("/var/home/you/repo", [log])).toEqual({
+      kind: "path",
+      value: newerNamed,
+    });
     await rm(base, { recursive: true, force: true });
   });
 });

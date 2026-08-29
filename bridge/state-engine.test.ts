@@ -17,6 +17,8 @@ interface FakePane {
   agent?: string | null;
   agent_status: AgentStatus;
   label?: string | null;
+  display_agent?: string | null;
+  state_labels?: Record<string, string> | null;
   revision: number;
   agent_session?: { source?: string; agent?: string; kind?: string; value?: string } | null;
   scroll?: {
@@ -236,6 +238,22 @@ describe("StateEngine — snapshot shaping", () => {
     const snap = engine.current();
     expect(snap.agents[0]!.paneLabel).toBe("deploy");
     expect(snap.shellPanes[0]!.paneLabel).toBe("logs");
+  });
+
+  test("threads generic agent identity and activity metadata without a harness allowlist", async () => {
+    const { herdr, engine, poll } = makeEngine();
+    herdr.panes = [
+      {
+        ...pane("w1:p1", "w1", "working", "future-agent"),
+        display_agent: "Future Agent Pro",
+        state_labels: { task: "Indexing docs" },
+      },
+    ];
+    await poll();
+    expect(engine.current().agents[0]).toMatchObject({
+      displayName: "Future Agent Pro",
+      activity: "Indexing docs",
+    });
   });
 
   test("leaves paneLabel absent when the pane has no label (or a null/empty one)", async () => {

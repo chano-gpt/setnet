@@ -311,6 +311,7 @@ export function AgentChat({
   // bridge/Herdr; treat that as "no idea" and stay hidden rather than offer a tap that fetches nothing.
   const historyAvailable = Boolean(agent?.hasSession);
   const moreScrollback =
+    agent?.kind === "shell" &&
     agent?.readableLines !== undefined &&
     requestedLines < agent.readableLines &&
     canGrowRequestedLines(paneId, session);

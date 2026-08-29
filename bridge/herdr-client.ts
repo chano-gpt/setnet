@@ -50,6 +50,9 @@ interface WirePane {
   /** User-set pane label (herdr `pane.rename`). Present only once set — the key disappears when
    *  cleared with `label: null`, so absent/null both read as "no label". */
   label?: string | null;
+  /** Agent/integration metadata (Herdr >= 0.8). Optional for older servers. */
+  display_agent?: string | null;
+  state_labels?: Record<string, string> | null;
   revision: number;
   /**
    * The agent's OWN session identity, as the agent reported it to Herdr (herdr ≥ 0.7.2). For Claude

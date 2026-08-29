@@ -3,8 +3,8 @@ import { resolve } from "node:path";
 
 import { FONT_URLS } from "@/lib/sw-routes";
 
-// setnet ships two KINDS of webfont, under opposite caching rules, and every one of these facts is
-// silent when broken.
+// setnet's webfonts follow two opposite caching rules, and every one of these facts is silent when
+// broken.
 //
 // The Nerd Font faces are LAZY: range-restricted to the private-use planes, cached by the SW on
 // first use, and deliberately absent from the precache — ~1.1 MB is not something to charge an
@@ -12,11 +12,9 @@ import { FONT_URLS } from "@/lib/sw-routes";
 // renamed file is a tofu box again (#70), and a URL the SW doesn't know gets swept out of the font
 // cache on activate.
 //
-// The UI face (IBM Plex Sans) is the opposite: it is on the first paint of every screen, so it IS
-// precached and is NOT in FONT_URLS — the SW never runtime-caches something workbox already holds.
-// The precache assertion below is therefore not "no woff2" any more; it is "only this one", which
-// is the part that would silently regress if someone widened the glob to `**/*.woff2` to "fix" a
-// missing font.
+// The first-paint faces (IBM Plex Sans and Space Mono) are the opposite: they ARE precached and are
+// NOT in FONT_URLS — the SW never runtime-caches something workbox already holds. The assertion
+// below pins those explicit patterns so a broad `**/*.woff2` cannot pull the lazy faces in too.
 
 const root = resolve(import.meta.dirname, "..");
 const read = (p: string) => readFileSync(resolve(root, p), "utf8");
@@ -25,6 +23,7 @@ const cssUrls = [...css.matchAll(/url\("([^"]+\.woff2)"\)/g)].map((m) => m[1]!);
 const nerdUrls = cssUrls.filter((u) => u.includes("nerd-symbols"));
 const krUrls = cssUrls.filter((u) => u.includes("plex-kr"));
 const uiUrls = cssUrls.filter((u) => u.includes("plex-sans"));
+const monoUrls = cssUrls.filter((u) => u.includes("space-mono"));
 const lazyUrls = [...krUrls, ...nerdUrls];
 
 describe("bundled fonts", () => {
@@ -71,6 +70,15 @@ describe("bundled fonts", () => {
     expect(css).toContain("font-weight: 100 700");
   });
 
+  it("uses Space Mono for monospace text at the two product weights", () => {
+    const stack = /--font-mono:([\s\S]*?);/.exec(css)?.[1] ?? "";
+    expect(stack).toMatch(/^\s*"Nerd Font Symbols", "Space Mono"/);
+    expect(stack).not.toContain("JetBrains Mono");
+    expect(monoUrls).toHaveLength(2);
+    expect(monoUrls.some((u) => u.includes("-400-"))).toBe(true);
+    expect(monoUrls.some((u) => u.includes("-700-"))).toBe(true);
+  });
+
   // Plex has no Hangul on purpose: Korean falls through to the system face, which Android already
   // has. That only works if the range stays Latin and the fallback stack behind it is real.
   it("keeps the Latin UI face Latin-only, with a fallback stack behind it", () => {
@@ -89,23 +97,24 @@ describe("bundled fonts", () => {
   // both holding the same bytes under different keys.
   it("keeps the precached UI face out of the runtime font cache", () => {
     expect(FONT_URLS).not.toContain(uiUrls[0]);
+    for (const url of monoUrls) expect(FONT_URLS).not.toContain(url);
   });
 
-  it.each([...FONT_URLS, ...uiUrls])("ships %s", (url) => {
+  it.each([...FONT_URLS, ...uiUrls, ...monoUrls])("ships %s", (url) => {
     // Throws if the asset is missing — a rename that misses one side lands as tofu, not an error.
     expect(statSync(resolve(root, `public${url}`)).size).toBeGreaterThan(0);
   });
 
   // `[\s\S]`, not `.`: Prettier is free to wrap that array, and a newline-blind pattern would read
   // only the first line of it.
-  it("precaches the UI face and nothing else from fonts/", () => {
+  it("precaches the first-paint faces and nothing else from fonts/", () => {
     const config = read("vite.config.ts");
     const patterns = /globPatterns:\s*\[([\s\S]*?)\]/.exec(config)?.[1] ?? "";
     expect(patterns).toContain("fonts/plex-sans-*.woff2");
-    // Every woff2 mention must be that one pattern. A widened `**/*.woff2` would sweep the ~1.1 MB
-    // of Nerd Font back into every install, which is the regression this whole file exists for.
+    // A widened `**/*.woff2` would sweep the ~1.1 MB of Nerd Font back into every install, which is
+    // the regression this whole file exists for.
     const woff2Patterns = [...patterns.matchAll(/"([^"]*woff2[^"]*)"/g)].map((m) => m[1]!);
-    expect(woff2Patterns).toEqual(["fonts/plex-sans-*.woff2"]);
+    expect(woff2Patterns).toEqual(["fonts/plex-sans-*.woff2", "fonts/space-mono-*.woff2"]);
     // And the brace-expanded catch-all must still not name woff2.
     expect(patterns).not.toMatch(/\{[^}]*woff2[^}]*\}/);
   });

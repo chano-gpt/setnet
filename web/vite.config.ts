@@ -158,11 +158,13 @@ export default defineConfig({
         // `unicode-range` already makes them lazy (index.css), so precaching them would charge
         // every install for glyphs most herds never paint. src/sw.ts caches them on first use.
         //
-        // The UI face is the exception, and the pattern names it rather than widening to woff2 so
-        // the exclusion above cannot be undone by accident: IBM Plex Sans is on the first paint of
-        // every screen, so a cold offline launch without it renders the whole app in the fallback
-        // and reflows when it lands. 45 KB, once. (index.css carries the long form of both rules.)
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}", "fonts/plex-sans-*.woff2"],
+        // First-paint text faces are the exception, and the patterns name them rather than widening
+        // to woff2: IBM Plex Sans paints the UI and Space Mono paints terminal-adjacent metadata.
+        globPatterns: [
+          "**/*.{js,css,html,svg,png,ico,webmanifest}",
+          "fonts/plex-sans-*.woff2",
+          "fonts/space-mono-*.woff2",
+        ],
       },
       // Over plain HTTP (insecure context) the SW can't register; in dev we don't want it anyway.
       devOptions: { enabled: false },

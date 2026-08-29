@@ -6,6 +6,18 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.32.4] - 2026-08-29
+
+### Changed
+
+- Agent identity and structured activity now render generically, with Space Mono for terminal and metadata text. (pending)
+- Agent mirrors read the visible grid while bare shells retain scrollback. (pending)
+
+### Fixed
+
+- Multiple OMO panes sharing a cwd keep separate conversation GUIs, including resumed older sessions. (pending)
+- Mobile tab and pane action sheets portal above retractable chrome so touch targets remain tappable. (pending)
+
 ## [0.32.3] - 2026-08-25
 
 ### Fixed

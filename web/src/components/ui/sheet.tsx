@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -18,8 +19,9 @@ function useDialogFocus(open: boolean, panelRef: React.RefObject<HTMLElement | n
   }, [open, panelRef]);
 }
 
-// A minimal bottom sheet — no Radix, no portals, no extra deps. Renders nothing when closed.
-// Dismisses on backdrop tap or Escape. Animations come from tw-animate-css (already imported).
+// A minimal bottom sheet — no Radix or extra deps. It portals to body so a transformed/retractable
+// navigation ancestor cannot create a containing block above the sheet and steal its touch targets.
+// Renders nothing when closed. Dismisses on backdrop tap or Escape.
 interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
@@ -108,7 +110,7 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex flex-col justify-end"
       role="dialog"
@@ -167,7 +169,8 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
         </div>
         <div className="px-4 py-3">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

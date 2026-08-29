@@ -23,6 +23,10 @@ export interface AgentView {
    * — see {@link paneDisplayName}. Render as text only (never markup) — same XSS boundary as paneLabel.
    */
   sessionName?: string;
+  /** Human-facing integration name. Unknown/older agents fall back to a readable agent id. */
+  displayName?: string;
+  /** Current task reported by the agent/integration, rendered as plain text. */
+  activity?: string;
   /**
    * True when the agent named a session, so a journal may exist for this pane — what the History
    * affordance keys off, without a speculative fetch.

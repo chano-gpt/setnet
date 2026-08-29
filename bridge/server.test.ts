@@ -13,6 +13,7 @@ import {
   isReservedAuthPath,
   keysPane,
   normalizeTabLabel,
+  paneReadSource,
   paneReadResponse,
   parseReplyBody,
   promptPane,
@@ -644,7 +645,7 @@ describe("pane write prompt binding", () => {
       "default",
     );
     expect(res.status).toBe(200);
-    expect(client.reads).toEqual([["w1:p1", "recent", 321, "ansi"]]);
+    expect(client.reads).toEqual([["w1:p1", "visible", 321, "ansi"]]);
     expect(client.keys).toEqual([["w1:p1", ["1"]]]);
     expect(entries[0]?.detail).toMatchObject({
       promptBinding: { checked: true, passed: true },
@@ -669,7 +670,7 @@ describe("pane write prompt binding", () => {
     expect(res.status).toBe(200);
     expect(client.reads).toHaveLength(1);
     expect(client.reads[0]?.[0]).toBe("w1:p1");
-    expect(client.reads[0]?.[1]).toBe("recent");
+    expect(client.reads[0]?.[1]).toBe("visible");
     expect(client.reads[0]?.[2]).toBeGreaterThan(32);
     expect(client.reads[0]?.[3]).toBe("ansi");
     expect(client.keys).toEqual([["w1:p1", ["1"]]]);
@@ -692,7 +693,7 @@ describe("pane write prompt binding", () => {
       "default",
     );
     expect(res.status).toBe(200);
-    expect(client.reads).toEqual([["w1:p1", "recent", 321, "ansi"]]);
+    expect(client.reads).toEqual([["w1:p1", "visible", 321, "ansi"]]);
     expect(client.texts).toEqual([["w1:p1", "hello"]]);
   });
 
@@ -809,6 +810,35 @@ describe("paneReadResponse — pane read → REST body", () => {
   });
 });
 
+describe("paneReadSource — current screen vs scrollback", () => {
+  const engine = (agents: AgentView[], shellPanes: AgentView[]) =>
+    ({ current: () => ({ agents, shellPanes }) }) as Parameters<typeof paneReadSource>[0];
+  const pane = (paneId: string, kind: "agent" | "shell"): AgentView => ({
+    paneId,
+    workspaceId: "w1",
+    workspaceLabel: "dev",
+    workspaceNumber: 1,
+    tabId: "w1:t1",
+    agent: kind === "shell" ? "shell" : "omo",
+    status: kind === "shell" ? "unknown" : "working",
+    cwd: "/dev",
+    focused: false,
+    kind,
+  });
+
+  test("reads an agent's live viewport instead of stale primary-screen scrollback", () => {
+    expect(paneReadSource(engine([pane("agent", "agent")], []), "agent")).toBe("visible");
+  });
+
+  test("keeps real scrollback for a bare shell", () => {
+    expect(paneReadSource(engine([], [pane("shell", "shell")]), "shell")).toBe("recent");
+  });
+
+  test("defaults an as-yet unclassified pane to current truth", () => {
+    expect(paneReadSource(engine([], []), "fresh")).toBe("visible");
+  });
+});
+
 describe("historyParams — transcript paging params", () => {
   const params = (qs: string) => historyParams(new URL(`http://x/api/pane/w1:p1/history${qs}`));
 
@@ -866,24 +896,54 @@ describe("resolvePaneSession — fallback isolation", () => {
       stat: async () => null,
       load: async () => ({ text: "", complete: true, size: 0, mtimeMs: 0 }),
     },
-    discoverSession: async () => ({ kind: "path", value: "/sessions/latest.jsonl" }),
+    discoverPaneSession: async (_cwd, startedAt) =>
+      startedAt === 12_000 ? { kind: "path", value: "/sessions/pane.jsonl" } : null,
+    discoverSession: async () => ({ kind: "path", value: "/sessions/active.jsonl" }),
     parse: () => [],
   };
+
+  test("uses the pane-specific process-start match before the cwd fallback", async () => {
+    const only = pane("p1");
+    expect(await resolvePaneSession(only, [only], adapter, 12_000)).toEqual({
+      kind: "path",
+      value: "/sessions/pane.jsonl",
+    });
+  });
+
+  test("uses the active cwd fallback for a single OMO pane", async () => {
+    const only = pane("p1");
+    expect(await resolvePaneSession(only, [only], adapter)).toEqual({
+      kind: "path",
+      value: "/sessions/active.jsonl",
+    });
+  });
 
   test("does not assign one cwd fallback to multiple OMO panes", async () => {
     const first = pane("p1");
     const second = pane("p2");
-
     expect(await resolvePaneSession(first, [first, second], adapter)).toBeNull();
   });
 
-  test("keeps the cwd fallback for a single OMO pane", async () => {
-    const only = pane("p1");
+  test("recovers a resumed OMO by excluding the sibling's process-matched session", async () => {
+    const resumed = pane("p1");
+    const fresh = pane("p2");
+    const excludingAdapter: JournalAdapter = {
+      ...adapter,
+      discoverSession: async (_cwd, excluded = []) =>
+        excluded.some((ref) => ref.kind === "path" && ref.value === "/sessions/fresh.jsonl")
+          ? { kind: "path", value: "/sessions/resumed.jsonl" }
+          : null,
+    };
 
-    expect(await resolvePaneSession(only, [only], adapter)).toEqual({
-      kind: "path",
-      value: "/sessions/latest.jsonl",
-    });
+    expect(
+      await resolvePaneSession(
+        resumed,
+        [resumed, fresh],
+        excludingAdapter,
+        null,
+        new Map([[fresh.paneId, { kind: "path", value: "/sessions/fresh.jsonl" }]]),
+      ),
+    ).toEqual({ kind: "path", value: "/sessions/resumed.jsonl" });
   });
 
   test("prefers a pane's reported session even when another OMO pane shares its cwd", async () => {
@@ -892,17 +952,15 @@ describe("resolvePaneSession — fallback isolation", () => {
       agentSession: { kind: "path", value: "/sessions/first.jsonl" } as const,
     };
     const second = pane("p2");
-
     expect(await resolvePaneSession(first, [first, second], adapter)).toEqual(first.agentSession);
   });
 
-  test("does not give an unreported pane its sibling's newer reported session", async () => {
+  test("does not give an unreported pane its sibling's active session", async () => {
     const first = {
       ...pane("p1"),
       agentSession: { kind: "path", value: "/sessions/first.jsonl" } as const,
     };
     const second = pane("p2");
-
     expect(await resolvePaneSession(second, [first, second], adapter)).toBeNull();
   });
 });

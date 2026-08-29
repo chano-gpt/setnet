@@ -54,6 +54,8 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 | **에이전트 실행** | Herd/Spaces에서 6종을 바로 생성하고 하네스별 자동 모드로 실행 (OMO 제외) | 이미 떠 있는 패널에만 붙음 |
 | **프롬프트 전송 경로** | Herdr `agent.prompt` 우선. Herdr가 lifecycle label만 알고 전송 어댑터는 모를 때(기본 Herdr의 OMO)는 살아 있는 에이전트 pane에만 제한적으로 타이핑 fallback | PTY에 키를 찍어 넣는 경로만 존재 |
 | **계획 진행 상황** | Senpi todo-state를 파싱해 현재 단계와 작업별 상태(대기/진행/완료/중단)를 대화에 표시 | 없음 |
+| **동일 cwd의 OMO 세션** | pane별 프로세스 매칭과 sibling 로그 제외로 여러 OMO 대화를 각각 올바른 GUI에 연결 | 최신 로그 하나를 추측하면 대화가 섞일 수 있음 |
+| **실시간 화면 정확도** | 에이전트는 현재 visible grid, 셸만 실제 scrollback을 읽어 이전 세션 잔상이 나오지 않음 | 모든 pane을 같은 방식으로 읽음 |
 | **대시보드에서 바로 지시** | 패널에 들어가지 않고 대시보드에서 프롬프트 전송, IME 안전 초안, 실시간 작업 경과 시간 | 패널로 들어가야 함 |
 | **모바일 내비게이션** | 전용 탭 바 (무리 / 스페이스, 주의 필요 개수 배지) | 단일 대시보드 |
 | **번들 명령의 정직성** | 카탈로그마다 `partial`(불완전) · `insert-only`(자동 실행 안 함) 표시 + 출처 명시 | 완전한 목록인 것처럼 노출 |
@@ -89,13 +91,17 @@ setnet은 [Herdr](https://herdr.dev) 위에서 도는 에이전트 무리를 폰
 **대화 기록**
 - 터미널이 스크롤백으로 되돌아갈 수 없는 구간까지, 에이전트 자신의 세션 로그에서 읽는다
 - OMO는 계획(plan)을 별도 블록으로 렌더 — 현재 단계와 완료 개수까지
+- 같은 cwd에서 OMO를 여러 개 실행하거나 오래된 대화를 재개해도, 먼저 pane별 프로세스 세션을 확정하고 이미 차지한 sibling 로그를 제외해 각 GUI를 분리한다
+- 에이전트 terminal mirror는 stale primary scrollback이 아니라 현재 visible grid를 읽는다. 일반 셸만 append-only scrollback을 유지한다
 - 라이브 대화 뷰는 폴링에 상한을 두고, 화면이 가려지면 멈추고, 진행 중이던 요청은 취소한다
 
 **모바일 우선**
 - 홈 화면에 설치되는 PWA
 - 무리 / 스페이스 탭 바, 주의가 필요한 에이전트 개수 배지
+- tab·pane을 길게 눌러 rename/close — action sheet는 화면 최상단 포털에서 열려 모바일 touch가 뒤쪽 대화 화면으로 새지 않는다
 - Herd/Spaces 화면에서 스페이스와 하네스를 골라 새 탭의 에이전트를 바로 시작
-- 헤더·무리·런처에서 Claude Code, Codex, pi, OpenCode, OMO, Antigravity를 공식 로고로 구분
+- 헤더·무리·런처에서 Claude Code, Codex, pi, OpenCode, OMO, Antigravity를 공식 로고와 이름으로 구분하고, 알려지지 않은 에이전트도 자체 identity/activity를 그대로 표시한다
+- 본문은 IBM Plex Sans를 유지하고, 터미널·코드·상태 메타데이터는 로컬 Space Mono로 통일한다
 - 대시보드는 "마지막에 바뀐 순서"가 아니라 **"당신을 기다리는 순서"**로 정렬
 - 특수키 패드(`Esc`, `Ctrl+C`, 화살표), 카메라 롤 이미지 전송, 출력 내 검색
 - 에이전트가 막히면 웹 푸시로 알림

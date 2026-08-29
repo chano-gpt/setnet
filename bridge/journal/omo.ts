@@ -79,7 +79,13 @@ export function omoJournal(roots: string | readonly string[]): JournalAdapter {
       );
       return candidate === null ? null : { kind: "path", value: candidate.path };
     },
-    discoverSession: (cwd) => source.latestForCwd(cwd),
+    // A resumed OMO conversation keeps its original timestamped filename. Follow the JSONL that is
+    // actually being written, not the lexically newest filename from another session.
+    discoverSession: (cwd, excluded = []) =>
+      source.activeForCwd(
+        cwd,
+        excluded.filter((ref) => ref.kind === "path").map((ref) => ref.value),
+      ),
     parse: parsePiTranscript,
   };
 }

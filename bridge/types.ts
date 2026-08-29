@@ -34,6 +34,10 @@ export interface AgentView {
    * absent for unnamed sessions and every non-claude pane. Display priority is `paneLabel` first.
    */
   sessionName?: string;
+  /** Integration-supplied human name, when available. The web app falls back to the agent id. */
+  displayName?: string;
+  /** Concise current task derived from Herdr's structured metadata or terminal title. */
+  activity?: string;
   /**
    * How the agent named its session (Herdr `agent_session`), when it named one at all.
    *
@@ -206,7 +210,7 @@ export interface UpdateStatus {
   checkedAt: number | null;
 }
 
-/** GET /api/pane/:id — recent terminal output for one agent (ANSI/SGR, rendered colored). */
+/** GET /api/pane/:id — live agent viewport or shell scrollback (ANSI/SGR, rendered colored). */
 export interface PaneReadResponse {
   paneId: string;
   text: string;

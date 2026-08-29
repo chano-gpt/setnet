@@ -1,4 +1,5 @@
 import { meaningfulTabLabel } from "./activity.ts";
+import { agentActivity, agentDisplayName } from "./agent-metadata.ts";
 import type { HerdrClient } from "./herdr-client.ts";
 import {
   type AgentStatus,
@@ -234,6 +235,22 @@ export class StateEngine {
           // A user-set pane label (herdr pane.rename); omitted when unset so "absent stays absent".
           ...(typeof p.label === "string" && p.label.length > 0 ? { paneLabel: p.label } : {}),
           ...(tabLabel ? { tabLabel } : {}),
+          // Agent identity and current task are ordinary metadata, not a catalog of special cases.
+          // This makes OMO and newly-added/unknown harnesses visible on the dashboard immediately.
+          ...(() => {
+            const metadata = {
+              agent,
+              workspaceLabel: ws?.label ?? p.workspace_id,
+              displayAgent: p.display_agent,
+              stateLabels: p.state_labels,
+            };
+            const displayName = agentDisplayName(metadata);
+            const activity = agentActivity(metadata);
+            return {
+              ...(displayName ? { displayName } : {}),
+              ...(activity ? { activity } : {}),
+            };
+          })(),
           // How the agent named its session. BOTH kinds are kept: Claude and Codex report an `id`,
           // while pi reports a `path` (its herdr integration prefers `agent_session_path` whenever
           // the session manager has a file open). Keeping only `id` — as this did until journals

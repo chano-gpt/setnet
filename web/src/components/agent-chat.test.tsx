@@ -97,6 +97,7 @@ describe("AgentChat — pane surface", () => {
     expect(screen.getByRole("button", { name: "Open conversation view" })).toBeInTheDocument();
     expect(screen.getByText("recent pane output")).toBeInTheDocument();
   });
+
 });
 
 describe("AgentChat — retractable mirror chrome", () => {
@@ -675,6 +676,13 @@ describe("AgentChat — top-of-mirror history affordance", () => {
     const agent = { ...fixtureAgents[0]!, kind: "shell" as const, readableLines: 6946 };
     renderChat({ agent, agents: [agent], requestedLines: 600 });
     expect(loadOlder()).toBeInTheDocument();
+    expect(showHistory()).not.toBeInTheDocument();
+  });
+
+  it("an agent without a transcript still stays on its live viewport", () => {
+    const agent = { ...fixtureAgents[0]!, kind: "agent" as const, readableLines: 6946 };
+    renderChat({ agent, agents: [agent], requestedLines: 600 });
+    expect(loadOlder()).not.toBeInTheDocument();
     expect(showHistory()).not.toBeInTheDocument();
   });
 

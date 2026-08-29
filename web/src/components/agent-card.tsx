@@ -10,6 +10,7 @@ import { paneParts, paneTitleInTab } from "@/lib/pane-name";
 import { STATUS_LABEL } from "@/lib/types";
 import type { AgentView } from "@/lib/types";
 import { workingElapsedLabel } from "@/lib/status";
+import { agentLabel } from "@/lib/agent-label";
 
 interface AgentCardProps {
   agent: AgentView;
@@ -64,10 +65,8 @@ function Age({ at, working = false }: { at: number; working?: boolean }) {
 // A pane row, used by the triage home and the space view. Usually an agent; for a bare shell pane
 // (kind:"shell") it shows a terminal glyph and a muted "shell" tag instead of a status badge.
 //
-// The title is `project · tab` — NOT the agent name, which every row would otherwise share. The two
-// parts render as separate spans on purpose: eight panes in one project all start `moonward_os · `,
-// so truncating the joined string would eat the tab and leave every row identical. The project
-// gives up width first; the tab, the only discriminator, survives.
+// The title is `agent · project · tab`: mixed herds must never rely on logo recognition alone. The
+// location parts stay separate so the project can truncate before the tab discriminator does.
 export function AgentCard({
   agent,
   onClick,
@@ -84,7 +83,8 @@ export function AgentCard({
   const parts = paneParts(agent);
   const tabTitle = paneTitleInTab(agent);
   const stamp = age === "seen" ? agent.lastSeenAt : age === "active" ? agent.lastActiveAt : undefined;
-  const secondary = inTab ? tabTitle.secondary : parts.secondary;
+  const secondary = agent.activity ?? (inTab ? tabTitle.secondary : parts.secondary);
+  const label = isShell ? undefined : agentLabel(agent);
   // The dot rides the avatar's corner rather than the far right: at the right edge the eye read a
   // title, then crossed 200px of empty card to a 10px mark describing it.
   const cornerDot = statusStyle === "dot" && !isShell;
@@ -140,11 +140,23 @@ export function AgentCard({
 
         <div className="min-w-0 flex-1">
           {inTab ? (
-            <div className="flex min-w-0 items-baseline gap-2">
+            <div className="flex min-w-0 items-baseline gap-1.5">
+              <span className="shrink-0 font-semibold">{label}</span>
+              <span className="shrink-0 text-muted-foreground/60" aria-hidden>
+                ·
+              </span>
               <span className="min-w-0 flex-1 truncate font-medium">{tabTitle.primary}</span>
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-1">
+              {!isShell && (
+                <>
+                  <span className="shrink-0 font-semibold">{label}</span>
+                  <span className="shrink-0 text-muted-foreground/60" aria-hidden>
+                    ·
+                  </span>
+                </>
+              )}
               {/* With a tab present the project yields width first (capped, truncatable) and the
                   tab — the discriminator — takes the rest. With NO tab the project IS the name, so
                   it takes the width itself; leaving the fill on the tab span meant an unlabelled
@@ -153,7 +165,7 @@ export function AgentCard({
               <span
                 className={cn(
                   "truncate text-muted-foreground",
-                  parts.tab ? "max-w-[45%] shrink" : "min-w-0 flex-1",
+                  parts.tab ? "max-w-[35%] shrink" : "min-w-0 flex-1",
                 )}
               >
                 {parts.project}
@@ -175,7 +187,12 @@ export function AgentCard({
           {/* Only rendered when there's something to say — most rows are one line now. */}
           {secondary && (
             <div className="flex min-w-0 items-baseline gap-2 text-xs text-muted-foreground">
-              <span className="min-w-0 flex-1 truncate font-mono">{secondary}</span>
+              <span
+                className={cn("min-w-0 flex-1 truncate", !agent.activity && "font-mono")}
+                title={agent.activity}
+              >
+                {secondary}
+              </span>
               {inTab && stamp !== undefined && (
                 <Age at={stamp} working={agent.status === "working"} />
               )}

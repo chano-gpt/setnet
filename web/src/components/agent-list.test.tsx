@@ -46,7 +46,7 @@ describe("AgentList — sections", () => {
     ]);
   });
 
-  it("titles rows by project · tab, never by the agent name", () => {
+  it("titles rows by agent · project · tab so mixed herds are explicit", () => {
     render(
       <AgentList
         agents={[agent("p", "idle", { workspaceLabel: "moonward_os", tabLabel: "fix-auth" })]}
@@ -58,7 +58,23 @@ describe("AgentList — sections", () => {
     expect(screen.getByText("moonward_os")).toBeInTheDocument();
     expect(screen.getByText("fix-auth")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /moonward_os.*fix-auth/ })).toBeInTheDocument();
-    expect(screen.queryByText("claude")).not.toBeInTheDocument();
+    expect(screen.getByText("Claude Code")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /claude code.*moonward_os.*fix-auth/i })).toBeInTheDocument();
+  });
+
+  it("shows OMO's task and gives unknown agents a readable identity", () => {
+    render(
+      <AgentList
+        agents={[
+          agent("omo-pane", "working", { agent: "omo", activity: "영어 문제 생성 엔진 설계" }),
+          agent("future-pane", "working", { agent: "future_agent" }),
+        ]}
+        onOpen={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("Omo")).toBeInTheDocument();
+    expect(screen.getByText("영어 문제 생성 엔진 설계")).toBeInTheDocument();
+    expect(screen.getByText("Future Agent")).toBeInTheDocument();
   });
 
   it("gives the tab the width and lets the project truncate — the tab is the discriminator", () => {
@@ -69,7 +85,7 @@ describe("AgentList — sections", () => {
       />,
     );
     // The project yields width first (capped + shrinkable); the tab takes what's left.
-    expect(screen.getByText("moonward_os").className).toMatch(/max-w-\[45%\]/);
+    expect(screen.getByText("moonward_os").className).toMatch(/max-w-\[35%\]/);
     expect(screen.getByText("fix-auth").className).toMatch(/flex-1/);
   });
 
@@ -311,7 +327,7 @@ describe("AgentList — the age column", () => {
         onOpen={vi.fn()}
       />,
     );
-    expect(screen.getByText("comm_cli").className).toMatch(/max-w-\[45%\]/);
+    expect(screen.getByText("comm_cli").className).toMatch(/max-w-\[35%\]/);
     expect(screen.getByText("main").className).toMatch(/flex-1/);
   });
 });

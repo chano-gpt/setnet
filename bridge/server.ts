@@ -278,7 +278,8 @@ export function startServer(opts: {
         // `history` is a read, so it gets no device attribution (nothing is written to attribute).
         const device = isRead ? null : deviceAuth(req, cfg).device;
 
-        if (!action && req.method === "GET") return readPane(herdr, cfg, paneId, url, req);
+        if (!action && req.method === "GET")
+          return readPane(herdr, cfg, paneId, url, req, paneReadSource(rt.engine, paneId));
         if (action === "history" && req.method === "GET")
           return paneHistory(cfg, journals, transcripts, rt.engine, rt.herdr, paneId, url, req);
         if (action === "reply" && req.method === "POST")
@@ -455,6 +456,7 @@ async function readPane(
   paneId: string,
   url: URL,
   req: Request,
+  source: "visible" | "recent",
 ): Promise<Response> {
   const linesParam = Number.parseInt(url.searchParams.get("lines") ?? "", 10);
   // Clamp to a sane ceiling — don't trust the client (or Herdr) to bound an enormous read.
@@ -463,12 +465,11 @@ async function readPane(
       ? Math.min(linesParam, MAX_READ_LINES)
       : cfg.readLines;
   try {
-    // "ansi" so the client can render a faithful, colored terminal mirror. It is also, as far as we
-    // have probed, why this read leaves the operator's terminal alone: a `recent` read only harvests
-    // an alt-screen pane — scrolling it up and back — in `text` format. `lines` here is whatever the
-    // web app asked for (600 for the history view), well past any pane's height, so switching this
-    // to "text" would move someone's screen on every revalidate. See HERDR_API.md → `pane.read`.
-    const read = await herdr.readPane(paneId, "recent", lines, "ansi");
+    // Agent TUIs are rendered screens, not append-only logs: `recent` can return stale primary-screen
+    // scrollback after a harness/session switch while `visible` is the screen the operator is
+    // actually looking at. Shells keep `recent` so their real scrollback remains useful. "ansi"
+    // preserves the faithful colored mirror in either case. See HERDR_API.md → `pane.read`.
+    const read = await herdr.readPane(paneId, source, lines, "ansi");
     const data = paneReadResponse(paneId, read);
     // ETag is derived from the serialised body — if content hasn't changed the client gets a 304
     // and skips the whole transfer (the big win on a cellular link).
@@ -496,6 +497,16 @@ async function readPane(
   } catch (err) {
     return text(`herdr read failed: ${(err as Error).message}`, 502);
   }
+}
+
+/** Agents show their live rendered viewport; only bare shells expose append-only scrollback. */
+export function paneReadSource(engine: Pick<StateEngine, "current">, paneId: string): "visible" | "recent" {
+  const snapshot = engine.current();
+  if (snapshot.agents.some((pane) => pane.paneId === paneId)) return "visible";
+  if (snapshot.shellPanes.some((pane) => pane.paneId === paneId)) return "recent";
+  // A just-created/unpolled pane is unknown. Prefer current truth over potentially unrelated old
+  // scrollback; once the engine classifies a shell, its next poll gets the full recent buffer.
+  return "visible";
 }
 
 /**
@@ -551,12 +562,44 @@ async function paneHistory(
   if (!pane) return unavailable("no-session");
   const adapter = adapterFor(journals, pane.agent);
   if (adapter === undefined) return unavailable("no-session");
-  const session = await resolvePaneSession(
+  const processStartedAtMs = await herdr.paneProcessStartedAt(paneId);
+  let session = await resolvePaneSession(
     pane,
     [...agents, ...shellPanes],
     adapter,
-    await herdr.paneProcessStartedAt(paneId),
+    processStartedAtMs,
   );
+  // A resumed OMO can keep an old JSONL filename while its foreground process started much later,
+  // so the pane-specific timestamp match can miss. When another same-cwd pane exists, first resolve
+  // each sibling's exact process match; those claimed logs can then be excluded safely from the
+  // current pane's active-log fallback. If any sibling is still unknown, stay unavailable rather
+  // than risk showing that sibling's conversation.
+  if (session === null) {
+    const siblingSessions = new Map<string, AgentSessionRef | null>();
+    const siblings = [...agents, ...shellPanes].filter(
+      (candidate) =>
+        candidate.paneId !== pane.paneId &&
+        candidate.agent === pane.agent &&
+        candidate.cwd === pane.cwd,
+    );
+    for (const sibling of siblings) {
+      let siblingSession = sibling.agentSession ?? null;
+      if (siblingSession === null && adapter.discoverPaneSession) {
+        const siblingStartedAt = await herdr.paneProcessStartedAt(sibling.paneId);
+        if (siblingStartedAt !== null) {
+          siblingSession = await adapter.discoverPaneSession(sibling.cwd, siblingStartedAt);
+        }
+      }
+      siblingSessions.set(sibling.paneId, siblingSession);
+    }
+    session = await resolvePaneSession(
+      pane,
+      [...agents, ...shellPanes],
+      adapter,
+      processStartedAtMs,
+      siblingSessions,
+    );
+  }
   if (session === null) return unavailable("no-session");
 
   try {
@@ -568,11 +611,19 @@ async function paneHistory(
   }
 }
 
+/**
+ * Resolve an unreported harness session without ever crossing pane boundaries.
+ *
+ * A process-start match is pane-specific and wins. The cwd fallback is safe only when exactly one
+ * pane of this harness owns that cwd; OMO's fallback follows the most recently written JSONL so a
+ * resumed older session does not get replaced by a newer-but-unrelated filename.
+ */
 export async function resolvePaneSession(
   pane: AgentView,
   panes: readonly AgentView[],
   adapter: JournalAdapter,
   processStartedAtMs: number | null = null,
+  siblingSessions: ReadonlyMap<string, AgentSessionRef | null> = new Map(),
 ): Promise<AgentSessionRef | null> {
   if (pane.agentSession) return pane.agentSession;
   if (!pane.cwd) return null;
@@ -583,13 +634,21 @@ export async function resolvePaneSession(
   if (paneSession) return paneSession;
   if (!adapter.discoverSession) return null;
 
-  const ambiguous = panes.some(
+  const siblings = panes.filter(
     (candidate) =>
       candidate.paneId !== pane.paneId &&
       candidate.agent === pane.agent &&
       candidate.cwd === pane.cwd,
   );
-  return ambiguous ? null : adapter.discoverSession(pane.cwd);
+  if (siblings.length === 0) return adapter.discoverSession(pane.cwd);
+
+  const claimed: AgentSessionRef[] = [];
+  for (const sibling of siblings) {
+    const session = siblingSessions.get(sibling.paneId);
+    if (session === undefined || session === null) return null;
+    claimed.push(session);
+  }
+  return adapter.discoverSession(pane.cwd, claimed);
 }
 
 /** Just the two one-shot RPCs a reply needs — real HerdrClient in the bridge, fake in tests. */
@@ -1015,11 +1074,11 @@ async function checkPromptBinding(
         expectedRawLines + DEFAULT_PROMPT_TAIL_LINES + PROMPT_BINDING_BLANK_LINE_HEADROOM,
       ),
     );
-    // Keep this coupled to readPane(): use its recent source and ANSI format so the bridge verifies
-    // the same kind of pane data the GET handler serves. The line count deliberately does not follow
+    // Prompt choices are only valid on the live screen. `recent` may contain the same text from a
+    // previous session and falsely authorize a key against whatever is visible now. The line count does not follow
     // cfg.readLines alone because a small legal setting may not contain the expected region; include
     // room for the accepted tail and for blank separator lines that normalization drops.
-    fresh = await herdr.readPane(paneId, "recent", bindingReadLines, "ansi");
+    fresh = await herdr.readPane(paneId, "visible", bindingReadLines, "ansi");
   } catch (err) {
     return {
       ok: false,
