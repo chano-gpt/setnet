@@ -10,13 +10,13 @@ All notable changes to setnet are recorded here. The format follows
 
 ### Changed
 
-- Agent identity and structured activity now render generically, with Space Mono for terminal and metadata text. (pending)
-- Agent mirrors read the visible grid while bare shells retain scrollback. (pending)
+- Agent identity and structured activity now render generically, with Space Mono for terminal and metadata text. (a9b016a)
+- Agent mirrors read the visible grid while bare shells retain scrollback. (a9b016a)
 
 ### Fixed
 
-- Multiple OMO panes sharing a cwd keep separate conversation GUIs, including resumed older sessions. (pending)
-- Mobile tab and pane action sheets portal above retractable chrome so touch targets remain tappable. (pending)
+- Multiple OMO panes sharing a cwd keep separate conversation GUIs, including resumed older sessions. (a9b016a)
+- Mobile tab and pane action sheets portal above retractable chrome so touch targets remain tappable. (a9b016a)
 
 ## [0.32.3] - 2026-08-25
 
