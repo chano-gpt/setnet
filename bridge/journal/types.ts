@@ -120,6 +120,12 @@ export interface JournalAdapter {
   readonly source: TranscriptSource;
   /** Pane-specific fallback for harnesses whose integration has not reported a session reference. */
   discoverPaneSession?(cwd: string, processStartedAtMs: number): Promise<AgentSessionRef | null>;
+  /**
+   * Last-resort pane-specific fallback for resumable TUIs whose process start no longer matches the
+   * original log filename. The adapter must fail closed unless the visible terminal uniquely
+   * identifies one of its logs.
+   */
+  discoverVisibleSession?(cwd: string, visibleText: string): Promise<AgentSessionRef | null>;
   /** Optional fallback for integrations that report a cwd but not a session reference. */
   discoverSession?(
     cwd: string,

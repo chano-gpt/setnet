@@ -569,6 +569,19 @@ async function paneHistory(
     adapter,
     processStartedAtMs,
   );
+  // OMO can resume an old conversation under a new foreground process, which breaks timestamp
+  // matching. In that case compare the actual visible terminal with recent same-cwd logs. The
+  // adapter returns a session only for one unique content match, so two panes can never receive the
+  // same merely-active log by guesswork.
+  if (session === null && adapter.discoverVisibleSession) {
+    try {
+      const visible = await herdr.readPane(paneId, "visible", cfg.readLines, "text");
+      session = await adapter.discoverVisibleSession(pane.cwd, visible.text);
+    } catch {
+      // A transient pane read must not turn the history endpoint into a 502. The conservative
+      // sibling-aware fallback below still gets its normal chance to resolve the session.
+    }
+  }
   // A resumed OMO can keep an old JSONL filename while its foreground process started much later,
   // so the pane-specific timestamp match can miss. When another same-cwd pane exists, first resolve
   // each sibling's exact process match; those claimed logs can then be excluded safely from the

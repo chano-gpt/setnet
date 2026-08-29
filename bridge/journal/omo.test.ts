@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { chooseSessionCandidate, sessionStartedAt } from "./omo.ts";
+import { chooseSessionCandidate, chooseVisibleSession, sessionStartedAt } from "./omo.ts";
 import { parsePiTranscript } from "./pi.ts";
 
 describe("sessionStartedAt", () => {
@@ -27,6 +27,43 @@ describe("chooseSessionCandidate", () => {
       chooseSessionCandidate(10_000, [
         { path: "/sessions/old.jsonl", startedAtMs: 1_000 },
         { path: "/sessions/new.jsonl", startedAtMs: 50_000 },
+      ]),
+    ).toBeNull();
+  });
+});
+
+describe("chooseVisibleSession", () => {
+  test("maps two resumed panes sharing a cwd to the conversation visible in each terminal", () => {
+    const candidates = [
+      {
+        path: "/sessions/classhift.jsonl",
+        text: "DATABASE_REJECTION IMMUTABLE_ITEM_VERSION\nOPTIMISTIC_REJECTION STALE_REVIEW_REVISION",
+      },
+      {
+        path: "/sessions/passage-xpack.jsonl",
+        text: "Production build completed successfully with 1820 modules transformed and the Chrome flow verified.",
+      },
+    ];
+
+    expect(
+      chooseVisibleSession(
+        "Task complete\nDATABASE_REJECTION IMMUTABLE_ITEM_VERSION\nOPTIMISTIC_REJECTION STALE_REVIEW_REVISION\n",
+        candidates,
+      ),
+    ).toEqual(candidates[0]!);
+    expect(
+      chooseVisibleSession(
+        "Build complete\n1820 modules transformed\nChrome flow verified successfully\n",
+        candidates,
+      ),
+    ).toEqual(candidates[1]!);
+  });
+
+  test("fails closed when visible text does not uniquely identify a log", () => {
+    expect(
+      chooseVisibleSession("Ready", [
+        { path: "/sessions/first.jsonl", text: "Ready" },
+        { path: "/sessions/second.jsonl", text: "Ready" },
       ]),
     ).toBeNull();
   });
