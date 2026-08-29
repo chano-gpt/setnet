@@ -6,6 +6,12 @@ All notable changes to setnet are recorded here. The format follows
 `version` in `herdr-plugin.toml`, `package.json`, and `web/package.json` (enforced by
 `scripts/check-version.sh`). See [`CLAUDE.md`](./CLAUDE.md) → *Versioning* for the bump policy.
 
+## [0.32.5] - 2026-08-29
+
+### Fixed
+
+- Resumed OMO panes sharing a cwd recover their own conversation GUI from unique visible-log content. (52366eb)
+
 ## [0.32.4] - 2026-08-29
 
 ### Changed
